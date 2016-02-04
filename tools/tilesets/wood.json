@@ -1,0 +1,31 @@
+{
+  "name": "wood",
+  "imageUrl": "/img/wood.png",
+  "tiles": [
+    {"xy": [0, 0], "name": "st1"},
+    {"xy": [1, 0], "name": "hbr1"},
+    {"xy": [2, 0], "name": "hbr2"},
+    {"xy": [3, 0], "name": "hbr3"},
+    {"xy": [4, 0], "name": "post_top"},
+    {"xy": [5, 0], "name": "l_supp"},
+    {"xy": [6, 0], "name": "r_supp"},
+    {"xy": [7, 0], "name": "c_supp"},
+
+    {"xy": [0, 1], "name": "st2"},
+    {"xy": [1, 1], "name": "v_br1"},
+    {"xy": [2, 1], "name": "v_br2"},
+    {"xy": [3, 1], "name": "v_br3"},
+    {"xy": [4, 1], "name": "post"},
+    {"xy": [5, 1], "name": "lls_supp"},
+    {"xy": [6, 1], "name": "supp"},
+    {"xy": [7, 1], "name": "lrs_supp"},
+
+    {"xy": [0, 2], "name": "st3"},
+    {"xy": [2, 2], "name": "post_combi"},
+    {"xy": [3, 2], "name": "stump"},
+    {"xy": [4, 2], "name": "post_base"},
+    {"xy": [5, 2], "name": "crs_supp"},
+    {"xy": [6, 2], "name": "cs_supp"},
+    {"xy": [7, 2], "name": "cls_supp"}
+  ]
+}

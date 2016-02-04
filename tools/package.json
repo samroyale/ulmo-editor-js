@@ -1,0 +1,8 @@
+{
+    "name": "ulmo-tools",
+    "main": "map-parser.js",
+    "dependencies": {
+        "collections": "^1.2.4",
+        "lazy": "^1.0.11"
+    }
+}
