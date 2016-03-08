@@ -76,6 +76,9 @@ var tilePositionMixin = {
  * =============================================================================
  */
 const TilePalette = React.createClass({
+
+  _tilesetCanvas: null,
+
   getInitialState: function() {
     return {
       currentTilePosition: null,
@@ -90,10 +93,10 @@ const TilePalette = React.createClass({
 
   updateTileSet: function(tsid) {
     if (tsid.length == 0) {
-      this.setState({tileSetId: null});
+      this._tilesetCanvas.hideTileset();
       return;
     }
-    this.setState({tileSetId: tsid});
+    this._tilesetCanvas.loadTileset(tsid);
   },
 
   render: function() {
@@ -106,7 +109,10 @@ const TilePalette = React.createClass({
             onTileSelected={this.props.onTileSelected}
             onTilePositionUpdated={this.updateCurrentTile}
             tilePosition={this.state.currentTilePosition}
-            tile={this.state.currentTile} />
+            tile={this.state.currentTile}
+            ref={function(comp) {
+              this._tilesetCanvas = comp;
+            }.bind(this)} />
         <TileInfo
             tilePosition={this.state.currentTilePosition}
             tile={this.state.currentTile} />
@@ -160,7 +166,6 @@ const TileSetPickerModal = React.createClass({
       }.bind(this)
     });
   },
-
 
   render() {
     var items = this.state.tileSets.map(function(tileSet) {
@@ -219,6 +224,17 @@ var TileSetCanvas = React.createClass({
     return {
       showTileset: false,
     };
+  },
+
+  hideTileset() {
+    this.setState({ showTileset: false });
+  },
+
+  loadTileset(tilesetId) {
+    this._tileSet = new TileSet(this.props.apiUrl + tilesetId, this.props.tileSize, function() {
+      this.drawTileSet();
+      this.setState({ showTileset: true });
+    }.bind(this));
   },
 
   initEmptyTile: function() {
@@ -289,17 +305,6 @@ var TileSetCanvas = React.createClass({
   },
 
   componentDidUpdate: function(oldProps, oldState) {
-    if (!this.props.tileSetId) {
-      this.setState({ showTileset: false });
-      return;
-    }
-    if (this.props.tileSetId != oldProps.tileSetId) {
-      this._tileSet = new TileSet(this.props.apiUrl + this.props.tileSetId, this.props.tileSize, function() {
-        this.drawTileSet();
-        this.setState({ showTileset: true });
-      }.bind(this));
-      return;
-    }
     if (oldProps.tilePosition) {
       this.unhighlightTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.tile);
     }
@@ -343,10 +348,10 @@ var MapEditor = React.createClass({
 
   updateMap: function(mid) {
     if (mid.length == 0) {
-      this.setState({mapId: null});
+      this._mapCanvas.hideMap()
       return;
     }
-    this.setState({mapId: mid});
+    this._mapCanvas.loadMap(mid)
   },
 
   saveMap: function() {
@@ -422,6 +427,10 @@ var MapPickerModal = React.createClass({
     });
   },
 
+  newMap: function(event) {
+    alert('hello');
+  },
+
   render() {
     var items = this.state.maps.map(function(map) {
        return <MapItem key={map._id} map={map} onMapSelected={this.mapSelected} />;
@@ -431,6 +440,9 @@ var MapPickerModal = React.createClass({
         <ReactBootstrap.ButtonToolbar>
           <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.loadMapsFromServer}>
             Choose Map
+          </ReactBootstrap.Button>
+          <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.newMap}>
+            New Map
           </ReactBootstrap.Button>
           <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.props.onSaveMap}>
             Save Map
@@ -486,6 +498,17 @@ var MapCanvas = React.createClass({
     return {
       showMap: false,
     };
+  },
+
+  hideMap: function() {
+    this.setState({ showMap: false });
+  },
+
+  loadMap: function(mapId) {
+    this._rpgMap = new RpgMap(this.props.apiUrl + mapId, this.props.tileSize, this.props.baseColours, function() {
+      this.drawMap();
+      this.setState({ showMap: true });
+    }.bind(this));
   },
 
   saveMap: function() {
@@ -548,17 +571,6 @@ var MapCanvas = React.createClass({
   },
 
   componentDidUpdate: function(oldProps, oldState) {
-    if (!this.props.mapId) {
-      this.setState({ showMap: false });
-      return;
-    }
-    if (this.props.mapId != oldProps.mapId) {
-      this._rpgMap = new RpgMap(this.props.apiUrl + this.props.mapId, this.props.tileSize, this.props.baseColours, function() {
-        this.drawMap();
-        this.setState({ showMap: true });
-      }.bind(this));
-      return;
-    }
     if (oldProps.tilePosition) {
       this.unhighlightTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.mapTile);
     }
