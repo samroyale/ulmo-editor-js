@@ -141,9 +141,9 @@ const TileSetPickerModal = React.createClass({
     this.setState({ showModal: false });
   },
 
-  open() {
+  /*open() {
     this.setState({ showModal: true });
-  },
+  },*/
 
   tileSetSelected: function(tsid) {
     this.close();
@@ -151,8 +151,7 @@ const TileSetPickerModal = React.createClass({
   },
 
   tileSetsLoaded: function(tileSetDefs) {
-    this.setState({ tileSets: tileSetDefs });
-    this.open();
+    this.setState({ tileSets: tileSetDefs, showModal: true });
   },
 
   loadTileSetsFromServer: function(event) {
@@ -361,7 +360,7 @@ var MapEditor = React.createClass({
   render: function() {
     return (
       <div>
-        <MapPickerModal
+        <MapToolbar
             onMapSelected={this.updateMap}
             onSaveMap={this.saveMap} />
         <MapCanvas
@@ -385,24 +384,24 @@ var MapEditor = React.createClass({
  * COMPONENT: MAP PICKER
  * =============================================================================
  */
-var MapPickerModal = React.createClass({
+var MapToolbar = React.createClass({
   getDefaultProps: function() {
     return { apiUrl: "/api/maps" };
   },
 
   getInitialState() {
     return {
-      showModal: false,
+      showLoadModal: false,
+      showNewModal: false,
       maps: []
     };
   },
 
   close() {
-    this.setState({ showModal: false });
-  },
-
-  open() {
-    this.setState({ showModal: true });
+    this.setState({
+      showLoadModal: false,
+      showNewModal: false
+    });
   },
 
   mapSelected: function(mid) {
@@ -411,8 +410,7 @@ var MapPickerModal = React.createClass({
   },
 
   mapsLoaded: function(mapDefs) {
-    this.setState({ maps: mapDefs });
-    this.open();
+    this.setState({ maps: mapDefs, showLoadModal: true });
   },
 
   loadMapsFromServer: function(event) {
@@ -428,13 +426,15 @@ var MapPickerModal = React.createClass({
   },
 
   newMap: function(event) {
-    alert('hello');
+    this.setState({ showNewModal: true });
+  },
+
+  newMapOfSize(rows, cols) {
+    this.close();
+    alert(rows + " : " + cols);
   },
 
   render() {
-    var items = this.state.maps.map(function(map) {
-       return <MapItem key={map._id} map={map} onMapSelected={this.mapSelected} />;
-    }.bind(this));
     return (
       <div>
         <ReactBootstrap.ButtonToolbar>
@@ -449,19 +449,46 @@ var MapPickerModal = React.createClass({
           </ReactBootstrap.Button>
         </ReactBootstrap.ButtonToolbar>
 
-        <ReactBootstrap.Modal show={this.state.showModal} onHide={this.close}>
-          <ReactBootstrap.Modal.Header closeButton>
-            <ReactBootstrap.Modal.Title>Maps</ReactBootstrap.Modal.Title>
-          </ReactBootstrap.Modal.Header>
-          <ReactBootstrap.Modal.Body>
-            <ul>{items}</ul>
-          </ReactBootstrap.Modal.Body>
-        </ReactBootstrap.Modal>
+        <ChooseMapModal
+            showModal={this.state.showLoadModal}
+            maps={this.state.maps}
+            onMapSelected={this.mapSelected}
+            onClose={this.close} />
+
+        <NewMapModal
+            showModal={this.state.showNewModal}
+            onNewMap={this.newMapOfSize}
+            onClose={this.close} />
       </div>
     );
   }
 });
 
+/* =============================================================================
+ * COMPONENT: CHOOSE MAP MODAL
+ * =============================================================================
+ */
+function ChooseMapModal(props) {
+  var items = props.maps.map(function(map) {
+     return <MapItem key={map._id} map={map} onMapSelected={props.onMapSelected} />;
+  }.bind(this));
+
+  return (
+    <ReactBootstrap.Modal show={props.showModal} onHide={props.onClose}>
+      <ReactBootstrap.Modal.Header closeButton>
+        <ReactBootstrap.Modal.Title>Choose Map</ReactBootstrap.Modal.Title>
+      </ReactBootstrap.Modal.Header>
+      <ReactBootstrap.Modal.Body>
+        <ul>{items}</ul>
+      </ReactBootstrap.Modal.Body>
+    </ReactBootstrap.Modal>
+  );
+}
+
+/* =============================================================================
+ * COMPONENT: MAP ITEM
+ * =============================================================================
+ */
 var MapItem = React.createClass({
   mapSelected: function(event) {
     event.preventDefault();
@@ -470,6 +497,52 @@ var MapItem = React.createClass({
 
   render: function() {
     return (<li><a href="#" onClick={this.mapSelected}>{this.props.map.name}</a></li>);
+  }
+});
+
+var NewMapModal = React.createClass({
+  getInitialState: function() {
+    return {
+      rowsVal: '',
+      colsVal: ''
+    };
+  },
+
+  handleRowsChange: function(event) {
+    var re = /\d*/g;
+    this.setState({rowsVal: re.exec(event.target.value)});
+  },
+
+  handleColsChange: function(event) {
+    var re = /\d*/g;
+    this.setState({colsVal: re.exec(event.target.value)});
+  },
+
+  handleSubmit: function(e) {
+    e.preventDefault();
+    var rows = parseInt(this.state.rowsVal, 10);
+    var cols = parseInt(this.state.colsVal, 10);
+    if (rows > 0 && cols > 0) {
+      this.props.onNewMap(rows, cols);
+    }
+    // this.props.onClose();
+  },
+
+  render() {
+    return (
+      <ReactBootstrap.Modal show={this.props.showModal} onHide={this.props.onClose}>
+        <ReactBootstrap.Modal.Header closeButton>
+          <ReactBootstrap.Modal.Title>New Map</ReactBootstrap.Modal.Title>
+        </ReactBootstrap.Modal.Header>
+        <ReactBootstrap.Modal.Body>
+        <form onSubmit={this.handleSubmit}>
+          <ReactBootstrap.Input type="text" label="Rows" placeholder="0-32" value={this.state.rowsVal} onChange={this.handleRowsChange} />
+          <ReactBootstrap.Input type="text" label="Cols" placeholder="0-32" value={this.state.colsVal} onChange={this.handleColsChange} />
+          <ReactBootstrap.ButtonInput type="submit" value="OK" />
+        </form>
+        </ReactBootstrap.Modal.Body>
+      </ReactBootstrap.Modal>
+    );
   }
 });
 
