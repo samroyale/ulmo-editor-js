@@ -299,7 +299,7 @@ var TileSetCanvas = React.createClass({
   },
 
   componentDidMount: function() {
-    this._canvas = ReactDOM.findDOMNode(this.refs.cvs);
+    // this._canvas = ReactDOM.findDOMNode(this.refs.cvs);
     this._highlight = this.initTileHighlight();
   },
 
@@ -316,10 +316,13 @@ var TileSetCanvas = React.createClass({
     var bsClass = this.state.showTileset ? "show" : "hidden";
     return (
       <div style={this.props.divStyle}>
-        <canvas ref="cvs" className={bsClass} style={this.props.cvsStyle}
+        <canvas className={bsClass} style={this.props.cvsStyle}
             onMouseMove={this.handleMouseMove}
             onMouseOut={this.handleMouseOut}
-            onClick={this.handleMouseClick} />
+            onClick={this.handleMouseClick}
+            ref={function(cvs) {
+              this._canvas = cvs;
+            }.bind(this)} />
       </div>
     );
   }
@@ -353,6 +356,10 @@ var MapEditor = React.createClass({
     this._mapCanvas.loadMap(mid)
   },
 
+  newMap: function(rows, cols) {
+    this._mapCanvas.newMap(rows, cols)
+  },
+
   saveMap: function() {
     this._mapCanvas.saveMap();
   },
@@ -362,6 +369,7 @@ var MapEditor = React.createClass({
       <div>
         <MapToolbar
             onMapSelected={this.updateMap}
+            onNewMap={this.newMap}
             onSaveMap={this.saveMap} />
         <MapCanvas
             mapId={this.state.mapId}
@@ -431,7 +439,8 @@ var MapToolbar = React.createClass({
 
   newMapOfSize(rows, cols) {
     this.close();
-    alert(rows + " : " + cols);
+    //alert(rows + " : " + cols);
+    this.props.onNewMap(rows, cols);
   },
 
   render() {
@@ -500,6 +509,10 @@ var MapItem = React.createClass({
   }
 });
 
+/* =============================================================================
+ * COMPONENT: NEW MAP MODAL
+ * =============================================================================
+ */
 var NewMapModal = React.createClass({
   getInitialState: function() {
     return {
@@ -578,7 +591,15 @@ var MapCanvas = React.createClass({
   },
 
   loadMap: function(mapId) {
-    this._rpgMap = new RpgMap(this.props.apiUrl + mapId, this.props.tileSize, this.props.baseColours, function() {
+    this.initMapFromUrl(this.props.apiUrl + mapId);
+  },
+
+  newMap: function(rows, cols) {
+    this.initMapFromUrl(this.props.apiUrl + "new?rows=" + rows + "&cols=" + cols);
+  },
+
+  initMapFromUrl(mapUrl) {
+    this._rpgMap = new RpgMap(mapUrl, this.props.tileSize, this.props.baseColours, function() {
       this.drawMap();
       this.setState({ showMap: true });
     }.bind(this));
@@ -639,7 +660,6 @@ var MapCanvas = React.createClass({
   },
 
   componentDidMount: function() {
-    this._canvas = ReactDOM.findDOMNode(this.refs.cvs);
     this._highlight = this.initTileHighlight();
   },
 
@@ -656,10 +676,13 @@ var MapCanvas = React.createClass({
     var bsClass = this.state.showMap ? "show" : "hidden";
     return (
       <div style={this.props.divStyle}>
-        <canvas ref="cvs" className={bsClass} style={this.props.cvsStyle}
+        <canvas className={bsClass} style={this.props.cvsStyle}
             onMouseMove={this.handleMouseMove}
             onMouseOut={this.handleMouseOut}
-            onClick={this.handleMouseClick} />
+            onClick={this.handleMouseClick}
+            ref={function(cvs) {
+              this._canvas = cvs;
+            }.bind(this)} />
       </div>
     );
   }
@@ -738,6 +761,12 @@ class RpgMap {
   initRpgMap(rpgMapDef, tileSize, callback) {
     this._name = rpgMapDef.name;
     var tileSetMappings = new Map();
+    if (rpgMapDef.mapTiles.length == 0) {
+      // typically a new map
+      this._mapTiles = this.initMapTiles(tileSetMappings, rpgMapDef);
+      callback(this);
+      return;
+    }
     rpgMapDef.mapTiles.forEach(function(mapTileDef) {
       mapTileDef.tiles.forEach(function(tileDef) {
         tileSetMappings.set(tileDef.tileSet, null);

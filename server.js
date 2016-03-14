@@ -127,6 +127,25 @@ router.route('/tilesets/:tileset_id')
     });
   });
 
+// on routes that end in /maps/new
+// ----------------------------------------------------
+router.route('/maps/new')
+  // get the named TileSets (accessed at GET http://localhost:8080/api/tilesets/tileset?name=grass)
+  .get(function(req, res) {
+    console.log("rows: " + req.query.rows);
+    console.log("cols: " + req.query.cols);
+    if (req.query.rows && req.query.cols) {
+      var rpgMap = {
+        //rpgMap.name = req.body.name;
+        rows: req.query.rows,
+        cols: req.query.cols,
+        mapTiles: []
+      }
+      res.json(rpgMap);
+    }
+    res.json({ message: 'Size not specified' });
+  });
+
 // on routes that end in /maps
 // ----------------------------------------------------
 router.route('/maps')
