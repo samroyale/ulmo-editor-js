@@ -15,11 +15,22 @@ const App = React.createClass({
 
   render: function() {
     return (
-      <div>
-        <TilePalette onTileSelected={this.tileSelected}/>
-        <hr />
-        <MapEditor selectedTile={this.state.selectedTile} />
-      </div>
+      <ReactBootstrap.Grid>
+        <ReactBootstrap.Row className="show-grid">
+          <ReactBootstrap.Col xs={18} md={12}>
+            <h1>Ulmo Editor</h1>
+            <hr />
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
+        <ReactBootstrap.Row className="show-grid">
+          <ReactBootstrap.Col xs={6} md={4}>
+            <TilePalette onTileSelected={this.tileSelected} />
+          </ReactBootstrap.Col>
+          <ReactBootstrap.Col xs={12} md={8}>
+            <MapEditor selectedTile={this.state.selectedTile} />
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
+      </ReactBootstrap.Grid>
     );
   }
 });
@@ -40,9 +51,12 @@ var tilePositionMixin = {
       x = evt.pageX;
       y = evt.pageY;
     }
-    var canvasElement = evt.target;
-    x = Math.max(Math.min(x - canvasElement.offsetLeft, canvasElement.width), 0);
-    y = Math.max(Math.min(y - canvasElement.offsetTop, canvasElement.height), 0);
+    var cvsElement = evt.target;
+    var cvsOffsetLeft = cvsElement.offsetLeft + cvsElement.offsetParent.offsetLeft;
+    var cvsOffsetTop = cvsElement.offsetTop + cvsElement.offsetParent.offsetTop;
+    // console.log(x + "," + y + " :: " + canvasElement.offsetLeft + "," + canvasElement.offsetTop + " :: " + canvasElement.offsetParent );
+    x = Math.max(Math.min(x - cvsOffsetLeft, cvsElement.width), 0);
+    y = Math.max(Math.min(y - cvsOffsetTop, cvsElement.height), 0);
     return { 'x': Math.floor(x / this.props.tileSize), 'y': Math.floor(y / this.props.tileSize)};
   },
 
@@ -102,10 +116,9 @@ const TilePalette = React.createClass({
   render: function() {
     return (
       <div>
-        <TileSetPickerModal
+        <TileSetPicker
             onTileSetSelected={this.updateTileSet} />
         <TileSetCanvas
-            tileSetId={this.state.tileSetId}
             onTileSelected={this.props.onTileSelected}
             onTilePositionUpdated={this.updateCurrentTile}
             tilePosition={this.state.currentTilePosition}
@@ -125,7 +138,7 @@ const TilePalette = React.createClass({
  * COMPONENT: TILE SET PICKER
  * =============================================================================
  */
-const TileSetPickerModal = React.createClass({
+const TileSetPicker = React.createClass({
   getDefaultProps: function() {
     return { apiUrl: "/api/tilesets" };
   },
@@ -140,10 +153,6 @@ const TileSetPickerModal = React.createClass({
   close() {
     this.setState({ showModal: false });
   },
-
-  /*open() {
-    this.setState({ showModal: true });
-  },*/
 
   tileSetSelected: function(tsid) {
     this.close();
@@ -189,6 +198,10 @@ const TileSetPickerModal = React.createClass({
   }
 });
 
+/* =============================================================================
+ * COMPONENT: TILE SET ITEM
+ * =============================================================================
+ */
 var TileSetItem = React.createClass({
   tileSetSelected: function(event) {
     event.preventDefault();
@@ -282,6 +295,7 @@ var TileSetCanvas = React.createClass({
   },
 
   handleMouseMove: function(evt) {
+    console.log("tile movement");
     var tilePosition = this.getCurrentTilePosition(evt);
     var tile = this._tileSet.getTile([tilePosition.x], [tilePosition.y]);
     this.props.onTilePositionUpdated(tilePosition, tile);
@@ -329,6 +343,17 @@ var TileSetCanvas = React.createClass({
 });
 
 /* =============================================================================
+ * COMPONENT: TILE INFO
+ * =============================================================================
+ */
+function TileInfo(props) {
+  if (props.tilePosition && props.tile) {
+    return (<p>{props.tilePosition.x}, {props.tilePosition.y} :: {props.tile._tileSetName}:{props.tile._tileName}</p>);
+  }
+  return (<p>-</p>);
+}
+
+/* =============================================================================
  * COMPONENT: MAP EDITOR
  * =============================================================================
  */
@@ -348,31 +373,44 @@ var MapEditor = React.createClass({
     this.setState({ currentTilePosition: tilePosition, currentTile: tile});
   },
 
-  updateMap: function(mid) {
+  mapSelected: function(mid) {
     if (mid.length == 0) {
       this._mapCanvas.hideMap()
+      this.setState({ mapId: null });
       return;
     }
     this._mapCanvas.loadMap(mid)
+    // TODO set async from load
+    this.setState({ mapId: mid });
   },
 
   newMap: function(rows, cols) {
     this._mapCanvas.newMap(rows, cols)
+    this.setState({ mapId: null });
   },
 
   saveMap: function() {
     this._mapCanvas.saveMap();
   },
 
+  saveMapAs: function(mapName) {
+    this._mapCanvas.saveMapAs(mapName);
+  },
+
+  mapLoaded: function(mid) {
+    this.setState({ mapId: mid });
+  },
+
   render: function() {
     return (
       <div>
         <MapToolbar
-            onMapSelected={this.updateMap}
-            onNewMap={this.newMap}
-            onSaveMap={this.saveMap} />
-        <MapCanvas
             mapId={this.state.mapId}
+            onMapSelected={this.mapSelected}
+            onNewMap={this.newMap}
+            onSaveMap={this.saveMap}
+            onSaveMapAs={this.saveMapAs} />
+        <MapCanvas
             onTilePositionUpdated={this.updateCurrentTile}
             selectedTile={this.props.selectedTile}
             tilePosition={this.state.currentTilePosition}
@@ -389,7 +427,7 @@ var MapEditor = React.createClass({
 });
 
 /* =============================================================================
- * COMPONENT: MAP PICKER
+ * COMPONENT: MAP TOOLBAR
  * =============================================================================
  */
 var MapToolbar = React.createClass({
@@ -401,6 +439,8 @@ var MapToolbar = React.createClass({
     return {
       showLoadModal: false,
       showNewModal: false,
+      showSaveModal: false,
+      mapId: null,
       maps: []
     };
   },
@@ -408,7 +448,8 @@ var MapToolbar = React.createClass({
   close() {
     this.setState({
       showLoadModal: false,
-      showNewModal: false
+      showNewModal: false,
+      showSaveModal: false
     });
   },
 
@@ -439,8 +480,21 @@ var MapToolbar = React.createClass({
 
   newMapOfSize(rows, cols) {
     this.close();
-    //alert(rows + " : " + cols);
     this.props.onNewMap(rows, cols);
+  },
+
+  saveMap() {
+    if (this.props.mapId) {
+      this.props.onSaveMap();
+      return;
+    }
+    this.setState({ showSaveModal: true });
+  },
+
+  saveMapAs(mapName) {
+    this.close();
+    // console.log("mapName: " + mapName);
+    this.props.onSaveMapAs(mapName);
   },
 
   render() {
@@ -453,7 +507,7 @@ var MapToolbar = React.createClass({
           <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.newMap}>
             New Map
           </ReactBootstrap.Button>
-          <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.props.onSaveMap}>
+          <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.saveMap}>
             Save Map
           </ReactBootstrap.Button>
         </ReactBootstrap.ButtonToolbar>
@@ -467,6 +521,11 @@ var MapToolbar = React.createClass({
         <NewMapModal
             showModal={this.state.showNewModal}
             onNewMap={this.newMapOfSize}
+            onClose={this.close} />
+
+        <SaveAsModal
+            showModal={this.state.showSaveModal}
+            onSaveAs={this.saveMapAs}
             onClose={this.close} />
       </div>
     );
@@ -514,6 +573,8 @@ var MapItem = React.createClass({
  * =============================================================================
  */
 var NewMapModal = React.createClass({
+  _regex: /\D/g,
+
   getInitialState: function() {
     return {
       rowsVal: '',
@@ -522,13 +583,11 @@ var NewMapModal = React.createClass({
   },
 
   handleRowsChange: function(event) {
-    var re = /\d*/g;
-    this.setState({rowsVal: re.exec(event.target.value)});
+    this.setState({ rowsVal: event.target.value.replace(this._regex, '') });
   },
 
   handleColsChange: function(event) {
-    var re = /\d*/g;
-    this.setState({colsVal: re.exec(event.target.value)});
+    this.setState({ colsVal: event.target.value.replace(this._regex, '') });
   },
 
   handleSubmit: function(e) {
@@ -538,7 +597,6 @@ var NewMapModal = React.createClass({
     if (rows > 0 && cols > 0) {
       this.props.onNewMap(rows, cols);
     }
-    // this.props.onClose();
   },
 
   render() {
@@ -552,6 +610,48 @@ var NewMapModal = React.createClass({
           <ReactBootstrap.Input type="text" label="Rows" placeholder="0-32" value={this.state.rowsVal} onChange={this.handleRowsChange} />
           <ReactBootstrap.Input type="text" label="Cols" placeholder="0-32" value={this.state.colsVal} onChange={this.handleColsChange} />
           <ReactBootstrap.ButtonInput type="submit" value="OK" />
+        </form>
+        </ReactBootstrap.Modal.Body>
+      </ReactBootstrap.Modal>
+    );
+  }
+});
+
+/* =============================================================================
+ * COMPONENT: SAVE AS MODAL
+ * =============================================================================
+ */
+var SaveAsModal = React.createClass({
+  getInitialState: function() {
+    return {
+      mapName: '',
+    };
+  },
+
+  handleNameChange: function(event) {
+    //var re = /\d*/g;
+    //this.setState({rowsVal: re.exec(event.target.value)});
+    this.setState({ mapName: event.target.value });
+  },
+
+  handleSubmit: function(e) {
+    e.preventDefault();
+    var mapName = this.state.mapName;
+    if (mapName.length > 0) {
+      this.props.onSaveAs(mapName);
+    }
+  },
+
+  render() {
+    return (
+      <ReactBootstrap.Modal show={this.props.showModal} onHide={this.props.onClose}>
+        <ReactBootstrap.Modal.Header closeButton>
+          <ReactBootstrap.Modal.Title>Save As</ReactBootstrap.Modal.Title>
+        </ReactBootstrap.Modal.Header>
+        <ReactBootstrap.Modal.Body>
+        <form onSubmit={this.handleSubmit}>
+          <ReactBootstrap.Input type="text" label="Name" placeholder="map name" value={this.state.mapName} onChange={this.handleNameChange} />
+          <ReactBootstrap.ButtonInput type="submit" value="Save" />
         </form>
         </ReactBootstrap.Modal.Body>
       </ReactBootstrap.Modal>
@@ -574,7 +674,7 @@ var MapCanvas = React.createClass({
     return {
       tileSize: 32,
       baseColours: ["#99CCCC", "#CC99CC"],
-      apiUrl: "/api/maps/",
+      apiUrl: "/api/maps",
       divStyle: { padding: "10px 0px" },
       cvsStyle: { backgroundColor: "#00FF00" }
     };
@@ -591,11 +691,11 @@ var MapCanvas = React.createClass({
   },
 
   loadMap: function(mapId) {
-    this.initMapFromUrl(this.props.apiUrl + mapId);
+    this.initMapFromUrl(this.props.apiUrl + "/" + mapId);
   },
 
   newMap: function(rows, cols) {
-    this.initMapFromUrl(this.props.apiUrl + "new?rows=" + rows + "&cols=" + cols);
+    this.initMapFromUrl(this.props.apiUrl + "/new?rows=" + rows + "&cols=" + cols);
   },
 
   initMapFromUrl(mapUrl) {
@@ -607,7 +707,13 @@ var MapCanvas = React.createClass({
 
   saveMap: function() {
     if (this._rpgMap) {
-      this._rpgMap.saveToServer(this.props.apiUrl + this.props.mapId);
+      this._rpgMap.saveToServer(this.props.apiUrl + "/" + this._rpgMap._id);
+    }
+  },
+
+  saveMapAs: function(mapName) {
+    if (this._rpgMap) {
+      this._rpgMap.saveToServer(this.props.apiUrl, mapName);
     }
   },
 
@@ -689,17 +795,6 @@ var MapCanvas = React.createClass({
 });
 
 /* =============================================================================
- * COMPONENT: TILE INFO
- * =============================================================================
- */
-function TileInfo(props) {
-  if (props.tilePosition && props.tile) {
-    return (<p>{props.tilePosition.x}, {props.tilePosition.y} :: {props.tile._tileSetName}:{props.tile._tileName}</p>);
-  }
-  return (<p>-</p>);
-}
-
-/* =============================================================================
  * COMPONENT: MAP TILE INFO
  * =============================================================================
  */
@@ -719,6 +814,7 @@ function MapTileInfo(props) {
  */
 class RpgMap {
   constructor(mapUrl, tileSize, baseColours, callback) {
+    this._id = null;
     this._name = null;
     this._mapTiles = null;
     this._baseTiles = baseColours.map(function(baseColour) {
@@ -727,10 +823,15 @@ class RpgMap {
     this.loadFromServer(mapUrl, tileSize, callback);
   }
 
-  saveToServer(mapUrl) {
-    console.log("Saving map: " + mapUrl);
+  saveToServer(mapUrl, mapName) {
+    console.log("Saving map [" + mapUrl + "]");
+    var reqType = "PUT";
+    if (mapName) {
+      this._name = mapName;
+      reqType = "POST";
+    }
     $.ajax({
-      type: "PUT",
+      type: reqType,
       url: mapUrl,
       dataType: 'json',
       data: this.getDto(),
@@ -744,7 +845,7 @@ class RpgMap {
   }
 
   loadFromServer(mapUrl, tileSize, callback) {
-    console.log("Loading map: " + mapUrl);
+    console.log("Loading map [" + mapUrl + "]");
     $.ajax({
       url: mapUrl,
       dataType: 'json',
@@ -759,6 +860,7 @@ class RpgMap {
   }
 
   initRpgMap(rpgMapDef, tileSize, callback) {
+    this._id = rpgMapDef._id;
     this._name = rpgMapDef.name;
     var tileSetMappings = new Map();
     if (rpgMapDef.mapTiles.length == 0) {
@@ -1024,7 +1126,7 @@ class TileSet {
   getDrawingContext(canvas) {
     var context = canvas.getContext("2d");
     context.imageSmoothingEnabled = false;
-    //context.webkitImageSmoothingEnabled = false;
+    context.webkitImageSmoothingEnabled = false;
     context.mozImageSmoothingEnabled = false;
     return context;
   }
