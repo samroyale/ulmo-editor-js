@@ -18,8 +18,7 @@ const App = React.createClass({
       <ReactBootstrap.Grid>
         <ReactBootstrap.Row className="show-grid">
           <ReactBootstrap.Col xs={18} md={12}>
-            <h1>Ulmo Editor</h1>
-            <hr />
+            <ReactBootstrap.PageHeader>Ulmo Editor</ReactBootstrap.PageHeader>
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
         <ReactBootstrap.Row className="show-grid">
@@ -115,7 +114,7 @@ const TilePalette = React.createClass({
 
   render: function() {
     return (
-      <div>
+      <ReactBootstrap.Panel>
         <TileSetPicker
             onTileSetSelected={this.updateTileSet} />
         <TileSetCanvas
@@ -129,7 +128,7 @@ const TilePalette = React.createClass({
         <TileInfo
             tilePosition={this.state.currentTilePosition}
             tile={this.state.currentTile} />
-      </div>
+      </ReactBootstrap.Panel>
     );
   }
 });
@@ -182,7 +181,7 @@ const TileSetPicker = React.createClass({
     return (
       <div>
         <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.loadTileSetsFromServer}>
-          Choose Tileset
+          Open Tileset
         </ReactBootstrap.Button>
 
         <ReactBootstrap.Modal show={this.state.showModal} onHide={this.close}>
@@ -403,7 +402,7 @@ var MapEditor = React.createClass({
 
   render: function() {
     return (
-      <div>
+      <ReactBootstrap.Panel>
         <MapToolbar
             mapId={this.state.mapId}
             onMapSelected={this.mapSelected}
@@ -421,7 +420,7 @@ var MapEditor = React.createClass({
         <MapTileInfo
             tilePosition={this.state.currentTilePosition}
             mapTile={this.state.currentTile} />
-      </div>
+      </ReactBootstrap.Panel>
     );
   }
 });
@@ -502,7 +501,7 @@ var MapToolbar = React.createClass({
       <div>
         <ReactBootstrap.ButtonToolbar>
           <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.loadMapsFromServer}>
-            Choose Map
+            Open Map
           </ReactBootstrap.Button>
           <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.newMap}>
             New Map
@@ -622,6 +621,8 @@ var NewMapModal = React.createClass({
  * =============================================================================
  */
 var SaveAsModal = React.createClass({
+  _regex: /\W/g,
+
   getInitialState: function() {
     return {
       mapName: '',
@@ -629,9 +630,7 @@ var SaveAsModal = React.createClass({
   },
 
   handleNameChange: function(event) {
-    //var re = /\d*/g;
-    //this.setState({rowsVal: re.exec(event.target.value)});
-    this.setState({ mapName: event.target.value });
+    this.setState({ mapName: event.target.value.replace(this._regex, '') });
   },
 
   handleSubmit: function(e) {
