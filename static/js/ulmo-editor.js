@@ -97,11 +97,11 @@ const TilePalette = React.createClass({
 
   getInitialState() {
     return {
-      currentTilePosition: null,
-      currentTile: null,
-      tileSetId: null,
       showModal: false,
-      tileSets: []
+      tileSets: [],
+      tileSetId: null,
+      currentTilePosition: null,
+      currentTile: null
     };
   },
 
@@ -362,79 +362,8 @@ function TileInfo(props) {
  * =============================================================================
  */
 var MapEditor = React.createClass({
-
   _mapCanvas: null,
 
-  getInitialState: function() {
-    return {
-      currentTilePosition: null,
-      currentTile: null,
-      mapId: null
-    }
-  },
-
-  updateCurrentTile: function(tilePosition, tile) {
-    this.setState({ currentTilePosition: tilePosition, currentTile: tile});
-  },
-
-  mapSelected: function(mid) {
-    if (mid.length == 0) {
-      this._mapCanvas.hideMap()
-      this.setState({ mapId: null });
-      return;
-    }
-    this._mapCanvas.loadMap(mid)
-    // TODO set async from load
-    this.setState({ mapId: mid });
-  },
-
-  newMap: function(rows, cols) {
-    this._mapCanvas.newMap(rows, cols)
-    this.setState({ mapId: null });
-  },
-
-  saveMap: function() {
-    this._mapCanvas.saveMap();
-  },
-
-  saveMapAs: function(mapName) {
-    this._mapCanvas.saveMapAs(mapName);
-  },
-
-  mapLoaded: function(mid) {
-    this.setState({ mapId: mid });
-  },
-
-  render: function() {
-    return (
-      <ReactBootstrap.Panel>
-        <MapToolbar
-            mapId={this.state.mapId}
-            onMapSelected={this.mapSelected}
-            onNewMap={this.newMap}
-            onSaveMap={this.saveMap}
-            onSaveMapAs={this.saveMapAs} />
-        <MapCanvas
-            onTilePositionUpdated={this.updateCurrentTile}
-            selectedTile={this.props.selectedTile}
-            tilePosition={this.state.currentTilePosition}
-            mapTile={this.state.currentTile}
-            ref={function(comp) {
-              this._mapCanvas = comp;
-            }.bind(this)} />
-        <MapTileInfo
-            tilePosition={this.state.currentTilePosition}
-            mapTile={this.state.currentTile} />
-      </ReactBootstrap.Panel>
-    );
-  }
-});
-
-/* =============================================================================
- * COMPONENT: MAP TOOLBAR
- * =============================================================================
- */
-var MapToolbar = React.createClass({
   getDefaultProps: function() {
     return { apiUrl: "/api/maps" };
   },
@@ -444,12 +373,14 @@ var MapToolbar = React.createClass({
       showLoadModal: false,
       showNewModal: false,
       showSaveModal: false,
+      maps: [],
       mapId: null,
-      maps: []
+      currentTilePosition: null,
+      currentTile: null
     };
   },
 
-  close() {
+  closeModal() {
     this.setState({
       showLoadModal: false,
       showNewModal: false,
@@ -458,8 +389,15 @@ var MapToolbar = React.createClass({
   },
 
   mapSelected: function(mid) {
-    this.close();
-    this.props.onMapSelected(mid);
+    this.closeModal();
+    if (mid.length == 0) {
+      this._mapCanvas.hideMap()
+      this.setState({ mapId: null });
+      return;
+    }
+    this._mapCanvas.loadMap(mid)
+    // TODO set async from load
+    this.setState({ mapId: mid });
   },
 
   mapsLoaded: function(mapDefs) {
@@ -483,58 +421,89 @@ var MapToolbar = React.createClass({
   },
 
   newMapOfSize(rows, cols) {
-    this.close();
-    this.props.onNewMap(rows, cols);
+    this.closeModal();
+    this._mapCanvas.newMap(rows, cols);
+    this.setState({ mapId: null });
   },
 
   saveMap() {
-    if (this.props.mapId) {
-      this.props.onSaveMap();
+    if (this.state.mapId) {
+      this._mapCanvas.saveMap();
       return;
     }
     this.setState({ showSaveModal: true });
   },
 
   saveMapAs(mapName) {
-    this.close();
+    this.closeModal();
     // console.log("mapName: " + mapName);
-    this.props.onSaveMapAs(mapName);
+    this._mapCanvas.saveMapAs(mapName);
+  },
+  
+  updateCurrentTile: function(tilePosition, tile) {
+    this.setState({ currentTilePosition: tilePosition, currentTile: tile});
   },
 
-  render() {
+  render: function() {
     return (
       <div>
-        <ReactBootstrap.ButtonToolbar>
-          <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.loadMapsFromServer}>
-            Open Map
-          </ReactBootstrap.Button>
-          <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.newMap}>
-            New Map
-          </ReactBootstrap.Button>
-          <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.saveMap}>
-            Save Map
-          </ReactBootstrap.Button>
-        </ReactBootstrap.ButtonToolbar>
+        <ReactBootstrap.Panel>
+          <MapToolbar
+              onLoadMapsFromServer={this.loadMapsFromServer}
+              onNewMap={this.newMap}
+              onSaveMap={this.saveMap} />
+          <MapCanvas
+              onTilePositionUpdated={this.updateCurrentTile}
+              selectedTile={this.props.selectedTile}
+              tilePosition={this.state.currentTilePosition}
+              mapTile={this.state.currentTile}
+              ref={function(comp) {
+                this._mapCanvas = comp;
+              }.bind(this)} />
+          <MapTileInfo
+              tilePosition={this.state.currentTilePosition}
+              mapTile={this.state.currentTile} />
+        </ReactBootstrap.Panel>
 
         <OpenMapModal
             showModal={this.state.showLoadModal}
             maps={this.state.maps}
             onMapSelected={this.mapSelected}
-            onClose={this.close} />
+            onClose={this.closeModal} />
 
         <NewMapModal
             showModal={this.state.showNewModal}
             onNewMap={this.newMapOfSize}
-            onClose={this.close} />
+            onClose={this.closeModal} />
 
         <SaveAsModal
             showModal={this.state.showSaveModal}
             onSaveAs={this.saveMapAs}
-            onClose={this.close} />
+            onClose={this.closeModal} />
       </div>
     );
   }
 });
+
+/* =============================================================================
+ * COMPONENT: MAP TOOLBAR
+ * =============================================================================
+ */
+function MapToolbar(props) {
+  return (
+    <ReactBootstrap.ButtonToolbar>
+      <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={props.onLoadMapsFromServer}>
+        Open Map
+      </ReactBootstrap.Button>
+      <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={props.onNewMap}>
+        New Map
+      </ReactBootstrap.Button>
+      <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={props.onSaveMap}>
+        Save Map
+      </ReactBootstrap.Button>
+    </ReactBootstrap.ButtonToolbar>
+  );
+}
 
 /* =============================================================================
  * COMPONENT: OPEN MAP MODAL
