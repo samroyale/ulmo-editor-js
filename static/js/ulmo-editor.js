@@ -89,73 +89,33 @@ var tilePositionMixin = {
  * =============================================================================
  */
 const TilePalette = React.createClass({
-
   _tilesetCanvas: null,
 
-  getInitialState: function() {
-    return {
-      currentTilePosition: null,
-      currentTile: null,
-      tileSetId: null
-    }
-  },
-
-  updateCurrentTile: function(tilePosition, tile) {
-    this.setState({ currentTilePosition: tilePosition, currentTile: tile});
-  },
-
-  updateTileSet: function(tsid) {
-    if (tsid.length == 0) {
-      this._tilesetCanvas.hideTileset();
-      return;
-    }
-    this._tilesetCanvas.loadTileset(tsid);
-  },
-
-  render: function() {
-    return (
-      <ReactBootstrap.Panel>
-        <TileSetPicker
-            onTileSetSelected={this.updateTileSet} />
-        <TileSetCanvas
-            onTileSelected={this.props.onTileSelected}
-            onTilePositionUpdated={this.updateCurrentTile}
-            tilePosition={this.state.currentTilePosition}
-            tile={this.state.currentTile}
-            ref={function(comp) {
-              this._tilesetCanvas = comp;
-            }.bind(this)} />
-        <TileInfo
-            tilePosition={this.state.currentTilePosition}
-            tile={this.state.currentTile} />
-      </ReactBootstrap.Panel>
-    );
-  }
-});
-
-/* =============================================================================
- * COMPONENT: TILE SET PICKER
- * =============================================================================
- */
-const TileSetPicker = React.createClass({
   getDefaultProps: function() {
     return { apiUrl: "/api/tilesets" };
   },
 
   getInitialState() {
     return {
+      currentTilePosition: null,
+      currentTile: null,
+      tileSetId: null,
       showModal: false,
       tileSets: []
     };
   },
 
-  close() {
+  closeModal() {
     this.setState({ showModal: false });
   },
 
   tileSetSelected: function(tsid) {
-    this.close();
-    this.props.onTileSetSelected(tsid);
+    this.closeModal();
+    if (tsid.length == 0) {
+      this._tilesetCanvas.hideTileset();
+      return;
+    }
+    this._tilesetCanvas.loadTileset(tsid);
   },
 
   tileSetsLoaded: function(tileSetDefs) {
@@ -174,28 +134,59 @@ const TileSetPicker = React.createClass({
     });
   },
 
-  render() {
-    var items = this.state.tileSets.map(function(tileSet) {
-       return <TileSetItem key={tileSet._id} tileSet={tileSet} onTileSetSelected={this.tileSetSelected} />;
-    }.bind(this));
+  updateCurrentTile: function(tilePosition, tile) {
+    this.setState({ currentTilePosition: tilePosition, currentTile: tile});
+  },
+
+  render: function() {
     return (
       <div>
-        <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={this.loadTileSetsFromServer}>
-          Open Tileset
-        </ReactBootstrap.Button>
+        <ReactBootstrap.Panel>
+          <TileSetToolbar
+              onLoadTileSetsFromServer={this.loadTileSetsFromServer} />
+          <TileSetCanvas
+              onTileSelected={this.props.onTileSelected}
+              onTilePositionUpdated={this.updateCurrentTile}
+              tilePosition={this.state.currentTilePosition}
+              tile={this.state.currentTile}
+              ref={function(comp) {
+                this._tilesetCanvas = comp;
+              }.bind(this)} />
+          <TileInfo
+              tilePosition={this.state.currentTilePosition}
+              tile={this.state.currentTile} />
+        </ReactBootstrap.Panel>
 
-        <ReactBootstrap.Modal show={this.state.showModal} onHide={this.close}>
-          <ReactBootstrap.Modal.Header closeButton>
-            <ReactBootstrap.Modal.Title>Tilesets</ReactBootstrap.Modal.Title>
-          </ReactBootstrap.Modal.Header>
-          <ReactBootstrap.Modal.Body>
-            <ul>{items}</ul>
-          </ReactBootstrap.Modal.Body>
-        </ReactBootstrap.Modal>
+        <OpenTileSetModal
+            showModal={this.state.showModal}
+            tileSets={this.state.tileSets}
+            onTileSetSelected={this.tileSetSelected}
+            onClose={this.closeModal} />
       </div>
     );
   }
 });
+
+/* =============================================================================
+ * COMPONENT: OPEN TILE SET MODAL
+ * =============================================================================
+ */
+function OpenTileSetModal(props) {
+  var items = props.tileSets.map(function(tileSet) {
+     return <TileSetItem key={tileSet._id} tileSet={tileSet} onTileSetSelected={props.onTileSetSelected} />;
+  }.bind(this));
+
+  return (
+    <ReactBootstrap.Modal show={props.showModal} onHide={props.onClose}>
+      <ReactBootstrap.Modal.Header closeButton>
+        <ReactBootstrap.Modal.Title>Tilesets</ReactBootstrap.Modal.Title>
+      </ReactBootstrap.Modal.Header>
+      <ReactBootstrap.Modal.Body>
+        <ul>{items}</ul>
+      </ReactBootstrap.Modal.Body>
+    </ReactBootstrap.Modal>
+  );
+}
 
 /* =============================================================================
  * COMPONENT: TILE SET ITEM
@@ -210,6 +201,20 @@ var TileSetItem = React.createClass({
     return (<li><a href="#" onClick={this.tileSetSelected}>{this.props.tileSet.name}</a></li>);
   }
 });
+
+/* =============================================================================
+ * COMPONENT: TILE SET TOOLBAR
+ * =============================================================================
+ */
+function TileSetToolbar(props) {
+  return (
+    <ReactBootstrap.ButtonToolbar>
+      <ReactBootstrap.Button bsStyle="primary" bsSize="medium" onClick={props.onLoadTileSetsFromServer}>
+        Open Tileset
+      </ReactBootstrap.Button>
+    </ReactBootstrap.ButtonToolbar>
+  );
+}
 
 /* =============================================================================
  * COMPONENT: TILE SET CANVAS
@@ -511,7 +516,7 @@ var MapToolbar = React.createClass({
           </ReactBootstrap.Button>
         </ReactBootstrap.ButtonToolbar>
 
-        <ChooseMapModal
+        <OpenMapModal
             showModal={this.state.showLoadModal}
             maps={this.state.maps}
             onMapSelected={this.mapSelected}
@@ -532,10 +537,10 @@ var MapToolbar = React.createClass({
 });
 
 /* =============================================================================
- * COMPONENT: CHOOSE MAP MODAL
+ * COMPONENT: OPEN MAP MODAL
  * =============================================================================
  */
-function ChooseMapModal(props) {
+function OpenMapModal(props) {
   var items = props.maps.map(function(map) {
      return <MapItem key={map._id} map={map} onMapSelected={props.onMapSelected} />;
   }.bind(this));
