@@ -158,10 +158,12 @@ router.route('/maps')
     rpgMap.mapTiles = req.body.mapTiles;
 
     // save the RpgMap and check for errors
-    rpgMap.save(function(err) {
-      if (err)
+    rpgMap.save(function(err, savedMap) {
+      if (err) {
         res.send(err);
-      res.json({ message: 'RpgMap created!' });
+        return;
+      }
+      res.json({ message: 'RpgMap created', mapId: savedMap.id});
     });
   })
 
@@ -202,10 +204,12 @@ router.route('/maps/:map_id')
       rpgMap.mapTiles = req.body.mapTiles;
 
       // save the RpgMap
-      rpgMap.save(function(err) {
-        if (err)
+      rpgMap.save(function(err, savedMap) {
+        if (err) {
           res.send(err);
-        res.json({ message: 'RpgMap updated!' });
+          return;
+        }
+        res.json({ message: 'RpgMap updated', mapId: savedMap.id});
       });
     });
   })
@@ -217,7 +221,7 @@ router.route('/maps/:map_id')
     }, function(err, rpgMap) {
       if (err)
         res.send(err);
-      res.json({ message: 'RpgMap deleted!' });
+      res.json({ message: 'RpgMap deleted' });
     });
   });
 

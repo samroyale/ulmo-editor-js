@@ -231,7 +231,7 @@ var TileSetCanvas = React.createClass({
     return {
       tileSize: 32,
       apiUrl: "/api/tilesets/",
-      divStyle: { padding: "10px 0px" },
+      divStyle: { padding: "10px 0" },
       cvsStyle: { backgroundColor: "#00FF00" }
     };
   },
@@ -428,7 +428,7 @@ var MapEditor = React.createClass({
 
   saveMap() {
     if (this.state.mapId) {
-      this._mapCanvas.saveMap();
+      this._mapCanvas.saveMap(this.mapSaved);
       return;
     }
     this.setState({ showSaveModal: true });
@@ -437,9 +437,14 @@ var MapEditor = React.createClass({
   saveMapAs(mapName) {
     this.closeModal();
     // console.log("mapName: " + mapName);
-    this._mapCanvas.saveMapAs(mapName);
+    this._mapCanvas.saveMapAs(mapName, this.mapSaved);
   },
-  
+
+  mapSaved(rpgMap) {
+    console.log("MAP SAVED! " + rpgMap._id)
+    this.setState({ mapId: rpgMap._id });
+  },
+
   updateCurrentTile: function(tilePosition, tile) {
     this.setState({ currentTilePosition: tilePosition, currentTile: tile});
   },
@@ -648,7 +653,7 @@ var MapCanvas = React.createClass({
       tileSize: 32,
       baseColours: ["#99CCCC", "#CC99CC"],
       apiUrl: "/api/maps",
-      divStyle: { padding: "10px 0px" },
+      divStyle: { padding: "10px 0" },
       cvsStyle: { backgroundColor: "#00FF00" }
     };
   },
@@ -678,15 +683,15 @@ var MapCanvas = React.createClass({
     }.bind(this));
   },
 
-  saveMap: function() {
+  saveMap: function(callback) {
     if (this._rpgMap) {
-      this._rpgMap.saveToServer(this.props.apiUrl + "/" + this._rpgMap._id);
+      this._rpgMap.saveToServer(this.props.apiUrl + "/" + this._rpgMap._id, callback);
     }
   },
 
-  saveMapAs: function(mapName) {
+  saveMapAs: function(mapName, callback) {
     if (this._rpgMap) {
-      this._rpgMap.saveToServer(this.props.apiUrl, mapName);
+      this._rpgMap.saveAsToServer(this.props.apiUrl, mapName, callback);
     }
   },
 
@@ -796,13 +801,17 @@ class RpgMap {
     this.loadFromServer(mapUrl, tileSize, callback);
   }
 
-  saveToServer(mapUrl, mapName) {
-    console.log("Saving map [" + mapUrl + "]");
-    var reqType = "PUT";
-    if (mapName) {
-      this._name = mapName;
-      reqType = "POST";
-    }
+  saveToServer(mapUrl, callback) {
+    this.doSave(mapUrl, "PUT", callback);
+  }
+
+  saveAsToServer(mapUrl, mapName, callback) {
+    this._name = mapName;
+    this.doSave(mapUrl, "POST", callback);
+  }
+
+  doSave(mapUrl, reqType, callback) {
+    console.log("Saving map [" +reqType + " " + mapUrl + "]");
     $.ajax({
       type: reqType,
       url: mapUrl,
@@ -810,7 +819,9 @@ class RpgMap {
       data: this.getDto(),
       success: function(data) {
         console.log(data.message);
-      },
+        this._id = data.mapId;
+        callback(this);
+      }.bind(this),
       error: function(xhr, status, err) {
         console.error(mapUrl, status, err.toString());
       }
@@ -836,17 +847,17 @@ class RpgMap {
     this._id = rpgMapDef._id;
     this._name = rpgMapDef.name;
     var tileSetMappings = new Map();
-    if (rpgMapDef.mapTiles.length == 0) {
-      // typically a new map
-      this._mapTiles = this.initMapTiles(tileSetMappings, rpgMapDef);
-      callback(this);
-      return;
-    }
     rpgMapDef.mapTiles.forEach(function(mapTileDef) {
       mapTileDef.tiles.forEach(function(tileDef) {
         tileSetMappings.set(tileDef.tileSet, null);
       });
     });
+    if (tileSetMappings.size == 0) {
+      // no tilesets to load - either a new or empty map
+      this._mapTiles = this.initMapTiles(tileSetMappings, rpgMapDef);
+      callback(this);
+      return;
+    }
     tileSetMappings.forEach(function(value, key) {
       new TileSet("/api/tilesets/tileset?name=" + key, tileSize, function(tileSet) {
         this.tileSetReady(tileSet, tileSetMappings, rpgMapDef, callback);
