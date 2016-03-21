@@ -192,15 +192,12 @@ function OpenTileSetModal(props) {
  * COMPONENT: TILE SET ITEM
  * =============================================================================
  */
-var TileSetItem = React.createClass({
-  tileSetSelected: function(event) {
+function TileSetItem(props) {
+  return (<li><a href="#" onClick={function(event) {
     event.preventDefault();
-    this.props.onTileSetSelected(this.props.tileSet._id);
-  },
-  render: function() {
-    return (<li><a href="#" onClick={this.tileSetSelected}>{this.props.tileSet.name}</a></li>);
-  }
-});
+    props.onTileSetSelected(props.tileSet._id);
+  }}>{props.tileSet.name}</a></li>);
+}
 
 /* =============================================================================
  * COMPONENT: TILE SET TOOLBAR
@@ -436,13 +433,20 @@ var MapEditor = React.createClass({
 
   saveMapAs(mapName) {
     this.closeModal();
-    // console.log("mapName: " + mapName);
     this._mapCanvas.saveMapAs(mapName, this.mapSaved);
   },
 
-  mapSaved(rpgMap) {
-    console.log("MAP SAVED! " + rpgMap._id)
-    this.setState({ mapId: rpgMap._id });
+  mapSaved(data) {
+    if (data.mapId) {
+      console.log("Map saved [" + data.mapName + "/" + data.mapId + "]");
+      this.setState({ mapId: data.mapId });
+      return;
+    }
+    if (data.err) {
+      console.log("Error [" + data.err + "]");
+      return;
+    }
+    console.log("Something went wrong...");
   },
 
   updateCurrentTile: function(tilePosition, tile) {
@@ -535,16 +539,12 @@ function OpenMapModal(props) {
  * COMPONENT: MAP ITEM
  * =============================================================================
  */
-var MapItem = React.createClass({
-  mapSelected: function(event) {
+function MapItem(props) {
+  return (<li><a href="#" onClick={function(event) {
     event.preventDefault();
-    this.props.onMapSelected(this.props.map._id);
-  },
-
-  render: function() {
-    return (<li><a href="#" onClick={this.mapSelected}>{this.props.map.name}</a></li>);
-  }
-});
+    props.onMapSelected(props.map._id);
+  }}>{props.map.name}</a></li>);
+}
 
 /* =============================================================================
  * COMPONENT: NEW MAP MODAL
@@ -818,14 +818,37 @@ class RpgMap {
       dataType: 'json',
       data: this.getDto(),
       success: function(data) {
-        console.log(data.message);
-        this._id = data.mapId;
-        callback(this);
+        callback(this.handleSaveResponse(data));
       }.bind(this),
       error: function(xhr, status, err) {
         console.error(mapUrl, status, err.toString());
       }
     });
+  }
+
+  // {"name":"MongoError","connectionId":32,"err":"E11000 duplicate key error index: ulmo.rpgmaps.$name_1 dup key: { : \"woot\" }","code":11000,"n":0,"ok":1}
+  handleSaveResponse(data) {
+    if (data.err) {
+      console.log(data.err);
+      if (data.code == 11000) {
+        var mapName = this._name;
+        this._name = null;
+        return {
+          err: "Map name already in use: " + mapName
+        }
+      }
+      return {
+        err: data.err
+      }
+    }
+    // no errors
+    console.log(data.message);
+    this._id = data.mapId;
+    return {
+      message: data.message,
+      mapId: this._id,
+      mapName: this._name
+    }
   }
 
   loadFromServer(mapUrl, tileSize, callback) {
