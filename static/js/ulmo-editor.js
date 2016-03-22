@@ -9,7 +9,7 @@ const App = React.createClass({
     }
   },
 
-  tileSelected(tile) {
+  tileSelected: function(tile) {
     this.setState({ selectedTile: tile });
   },
 
@@ -95,7 +95,7 @@ const TilePalette = React.createClass({
     return { apiUrl: "/api/tilesets" };
   },
 
-  getInitialState() {
+  getInitialState: function() {
     return {
       showModal: false,
       tileSets: [],
@@ -105,7 +105,7 @@ const TilePalette = React.createClass({
     };
   },
 
-  closeModal() {
+  closeModal: function() {
     this.setState({ showModal: false });
   },
 
@@ -233,17 +233,17 @@ var TileSetCanvas = React.createClass({
     };
   },
 
-  getInitialState() {
+  getInitialState: function() {
     return {
       showTileset: false,
     };
   },
 
-  hideTileset() {
+  hideTileset: function() {
     this.setState({ showTileset: false });
   },
 
-  loadTileset(tilesetId) {
+  loadTileset: function(tilesetId) {
     this._tileSet = new TileSet(this.props.apiUrl + tilesetId, this.props.tileSize, function() {
       this.drawTileSet();
       this.setState({ showTileset: true });
@@ -365,40 +365,25 @@ var MapEditor = React.createClass({
     return { apiUrl: "/api/maps" };
   },
 
-  getInitialState() {
+  getInitialState: function() {
     return {
       showLoadModal: false,
       showNewModal: false,
       showSaveModal: false,
       maps: [],
       mapId: null,
+      saveError: null,
       currentTilePosition: null,
       currentTile: null
     };
   },
 
-  closeModal() {
+  closeModal: function() {
     this.setState({
       showLoadModal: false,
       showNewModal: false,
       showSaveModal: false
     });
-  },
-
-  mapSelected: function(mid) {
-    this.closeModal();
-    if (mid.length == 0) {
-      this._mapCanvas.hideMap()
-      this.setState({ mapId: null });
-      return;
-    }
-    this._mapCanvas.loadMap(mid)
-    // TODO set async from load
-    this.setState({ mapId: mid });
-  },
-
-  mapsLoaded: function(mapDefs) {
-    this.setState({ maps: mapDefs, showLoadModal: true });
   },
 
   loadMapsFromServer: function(event) {
@@ -413,17 +398,39 @@ var MapEditor = React.createClass({
     });
   },
 
+  mapsLoaded: function(mapDefs) {
+    this.setState({ maps: mapDefs, showLoadModal: true });
+  },
+
+  mapSelected: function(mid) {
+    this._mapCanvas.loadMap(mid, this.mapLoaded)
+  },
+
   newMap: function(event) {
     this.setState({ showNewModal: true });
   },
 
-  newMapOfSize(rows, cols) {
-    this.closeModal();
-    this._mapCanvas.newMap(rows, cols);
-    this.setState({ mapId: null });
+  newMapOfSize: function(rows, cols) {
+    this._mapCanvas.newMap(rows, cols, this.mapLoaded);
   },
 
-  saveMap() {
+  mapLoaded: function(data) {
+    // use typeof to distinguish between null and undefined
+    if (typeof data.mapId) {
+      this.closeModal();
+      // this.setState({ mapId: data.mapId, loadError: null });
+      this.setState({ mapId: data.mapId });
+      return;
+    }
+    /*if (data.err) {
+      // console.log("Error [" + data.err + "]");
+      this.setState({ loadError: data.err });
+      return;
+    }*/
+    console.log("Something went wrong...");
+  },
+
+  saveMap: function() {
     if (this.state.mapId) {
       this._mapCanvas.saveMap(this.mapSaved);
       return;
@@ -431,19 +438,21 @@ var MapEditor = React.createClass({
     this.setState({ showSaveModal: true });
   },
 
-  saveMapAs(mapName) {
-    this.closeModal();
+  saveMapAs: function(mapName) {
+    // this.closeModal();
     this._mapCanvas.saveMapAs(mapName, this.mapSaved);
   },
 
-  mapSaved(data) {
+  mapSaved: function(data) {
     if (data.mapId) {
-      console.log("Map saved [" + data.mapName + "/" + data.mapId + "]");
-      this.setState({ mapId: data.mapId });
+      // console.log("Map saved [" + data.mapName + "/" + data.mapId + "]");
+      this.closeModal();
+      this.setState({ mapId: data.mapId, saveError: null });
       return;
     }
     if (data.err) {
-      console.log("Error [" + data.err + "]");
+      // console.log("Error [" + data.err + "]");
+      this.setState({ saveError: data.err });
       return;
     }
     console.log("Something went wrong...");
@@ -488,7 +497,8 @@ var MapEditor = React.createClass({
         <SaveAsModal
             showModal={this.state.showSaveModal}
             onSaveAs={this.saveMapAs}
-            onClose={this.closeModal} />
+            onClose={this.closeModal}
+            error={this.state.saveError} />
       </div>
     );
   }
@@ -577,7 +587,7 @@ var NewMapModal = React.createClass({
     }
   },
 
-  render() {
+  render: function() {
     return (
       <ReactBootstrap.Modal show={this.props.showModal} onHide={this.props.onClose}>
         <ReactBootstrap.Modal.Header closeButton>
@@ -620,7 +630,8 @@ var SaveAsModal = React.createClass({
     }
   },
 
-  render() {
+  render: function() {
+    var showError = this.props.error && this.props.error.length > 0;
     return (
       <ReactBootstrap.Modal show={this.props.showModal} onHide={this.props.onClose}>
         <ReactBootstrap.Modal.Header closeButton>
@@ -629,6 +640,11 @@ var SaveAsModal = React.createClass({
         <ReactBootstrap.Modal.Body>
         <form onSubmit={this.handleSubmit}>
           <ReactBootstrap.Input type="text" label="Name" placeholder="map name" value={this.state.mapName} onChange={this.handleNameChange} />
+          <ReactBootstrap.Collapse in={showError}>
+            <div>
+              <ReactBootstrap.Alert bsStyle="danger">{this.props.error}</ReactBootstrap.Alert>
+            </div>
+          </ReactBootstrap.Collapse>
           <ReactBootstrap.ButtonInput type="submit" value="Save" />
         </form>
         </ReactBootstrap.Modal.Body>
@@ -658,7 +674,7 @@ var MapCanvas = React.createClass({
     };
   },
 
-  getInitialState() {
+  getInitialState: function() {
     return {
       showMap: false,
     };
@@ -668,18 +684,27 @@ var MapCanvas = React.createClass({
     this.setState({ showMap: false });
   },
 
-  loadMap: function(mapId) {
-    this.initMapFromUrl(this.props.apiUrl + "/" + mapId);
+  loadMap: function(mapId, callback) {
+    this.initMapFromUrl(this.props.apiUrl + "/" + mapId, function() {
+      callback({
+        mapId: mapId
+      });
+    });
   },
 
-  newMap: function(rows, cols) {
-    this.initMapFromUrl(this.props.apiUrl + "/new?rows=" + rows + "&cols=" + cols);
+  newMap: function(rows, cols, callback) {
+    this.initMapFromUrl(this.props.apiUrl + "/new?rows=" + rows + "&cols=" + cols, function() {
+      callback({
+        mapId: null
+      });
+    });
   },
 
-  initMapFromUrl(mapUrl) {
+  initMapFromUrl: function(mapUrl, callback) {
     this._rpgMap = new RpgMap(mapUrl, this.props.tileSize, this.props.baseColours, function() {
       this.drawMap();
       this.setState({ showMap: true });
+      callback();
     }.bind(this));
   },
 
