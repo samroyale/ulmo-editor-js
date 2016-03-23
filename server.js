@@ -44,14 +44,18 @@ router.get('/', function(req, res) {
 router.route('/tilesets/tileset')
   // get the named TileSets (accessed at GET http://localhost:8080/api/tilesets/tileset?name=grass)
   .get(function(req, res) {
-    console.log(req.query.name);
-    if (req.query.name) {
-      TileSet.findOne({name: req.query.name}, function (err, tileSet) {
-        if (err)
-          res.send(err);
-        res.json(tileSet);
-      });
+    if (!req.query.name) {
+      res.status(400).send({ err: 'Tileset name not specified' });
     }
+    TileSet.findOne({name: req.query.name}, function (err, tileSet) {
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
+      res.json(tileSet);
+      return;
+    });
   });
 
 // on routes that end in /tilesets
@@ -66,8 +70,11 @@ router.route('/tilesets')
 
     // save the TileSet and check for errors
     tileSet.save(function(err) {
-      if (err)
-        res.send(err);
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
       res.json({ message: 'TileSet created!' });
     });
   })
@@ -80,8 +87,11 @@ router.route('/tilesets')
       res.json(tileSets);
     });*/
     TileSet.find({}, '_id name', function(err, tileSets) {
-      if (err)
-        res.send(err);
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
       res.json(tileSets);
     });
   });
@@ -92,8 +102,15 @@ router.route('/tilesets/:tileset_id')
   // get the TileSet with that id (accessed at GET http://localhost:8080/api/tileset/:tileset_id)
   .get(function(req, res) {
     TileSet.findById(req.params.tileset_id, function(err, tileSet) {
-      if (err)
-        res.send(err);
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
+      if (!tileSet) {
+        res.status(404).send({ err: 'Tileset not found: ' + req.params.tileset_id });
+        return;
+      }
       res.json(tileSet);
     });
   })
@@ -101,16 +118,26 @@ router.route('/tilesets/:tileset_id')
   // update the TileSet with this id (accessed at PUT http://localhost:8080/api/tileset/:tileset_id)
   .put(function(req, res) {
     TileSet.findById(req.params.tileset_id, function(err, tileSet) {
-      if (err)
-        res.send(err);
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
+      if (!tileSet) {
+        res.status(404).send({ err: 'Tileset not found: ' + req.params.tileset_id });
+        return;
+      }
       tileSet.name = req.body.name;
       tileSet.imageUrl = req.body.imageUrl;
       tileSet.tiles = req.body.tiles;
 
       // save the TileSet
       tileSet.save(function(err) {
-        if (err)
-          res.send(err);
+        if (err) {
+          console.log(err.toString());
+          res.status(500).send(err);
+          return;
+        }
         res.json({ message: 'TileSet updated!' });
       });
     });
@@ -118,11 +145,16 @@ router.route('/tilesets/:tileset_id')
 
   // delete the TileSet with this id (accessed at DELETE http://localhost:8080/api/tileset/:tileset_id)
   .delete(function(req, res) {
-    TileSet.remove({
-      _id: req.params.tileset_id
-    }, function(err, tileSet) {
-      if (err)
-        res.send(err);
+    TileSet.remove({ _id: req.params.tileset_id }, function(err, tileSet) {
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
+      if (!tileSet) {
+        res.status(404).send({ err: 'Tileset not found: ' + req.params.tileset_id });
+        return;
+      }
       res.json({ message: 'TileSet deleted!' });
     });
   });
@@ -132,18 +164,17 @@ router.route('/tilesets/:tileset_id')
 router.route('/maps/new')
   // get the named TileSets (accessed at GET http://localhost:8080/api/tilesets/tileset?name=grass)
   .get(function(req, res) {
-    console.log("rows: " + req.query.rows);
-    console.log("cols: " + req.query.cols);
+    console.log("rows: " + req.query.rows + ", cols: " + req.query.cols);
     if (req.query.rows && req.query.cols) {
       var rpgMap = {
-        //rpgMap.name = req.body.name;
         rows: req.query.rows,
         cols: req.query.cols,
         mapTiles: []
       }
       res.json(rpgMap);
+      return;
     }
-    res.json({ message: 'Size not specified' });
+    res.status(400).json({ err: 'Map size not specified' });
   });
 
 // on routes that end in /maps
@@ -160,10 +191,11 @@ router.route('/maps')
     // save the RpgMap and check for errors
     rpgMap.save(function(err, savedMap) {
       if (err) {
-        res.send(err);
+        console.log(err.toString());
+        res.status(500).send(err);
         return;
       }
-      res.json({ message: 'RpgMap created', mapId: savedMap.id});
+      res.json({ message: 'RpgMap created', mapId: savedMap.id });
     });
   })
 
@@ -175,8 +207,11 @@ router.route('/maps')
       res.json(rpgMaps);
     });*/
     RpgMap.find({}, '_id name', function(err, rpgMaps) {
-      if (err)
-        res.send(err);
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
       res.json(rpgMaps);
     });
   });
@@ -187,8 +222,15 @@ router.route('/maps/:map_id')
   // get the RpgMap with that id (accessed at GET http://localhost:8080/api/maps/:map_id)
   .get(function(req, res) {
     RpgMap.findById(req.params.map_id, function(err, rpgMap) {
-      if (err)
-        res.send(err);
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
+      if (!rpgMap) {
+        res.status(404).send({ err: 'Map not found: ' + req.params.map_id });
+        return;
+      }
       res.json(rpgMap);
     });
   })
@@ -196,8 +238,15 @@ router.route('/maps/:map_id')
   // update the RpgMap with this id (accessed at PUT http://localhost:8080/api/maps/:map_id)
   .put(function(req, res) {
     RpgMap.findById(req.params.map_id, function(err, rpgMap) {
-      if (err)
-        res.send(err);
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
+      if (!rpgMap) {
+        res.status(404).send({ err: 'Map not found: ' + req.params.map_id });
+        return;
+      }
       rpgMap.name = req.body.name;
       rpgMap.rows = req.body.rows;
       rpgMap.cols = req.body.cols;
@@ -206,22 +255,28 @@ router.route('/maps/:map_id')
       // save the RpgMap
       rpgMap.save(function(err, savedMap) {
         if (err) {
-          res.send(err);
+          console.log(err.toString());
+          res.status(500).send(err);
           return;
         }
-        res.json({ message: 'RpgMap updated', mapId: savedMap.id});
+        res.json({ message: 'RpgMap updated', mapId: savedMap.id });
       });
     });
   })
 
   // delete the RpgMap with this id (accessed at DELETE http://localhost:8080/api/maps/:map_id)
   .delete(function(req, res) {
-    RpgMap.remove({
-      _id: req.params.map_id
-    }, function(err, rpgMap) {
-      if (err)
-        res.send(err);
-      res.json({ message: 'RpgMap deleted' });
+    RpgMap.remove({ _id: req.params.map_id }, function(err, rpgMap) {
+      if (err) {
+        console.log(err.toString());
+        res.status(500).send(err);
+        return;
+      }
+      if (!rpgMap) {
+        res.status(404).send({ err: 'Map not found: ' + req.params.map_id });
+        return;
+      }
+      res.json({ message: 'RpgMap deleted', mapId: req.params.map_id });
     });
   });
 

@@ -415,7 +415,8 @@ var MapEditor = React.createClass({
   },
 
   mapLoaded: function(data) {
-    // use typeof to distinguish between null and undefined
+    // use typeof to distinguish between null and undefined - a null mapId is
+    // used to indicate that a new map has been initialized
     if (typeof data.mapId) {
       this.closeModal();
       // this.setState({ mapId: data.mapId, loadError: null });
@@ -439,7 +440,6 @@ var MapEditor = React.createClass({
   },
 
   saveMapAs: function(mapName) {
-    // this.closeModal();
     this._mapCanvas.saveMapAs(mapName, this.mapSaved);
   },
 
@@ -843,30 +843,30 @@ class RpgMap {
       dataType: 'json',
       data: this.getDto(),
       success: function(data) {
-        callback(this.handleSaveResponse(data));
+        callback(this.handleSuccess(data));
       }.bind(this),
       error: function(xhr, status, err) {
-        console.error(mapUrl, status, err.toString());
-      }
+        // console.error(mapUrl, status, err.toString());
+        callback(this.handleError(xhr.responseJSON));
+      }.bind(this)
     });
   }
 
-  // {"name":"MongoError","connectionId":32,"err":"E11000 duplicate key error index: ulmo.rpgmaps.$name_1 dup key: { : \"woot\" }","code":11000,"n":0,"ok":1}
-  handleSaveResponse(data) {
-    if (data.err) {
-      console.log(data.err);
-      if (data.code == 11000) {
-        var mapName = this._name;
-        this._name = null;
-        return {
-          err: "Map name already in use: " + mapName
-        }
-      }
+  handleError(data) {
+    console.log(data.err);
+    if (data.code == 11000) {
+      var mapName = this._name;
+      this._name = null;
       return {
-        err: data.err
+        err: "Map name already in use: " + mapName
       }
     }
-    // no errors
+    return {
+      err: data.err
+    }
+  }
+
+  handleSuccess(data) {
     console.log(data.message);
     this._id = data.mapId;
     return {
