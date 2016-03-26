@@ -244,7 +244,13 @@ var TileSetCanvas = React.createClass({
   },
 
   loadTileset: function(tilesetId) {
-    this._tileSet = new TileSet(this.props.apiUrl + tilesetId, this.props.tileSize, function() {
+    /*this._tileSet = new TileSet(this.props.apiUrl + tilesetId, this.props.tileSize, function() {
+      this.drawTileSet();
+      this.setState({ showTileset: true });
+    }.bind(this));*/
+    var tileSetBuilder = new TileSetBuilder(this.props.tileSize);
+    tileSetBuilder.loadTileSet(this.props.apiUrl + tilesetId, function(tileSet) {
+      this._tileSet = tileSet;
       this.drawTileSet();
       this.setState({ showTileset: true });
     }.bind(this));
@@ -685,23 +691,39 @@ var MapCanvas = React.createClass({
   },
 
   loadMap: function(mapId, callback) {
-    this.initMapFromUrl(this.props.apiUrl + "/" + mapId, function() {
+    /*this.initMapFromUrl(this.props.apiUrl + "/" + mapId, function() {
       callback({
         mapId: mapId
       });
-    });
+    });*/
+    var mapBuilder = new RpgMapBuilder(this.props.tileSize, this.props.baseColours);
+    mapBuilder.loadMap(this.props.apiUrl + "/" + mapId, function(rpgMap) {
+      this._rpgMap = rpgMap;
+      this.drawMap();
+      this.setState({ showMap: true });
+      callback({ mapId });
+    }.bind(this));
   },
 
   newMap: function(rows, cols, callback) {
-    this.initMapFromUrl(this.props.apiUrl + "/new?rows=" + rows + "&cols=" + cols, function() {
+    /*this.initMapFromUrl(this.props.apiUrl + "/new?rows=" + rows + "&cols=" + cols, function() {
       callback({
         mapId: null
       });
-    });
+    });*/
+    var mapBuilder = new RpgMapBuilder(this.props.tileSize, this.props.baseColours);
+    mapBuilder.newMap(rows, cols, function(rpgMap) {
+      this._rpgMap = rpgMap;
+      this.drawMap();
+      this.setState({ showMap: true });
+      callback({ null });
+    }.bind(this));
   },
 
   initMapFromUrl: function(mapUrl, callback) {
-    this._rpgMap = new RpgMap(mapUrl, this.props.tileSize, this.props.baseColours, function() {
+    var mapBuilder = new RpgMapBuilder(this.props.tileSize, this.props.baseColours);
+    mapBuilder.loadAndBuildMap(mapUrl, function(rpgMap) {
+      this._rpgMap = rpgMap;
       this.drawMap();
       this.setState({ showMap: true });
       callback();
@@ -810,20 +832,142 @@ function MapTileInfo(props) {
 }
 
 /* =============================================================================
+ * CLASS: RPG MAP BUILDER
+ * =============================================================================
+ * Encapsulates the things that need to happen _before_ we construct an RpgMap.
+ * =============================================================================
+ */
+class RpgMapBuilder {
+  constructor(tileSize, baseColours) {
+    this._tileSize = tileSize;
+    this._baseTiles = baseColours.map(function(baseColour) {
+      console.log(baseColour);
+      return this.initBaseCanvas(baseColour, tileSize);
+    }.bind(this));
+  }
+
+  loadMap(mapUrl, callback) {
+    console.log("Loading map [" + mapUrl + "]");
+    $.ajax({
+      url: mapUrl,
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        this.initRpgMap(data, callback);
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(mapUrl, status, err.toString());
+      }
+    });
+  }
+
+  newMap(rrows, ccols, callback) {
+    var data = {
+      rows: rrows,
+      cols: ccols,
+      mapTiles: []
+    }
+    this.initRpgMap(data, callback);
+  }
+
+  initRpgMap(rpgMapDef, callback) {
+    var tileSetMappings = new Map();
+    rpgMapDef.mapTiles.forEach(function(mapTileDef) {
+      mapTileDef.tiles.forEach(function(tileDef) {
+        tileSetMappings.set(tileDef.tileSet, null);
+      });
+    });
+    if (tileSetMappings.size == 0) {
+      // no tilesets to load - either a new or empty map
+      callback(this.buildRpgMap(tileSetMappings, rpgMapDef));
+      return;
+    }
+    tileSetMappings.forEach(function(value, key) {
+      var tileSetBuilder = new TileSetBuilder(this._tileSize);
+      tileSetBuilder.loadTileSet("/api/tilesets/tileset?name=" + key, function(tileSet) {
+        this.tileSetLoaded(tileSet, tileSetMappings, rpgMapDef, callback);
+      }.bind(this));
+    }.bind(this));
+  }
+
+  tileSetLoaded(tileSet, tileSetMappings, rpgMapDef, callback) {
+    console.log("> Tileset loaded: " + tileSet._name);
+    tileSetMappings.set(tileSet._name, tileSet);
+    var allTileSetsLoaded = true;
+    tileSetMappings.forEach(function(value, key) {
+      if (!value) {
+        allTileSetsLoaded = false;
+      }
+    });
+    if (allTileSetsLoaded) {
+      callback(this.buildRpgMap(tileSetMappings, rpgMapDef));
+    }
+  }
+
+  buildRpgMap(tileSetMappings, rpgMapDef) {
+    return new RpgMap(
+      rpgMapDef._id,
+      rpgMapDef._name,
+      this.initMapTiles(tileSetMappings, rpgMapDef),
+      this._baseTiles
+    );
+  }
+
+  initMapTiles(tileSetMappings, rpgMapDef) {
+    //var baseColours = ["#99CCCC", "#CC99CC"];
+    var tileDefKey = function(x, y) {
+      return x + "-" + y;
+    }
+    var tileDefMappings = {};
+    rpgMapDef.mapTiles.forEach(function(mapTileDef) {
+      var key = tileDefKey(mapTileDef.xy[0], mapTileDef.xy[1]);
+      tileDefMappings[key] = mapTileDef;
+    });
+    var rows = rpgMapDef.rows, cols = rpgMapDef.cols;
+    var tiles = new Array(cols);
+    for (var x = 0; x < cols; x++) {
+      tiles[x] = new Array(rows);
+      for (var y = 0; y < rows; y++) {
+        var mapTileDef = tileDefMappings[tileDefKey(x, y)];
+        var baseCanvas = this._baseTiles[(x + y) % this._baseTiles.length];
+        if (mapTileDef) {
+          var maskTiles = mapTileDef.tiles.map(function(tileDef) {
+            var tile = tileSetMappings.get(tileDef.tileSet).getTileByName(tileDef.tile);
+            return new MaskTile(tile, tileDef.maskLevel);
+          }.bind(this));
+          tiles[x][y] = new MapTile(baseCanvas, maskTiles, mapTileDef.levels);
+        }
+        else {
+          tiles[x][y] = new MapTile(baseCanvas);
+        }
+      }
+    }
+    return tiles;
+  }
+
+  initBaseCanvas(colour, tileSize) {
+    var tileCanvas = document.createElement("canvas");
+    tileCanvas.width = tileSize;
+    tileCanvas.height = tileSize;
+    var ctx = tileCanvas.getContext('2d');
+    ctx.fillStyle = colour;
+    ctx.fillRect(0, 0, tileSize, tileSize);
+    return tileCanvas;
+  }
+}
+
+/* =============================================================================
  * CLASS: RPG MAP
  * -----------------------------------------------------------------------------
  * The model representing a map of tiles.
  * =============================================================================
  */
 class RpgMap {
-  constructor(mapUrl, tileSize, baseColours, callback) {
-    this._id = null;
-    this._name = null;
-    this._mapTiles = null;
-    this._baseTiles = baseColours.map(function(baseColour) {
-      return this.initBaseCanvas(baseColour, tileSize);
-    }.bind(this));
-    this.loadFromServer(mapUrl, tileSize, callback);
+  constructor(id, name, mapTiles, baseTiles) {
+    this._id = id;
+    this._name = name;
+    this._mapTiles = mapTiles;
+    this._baseTiles = baseTiles;
   }
 
   saveToServer(mapUrl, callback) {
@@ -874,100 +1018,6 @@ class RpgMap {
       mapId: this._id,
       mapName: this._name
     }
-  }
-
-  loadFromServer(mapUrl, tileSize, callback) {
-    console.log("Loading map [" + mapUrl + "]");
-    $.ajax({
-      url: mapUrl,
-      dataType: 'json',
-      cache: false,
-      success: function(data) {
-        this.initRpgMap(data, tileSize, callback);
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error(mapUrl, status, err.toString());
-      }
-    });
-  }
-
-  initRpgMap(rpgMapDef, tileSize, callback) {
-    this._id = rpgMapDef._id;
-    this._name = rpgMapDef.name;
-    var tileSetMappings = new Map();
-    rpgMapDef.mapTiles.forEach(function(mapTileDef) {
-      mapTileDef.tiles.forEach(function(tileDef) {
-        tileSetMappings.set(tileDef.tileSet, null);
-      });
-    });
-    if (tileSetMappings.size == 0) {
-      // no tilesets to load - either a new or empty map
-      this._mapTiles = this.initMapTiles(tileSetMappings, rpgMapDef);
-      callback(this);
-      return;
-    }
-    tileSetMappings.forEach(function(value, key) {
-      new TileSet("/api/tilesets/tileset?name=" + key, tileSize, function(tileSet) {
-        this.tileSetReady(tileSet, tileSetMappings, rpgMapDef, callback);
-      }.bind(this));
-    }.bind(this));
-  }
-
-  tileSetReady(tileSet, tileSetMappings, rpgMapDef, callback) {
-    console.log("> Tileset loaded: " + tileSet._name);
-    tileSetMappings.set(tileSet._name, tileSet);
-    var tileSetsLoaded = true;
-    tileSetMappings.forEach(function(value, key) {
-      if (!value) {
-        tileSetsLoaded = false;
-      }
-    });
-    if (tileSetsLoaded) {
-      this._mapTiles = this.initMapTiles(tileSetMappings, rpgMapDef);
-      callback(this);
-    }
-  }
-
-  initMapTiles(tileSetMappings, rpgMapDef) {
-    //var baseColours = ["#99CCCC", "#CC99CC"];
-    var tileDefKey = function(x, y) {
-      return x + "-" + y;
-    }
-    var tileDefMappings = {};
-    rpgMapDef.mapTiles.forEach(function(mapTileDef) {
-      var key = tileDefKey(mapTileDef.xy[0], mapTileDef.xy[1]);
-      tileDefMappings[key] = mapTileDef;
-    });
-    var rows = rpgMapDef.rows, cols = rpgMapDef.cols;
-    var tiles = new Array(cols);
-    for (var x = 0; x < cols; x++) {
-      tiles[x] = new Array(rows);
-      for (var y = 0; y < rows; y++) {
-        var mapTileDef = tileDefMappings[tileDefKey(x, y)];
-        var baseCanvas = this._baseTiles[(x + y) % this._baseTiles.length];
-        if (mapTileDef) {
-          var maskTiles = mapTileDef.tiles.map(function(tileDef) {
-            var tile = tileSetMappings.get(tileDef.tileSet).getTileByName(tileDef.tile);
-            return new MaskTile(tile, tileDef.maskLevel);
-          }.bind(this));
-          tiles[x][y] = new MapTile(baseCanvas, maskTiles, mapTileDef.levels);
-        }
-        else {
-          tiles[x][y] = new MapTile(baseCanvas);
-        }
-      }
-    }
-    return tiles;
-  }
-
-  initBaseCanvas(colour, tileSize) {
-    var tileCanvas = document.createElement("canvas");
-    tileCanvas.width = tileSize;
-    tileCanvas.height = tileSize;
-    var ctx = tileCanvas.getContext('2d');
-    ctx.fillStyle = colour;
-    ctx.fillRect(0, 0, tileSize, tileSize);
-    return tileCanvas;
   }
 
   getMapTile(x, y) {
@@ -1080,24 +1130,21 @@ class MaskTile {
 }
 
 /* =============================================================================
- * CLASS: TILE SET
+ * CLASS: TILE SET BUILDER
  * =============================================================================
  */
-class TileSet {
-  constructor(tileSetUrl, tileSize, callback) {
-    this._name = null;
-    this._tileNameMappings = {};
-    this._tiles = null;
-    this.loadFromServer(tileSetUrl, tileSize, callback);
+class TileSetBuilder {
+  constructor(tileSize) {
+    this._tileSize = tileSize;
   }
 
-  loadFromServer(tileSetUrl, tileSize, callback) {
+  loadTileSet(tileSetUrl, callback) {
     $.ajax({
       url: tileSetUrl,
       dataType: 'json',
       cache: false,
       success: function(data) {
-        this.initTileSet(data, tileSize, callback);
+        this.initTileSet(data, callback);
       }.bind(this),
       error: function(xhr, status, err) {
         console.error(tileSetUrl, status, err.toString());
@@ -1105,17 +1152,17 @@ class TileSet {
     });
   }
 
-  initTileSet(tileSetDef, tileSize, callback) {
-    this._name = tileSetDef.name;
+  initTileSet(tileSetDef, callback) {
     var tileSetImage = new Image();
     tileSetImage.onload = function() {
-      this._tiles = this.processTileSet(tileSetDef, tileSetImage, tileSize);
-      callback(this);
+      // this._tiles = this.processTileSet(tileSetDef, tileSetImage);
+      callback(new TileSet(tileSetDef.name,
+          this.processTileSet(tileSetDef, tileSetImage)));
     }.bind(this);
     tileSetImage.src = tileSetDef.imageUrl;
   }
 
-  processTileSet(tileSetDef, tileSetImage, tileSize) {
+  processTileSet(tileSetDef, tileSetImage) {
     // parse the tile names
     var tileDefKey = function(x, y) {
       return x + "-" + y;
@@ -1132,23 +1179,23 @@ class TileSet {
     var ctx = this.getDrawingContext(tileSetCanvas);
     ctx.drawImage(tileSetImage, 0, 0, tileSetCanvas.width, tileSetCanvas.height);
     // extract tiles and store them in a 2D array
-    var cols = Math.floor(tileSetCanvas.width / tileSize);
-    var rows = Math.floor(tileSetCanvas.height / tileSize);
+    var cols = Math.floor(tileSetCanvas.width / this._tileSize);
+    var rows = Math.floor(tileSetCanvas.height / this._tileSize);
     var tiles = new Array(cols);
     for (var x = 0; x < cols; x++) {
       tiles[x] = new Array(rows);
       for (var y = 0; y < rows; y++) {
         var tileCanvas = document.createElement("canvas");
-        tileCanvas.width = tileSize;
-        tileCanvas.height = tileSize;
+        tileCanvas.width = this._tileSize;
+        tileCanvas.height = this._tileSize;
         var tileCtx = tileCanvas.getContext('2d');
-        var tileImageData = ctx.getImageData(x * tileSize, y * tileSize,
-            tileSize, tileSize);
+        var tileImageData = ctx.getImageData(x * this._tileSize, y * this._tileSize,
+            this._tileSize, this._tileSize);
         tileCtx.putImageData(tileImageData, 0, 0);
         var tileDef = tileDefMappings[tileDefKey(x, y)];
         if (tileDef) {
           tiles[x][y] = new Tile(tileSetDef.name, tileDef.name, tileCanvas);
-          this._tileNameMappings[tileDef.name] = tiles[x][y];
+          //this._tileNameMappings[tileDef.name] = tiles[x][y];
         }
       }
     }
@@ -1161,6 +1208,24 @@ class TileSet {
     context.webkitImageSmoothingEnabled = false;
     context.mozImageSmoothingEnabled = false;
     return context;
+  }
+}
+
+/* =============================================================================
+ * CLASS: TILE SET
+ * =============================================================================
+ */
+class TileSet {
+  constructor(name, tiles) {
+    this._name = name;
+    this._tiles = tiles;
+    this._tileNameMappings = {};
+    for (var x = 0; x < this.getCols(); x++) {
+      for (var y = 0; y < this.getRows(); y++) {
+        if (tiles[x][y])
+          this._tileNameMappings[tiles[x][y]._tileName] = tiles[x][y];
+      }
+    }
   }
 
   getTile(x, y) {
