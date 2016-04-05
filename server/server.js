@@ -28,13 +28,13 @@ var port = process.env.PORT || 8081; // set our port
 // =============================================================================
 var router = express.Router(); // get an instance of the express Router
 
-// middleware to use for all requests
+// middleware to use for all API requests
 router.use(function(req, res, next) {
     console.log('Received: ' + req.originalUrl);
     next(); // make sure we go to the next routes and don't stop here
 });
 
-// test route to make sure everything is working (accessed at GET http://localhost:8080/api)
+// test route to make sure everything is working (accessed at GET http://localhost:8081/api)
 router.get('/', function(req, res) {
     res.json({ message: 'Hello! Welcome to our api' });
 });
@@ -42,7 +42,7 @@ router.get('/', function(req, res) {
 // on routes that end in /tilesets/tileset
 // ----------------------------------------------------
 router.route('/tilesets/tileset')
-  // get the named TileSets (accessed at GET http://localhost:8080/api/tilesets/tileset?name=grass)
+  // get the named TileSet (accessed at GET http://localhost:8081/api/tilesets/tileset?name=grass)
   .get(function(req, res) {
     if (!req.query.name) {
       res.status(400).send({ err: 'Tileset name not specified' });
@@ -53,15 +53,20 @@ router.route('/tilesets/tileset')
         res.status(500).send(err);
         return;
       }
-      res.json(tileSet);
-      return;
+      // return _id as id
+      res.json({
+        id: tileSet._id,
+        name: tileSet.name,
+        imageUrl: tileSet.imageUrl,
+        tiles: tileSet.tiles
+      });
     });
   });
 
 // on routes that end in /tilesets
 // ----------------------------------------------------
 router.route('/tilesets')
-  // create a TileSet (accessed at POST http://localhost:8080/api/tilesets)
+  // create a TileSet (accessed at POST http://localhost:8081/api/tilesets)
   .post(function(req, res) {
     var tileSet = new TileSet();
     tileSet.name = req.body.name;
@@ -79,27 +84,28 @@ router.route('/tilesets')
     });
   })
 
-  // get all the TileSets (accessed at GET http://localhost:8080/api/tilesets)
+  // get all the TileSets (accessed at GET http://localhost:8081/api/tilesets)
   .get(function(req, res) {
-    /*TileSet.find(function(err, tileSets) {
-      if (err)
-        res.send(err);
-      res.json(tileSets);
-    });*/
     TileSet.find({}, '_id name', function(err, tileSets) {
       if (err) {
         console.log(err.toString());
         res.status(500).send(err);
         return;
       }
-      res.json(tileSets);
+      // return _id as id
+      res.json(tileSets.map(function(tileSet) {
+        return {
+          id: tileSet._id,
+          name: tileSet.name
+        }
+      }));
     });
   });
 
 // on routes that end in /tilesets/:tileset_id
 // ----------------------------------------------------
 router.route('/tilesets/:tileset_id')
-  // get the TileSet with that id (accessed at GET http://localhost:8080/api/tileset/:tileset_id)
+  // get the TileSet with that id (accessed at GET http://localhost:8081/api/tileset/:tileset_id)
   .get(function(req, res) {
     TileSet.findById(req.params.tileset_id, function(err, tileSet) {
       if (err) {
@@ -111,11 +117,17 @@ router.route('/tilesets/:tileset_id')
         res.status(404).send({ err: 'Tileset not found: ' + req.params.tileset_id });
         return;
       }
-      res.json(tileSet);
+      // return _id as id
+      res.json({
+        id: tileSet._id,
+        name: tileSet.name,
+        imageUrl: tileSet.imageUrl,
+        tiles: tileSet.tiles
+      });
     });
   })
 
-  // update the TileSet with this id (accessed at PUT http://localhost:8080/api/tileset/:tileset_id)
+  // update the TileSet with this id (accessed at PUT http://localhost:8081/api/tileset/:tileset_id)
   .put(function(req, res) {
     TileSet.findById(req.params.tileset_id, function(err, tileSet) {
       if (err) {
@@ -143,7 +155,7 @@ router.route('/tilesets/:tileset_id')
     });
   })
 
-  // delete the TileSet with this id (accessed at DELETE http://localhost:8080/api/tileset/:tileset_id)
+  // delete the TileSet with this id (accessed at DELETE http://localhost:8081/api/tileset/:tileset_id)
   .delete(function(req, res) {
     TileSet.remove({ _id: req.params.tileset_id }, function(err, tileSet) {
       if (err) {
@@ -159,28 +171,10 @@ router.route('/tilesets/:tileset_id')
     });
   });
 
-// on routes that end in /maps/new
-// ----------------------------------------------------
-router.route('/maps/new')
-  // get the named TileSets (accessed at GET http://localhost:8080/api/tilesets/tileset?name=grass)
-  .get(function(req, res) {
-    console.log("rows: " + req.query.rows + ", cols: " + req.query.cols);
-    if (req.query.rows && req.query.cols) {
-      var rpgMap = {
-        rows: req.query.rows,
-        cols: req.query.cols,
-        mapTiles: []
-      }
-      res.json(rpgMap);
-      return;
-    }
-    res.status(400).json({ err: 'Map size not specified' });
-  });
-
 // on routes that end in /maps
 // ----------------------------------------------------
 router.route('/maps')
-  // create an RpgMap (accessed at POST http://localhost:8080/api/maps)
+  // create an RpgMap (accessed at POST http://localhost:8081/api/maps)
   .post(function(req, res) {
     var rpgMap = new RpgMap();
     rpgMap.name = req.body.name;
@@ -199,27 +193,28 @@ router.route('/maps')
     });
   })
 
-  // get all the RpgMaps (accessed at GET http://localhost:8080/api/maps)
+  // get all the RpgMaps (accessed at GET http://localhost:8081/api/maps)
   .get(function(req, res) {
-    /*RpgMap.find(function(err, rpgMaps) {
-      if (err)
-        res.send(err);
-      res.json(rpgMaps);
-    });*/
     RpgMap.find({}, '_id name', function(err, rpgMaps) {
       if (err) {
         console.log(err.toString());
         res.status(500).send(err);
         return;
       }
-      res.json(rpgMaps);
+      // return _id as id
+      res.json(rpgMaps.map(function(rpgMap) {
+        return {
+          id: rpgMap._id,
+          name: rpgMap.name
+        };
+      }));
     });
   });
 
 // on routes that end in /maps/:map_id
 // ----------------------------------------------------
 router.route('/maps/:map_id')
-  // get the RpgMap with that id (accessed at GET http://localhost:8080/api/maps/:map_id)
+  // get the RpgMap with that id (accessed at GET http://localhost:8081/api/maps/:map_id)
   .get(function(req, res) {
     RpgMap.findById(req.params.map_id, function(err, rpgMap) {
       if (err) {
@@ -231,11 +226,18 @@ router.route('/maps/:map_id')
         res.status(404).send({ err: 'Map not found: ' + req.params.map_id });
         return;
       }
-      res.json(rpgMap);
+      // return _id as id
+      res.json({
+        id: rpgMap._id,
+        name: rpgMap.name,
+        rows: rpgMap.rows,
+        cols: rpgMap.cols,
+        mapTiles: rpgMap.mapTiles
+      });
     });
   })
 
-  // update the RpgMap with this id (accessed at PUT http://localhost:8080/api/maps/:map_id)
+  // update the RpgMap with this id (accessed at PUT http://localhost:8081/api/maps/:map_id)
   .put(function(req, res) {
     RpgMap.findById(req.params.map_id, function(err, rpgMap) {
       if (err) {
@@ -264,7 +266,7 @@ router.route('/maps/:map_id')
     });
   })
 
-  // delete the RpgMap with this id (accessed at DELETE http://localhost:8080/api/maps/:map_id)
+  // delete the RpgMap with this id (accessed at DELETE http://localhost:8081/api/maps/:map_id)
   .delete(function(req, res) {
     RpgMap.remove({ _id: req.params.map_id }, function(err, rpgMap) {
       if (err) {
@@ -282,10 +284,19 @@ router.route('/maps/:map_id')
 
 // REGISTER ROUTES
 // =============================================================================
+// CORS response headers
+//app.use(function(req, res, next) {
+//  res.header("Access-Control-Allow-Origin", "*");
+//  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//  res.header("Access-Control-Allow-Methods", "PUT, POST, GET, OPTIONS");
+//  next();
+//});
+
 // all our API routes will be prefixed with /api
 app.use('/api', router);
-// static content is served from the 'static' folder
-app.use(express.static(__dirname + '/static'));
+
+// static content
+//app.use(express.static(__dirname + '/static'));
 
 // START THE SERVER
 // =============================================================================
