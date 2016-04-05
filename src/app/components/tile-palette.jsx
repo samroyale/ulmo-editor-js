@@ -57,7 +57,7 @@ const TilePalette = React.createClass({
   render: function() {
     return (
       <div>
-        <Panel>
+        <Panel className="component">
           <TileSetToolbar
               onLoadTileSetsFromServer={this.loadTileSetsFromServer} />
           <TileSetCanvas
@@ -138,13 +138,6 @@ const TileSetCanvas = React.createClass({
   _tileSet: null,
   _canvas: null,
   _highlight: null,
-
-  getDefaultProps: function() {
-    return {
-      divStyle: { padding: "10px 0" },
-      cvsStyle: { backgroundColor: "#00FF00" }
-    };
-  },
 
   getInitialState: function() {
     return {
@@ -247,10 +240,10 @@ const TileSetCanvas = React.createClass({
   },
 
   render: function() {
-    var bsClass = this.state.showTileset ? "show" : "hidden";
+    var bsClass = this.state.showTileset ? "show tileset" : "hidden";
     return (
-      <div style={this.props.divStyle}>
-        <canvas className={bsClass} style={this.props.cvsStyle}
+      <div className="canvas-container">
+        <canvas className={bsClass}
             onMouseMove={this.handleMouseMove}
             onMouseOut={this.handleMouseOut}
             onClick={this.handleMouseClick}
@@ -266,9 +259,9 @@ const TileSetCanvas = React.createClass({
  */
 function TileInfo(props) {
   if (props.tilePosition && props.tile) {
-    return (<p>{props.tilePosition.x}, {props.tilePosition.y} :: {props.tile.getTileSetName()}:{props.tile.getTileName()}</p>);
+    return (<p className="no-margin">{props.tilePosition.x}, {props.tilePosition.y} :: {props.tile.getTileSetName()}:{props.tile.getTileName()}</p>);
   }
-  return (<p>-</p>);
+  return (<p className="no-margin">-</p>);
 }
 
 module.exports = TilePalette;

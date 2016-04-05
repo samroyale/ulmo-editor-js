@@ -116,7 +116,7 @@ const MapEditor = React.createClass({
   render: function() {
     return (
       <div>
-        <Panel>
+        <Panel className="component">
           <MapToolbar
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
@@ -313,13 +313,6 @@ const MapCanvas = React.createClass({
   _canvas: null,
   _highlight: null,
 
-  getDefaultProps: function() {
-    return {
-      divStyle: { padding: "10px 0" },
-      cvsStyle: { backgroundColor: "#00FF00" }
-    };
-  },
-
   getInitialState: function() {
     return {
       showMap: false,
@@ -433,8 +426,8 @@ const MapCanvas = React.createClass({
   render: function() {
     var bsClass = this.state.showMap ? "show" : "hidden";
     return (
-      <div style={this.props.divStyle}>
-        <canvas className={bsClass} style={this.props.cvsStyle}
+      <div className="canvas-container">
+        <canvas className={bsClass}
             onMouseMove={this.handleMouseMove}
             onMouseOut={this.handleMouseOut}
             onClick={this.handleMouseClick}
@@ -451,9 +444,9 @@ const MapCanvas = React.createClass({
 function MapTileInfo(props) {
   if (props.tilePosition && props.mapTile) {
     var levelsInfo = "[" + props.mapTile.getLevels().toString() + "]";
-    return (<p>{props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo}</p>);
+    return (<p className="no-margin">{props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo}</p>);
   }
-  return (<p>-</p>);
+  return (<p className="no-margin">-</p>);
 }
 
 module.exports = MapEditor;

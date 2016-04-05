@@ -8,27 +8,6 @@ var Row = Bootstrap.Row;
 var Col = Bootstrap.Col;
 var PageHeader = Bootstrap.PageHeader;
 
-// var Navigation = require('./navigation.jsx');
-
-/*var Main = React.createClass({
-    render: function () {
-        return (
-            <div>
-                <Navigation projectName="react-bootstrap-starter" />
-
-                <div className="container">
-                    <div className="starter-template">
-                        <h1>Bootstrap starter template</h1>
-                        <p className="lead">Use this document as a way to quickly start any new project.
-                            <br />
-                        All you get is this text and a mostly barebones HTML document.</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-});*/
-
 /* =============================================================================
  * COMPONENT: APP
  * =============================================================================
@@ -49,7 +28,9 @@ const Main = React.createClass({
       <Grid>
         <Row className="show-grid">
           <Col xs={18} md={12}>
-            <PageHeader>Ulmo Editor</PageHeader>
+            <div className="my-page-header">
+              <h1>Ulmo Editor <small>v0.1.0</small></h1>
+            </div>
           </Col>
         </Row>
         <Row className="show-grid">
