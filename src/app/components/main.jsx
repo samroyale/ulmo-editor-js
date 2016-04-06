@@ -28,9 +28,9 @@ const Main = React.createClass({
       <Grid>
         <Row className="show-grid">
           <Col xs={18} md={12}>
-            <div className="my-page-header">
-              <h1>Ulmo Editor <small>v0.1.0</small></h1>
-            </div>
+            <PageHeader className="my-page-header">
+              Ulmo Editor <small>v0.1.0</small>
+            </PageHeader>
           </Col>
         </Row>
         <Row className="show-grid">
