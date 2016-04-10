@@ -1,12 +1,12 @@
-var React = require('react');
-var Bootstrap = require('react-bootstrap');
-var TilePalette = require('./tile-palette.jsx');
-var MapEditor = require('./map-editor.jsx');
+var React = require('react'),
+    Bootstrap = require('react-bootstrap'),
+    TilePalette = require('./tile-palette.jsx'),
+    MapEditor = require('./map-editor.jsx');
 
-var Grid = Bootstrap.Grid;
-var Row = Bootstrap.Row;
-var Col = Bootstrap.Col;
-var PageHeader = Bootstrap.PageHeader;
+var Grid = Bootstrap.Grid,
+    Row = Bootstrap.Row,
+    Col = Bootstrap.Col,
+    PageHeader = Bootstrap.PageHeader;
 
 /* =============================================================================
  * COMPONENT: APP

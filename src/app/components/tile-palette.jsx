@@ -1,13 +1,15 @@
-var React = require('react');
-var Bootstrap = require('react-bootstrap');
-var TileSets = require('./tile-sets.js');
-var tilePositionMixin = require('./tile-position-mixin.js');
-var tileSize = require('../config.js').tileSize;
+var React = require('react'),
+    Bootstrap = require('react-bootstrap'),
+    TileSets = require('./tile-sets.js'),
+    tilePositionMixin = require('./tile-position-mixin.js'),
+    tileSize = require('../config.js').tileSize;
 
-var Panel = Bootstrap.Panel;
-var Modal = Bootstrap.Modal;
-var ButtonToolbar = Bootstrap.ButtonToolbar;
-var Button = Bootstrap.Button;
+var Panel = Bootstrap.Panel,
+    Modal = Bootstrap.Modal,
+    ButtonToolbar = Bootstrap.ButtonToolbar,
+    Button = Bootstrap.Button,
+    Collapse = Bootstrap.Collapse,
+    Alert = Bootstrap.Alert;
 
 var TileSetService = TileSets.TileSetService;
 
@@ -16,7 +18,7 @@ var TileSetService = TileSets.TileSetService;
  * =============================================================================
  */
 const TilePalette = React.createClass({
-  _tilesetCanvas: null,
+  _tileSetCanvas: null,
 
   getInitialState: function() {
     return {
@@ -33,16 +35,50 @@ const TilePalette = React.createClass({
   },
 
   tileSetSelected: function(tsid) {
-    this.closeModal();
-    if (tsid.length == 0) {
-      this._tilesetCanvas.hideTileSet();
-      return;
-    }
-    this._tilesetCanvas.loadTileSet(tsid);
+    this._tileSetCanvas.loadTileSet(tsid, data => {
+      this.tileSetLoaded(tsid, data)
+    });
   },
 
-  tileSetsLoaded: function(tileSetDefs) {
-    this.setState({ tileSets: tileSetDefs, showModal: true });
+  tileSetLoaded: function(tsid, data) {
+    if (data.tileSet) {
+      this.closeModal();
+      this.setState({
+        tileSetId: data.tileSet.getId(),
+        loadError: null
+      });
+      return;
+    }
+    if (data.err) {
+      // console.log("Error [" + data.err + "]");
+      this.setState({
+        tileSetId: null,
+        loadError: "Could not load tileset " + tsid + " [" + data.status + ": " + data.err + "]",
+      });
+      return;
+    }
+    console.log("Something went wrong...");
+  },
+
+  tileSetsLoaded: function(data) {
+    if (data.tileSets) {
+      this.setState({
+        tileSets: data.tileSets,
+        loadError: null,
+        showModal: true
+      });
+      return;
+    }
+    if (data.err) {
+      // console.log("Error [" + data.err + "]");
+      this.setState({
+        tileSets: [],
+        loadError: "Could not load tilesets [" + data.status + ": " + data.err + "]",
+        showModal: true
+      });
+      return;
+    }
+    console.log("Something went wrong...");
   },
 
   loadTileSetsFromServer: function(event) {
@@ -65,7 +101,7 @@ const TilePalette = React.createClass({
               onTilePositionUpdated={this.updateCurrentTile}
               tilePosition={this.state.currentTilePosition}
               tile={this.state.currentTile}
-              ref={comp => this._tilesetCanvas = comp} />
+              ref={comp => this._tileSetCanvas = comp} />
           <TileInfo
               tilePosition={this.state.currentTilePosition}
               tile={this.state.currentTile} />
@@ -75,7 +111,8 @@ const TilePalette = React.createClass({
             showModal={this.state.showModal}
             tileSets={this.state.tileSets}
             onTileSetSelected={this.tileSetSelected}
-            onClose={this.closeModal} />
+            onClose={this.closeModal}
+            error={this.state.loadError} />
       </div>
     );
   }
@@ -100,6 +137,7 @@ function TileSetToolbar(props) {
  * =============================================================================
  */
 function OpenTileSetModal(props) {
+  var showError = props.error && props.error.length > 0;
   var items = props.tileSets.map(
     tileSet => <TileSetItem key={tileSet.id} tileSet={tileSet}
         onTileSetSelected={props.onTileSetSelected} />
@@ -111,6 +149,11 @@ function OpenTileSetModal(props) {
         <Modal.Title>Tilesets</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        <Collapse in={showError}>
+          <div>
+            <Alert bsStyle="danger">{props.error}</Alert>
+          </div>
+        </Collapse>
         <ul>{items}</ul>
       </Modal.Body>
     </Modal>
@@ -145,18 +188,31 @@ const TileSetCanvas = React.createClass({
     };
   },
 
-  hideTileSet: function() {
-    this.setState({ showTileset: false });
-  },
-
-  loadTileSet: function(tilesetId) {
+  loadTileSet: function(tilesetId, callback) {
     var tileSetService = new TileSetService();
-    tileSetService.loadTileSet(tilesetId, tileSet => {
-      this._tileSet = tileSet;
-      this.drawTileSet();
-      this.setState({ showTileset: true });
+    tileSetService.loadTileSet(tilesetId, data => {
+      this.tileSetLoaded(data, callback);
     });
   },
+
+  tileSetLoaded: function(data, callback) {
+    if (data.tileSet) {
+      this._tileSet = data.tileSet;
+      this.drawTileSet();
+      this.setState({ showTileset: true });
+      callback(data);
+      return;
+    }
+    if (data.err) {
+      // console.log("Error [" + data.err + "]");
+      this._tileSet = null;
+      // this.hideTileSet();
+      callback(data);
+      return;
+    }
+    console.log("Something went wrong...");
+  },
+
 
   initEmptyTile: function() {
     var emptyCanvas = document.createElement("canvas");
@@ -226,7 +282,6 @@ const TileSetCanvas = React.createClass({
   },
 
   componentDidMount: function() {
-    // this._canvas = ReactDOM.findDOMNode(this.refs.cvs);
     this._highlight = this.initTileHighlight();
   },
 

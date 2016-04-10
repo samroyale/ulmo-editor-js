@@ -1,8 +1,8 @@
-var TileSets = require('./tile-sets.js');
-var config = require('../config.js');
+var TileSets = require('./tile-sets.js'),
+    config = require('../config.js');
 
-var tileSetsApi = config.tileSetsApi;
-var tileSize = config.tileSize;
+const tileSetsApi = config.tileSetsApi,
+      tileSize = config.tileSize;
 
 /* =============================================================================
  * CLASS: TILE SET SERVICE
@@ -11,17 +11,17 @@ var tileSize = config.tileSize;
  * =============================================================================
  */
 class TileSetService {
-  constructor() {
-  }
-
   loadTileSets(callback) {
     $.ajax({
       url: tileSetsApi,
       dataType: 'json',
       cache: false,
-      success: callback,
+      success: data => {
+        callback({ tileSets: data });
+      },
       error: (xhr, status, err) => {
-        console.error(tileSetsApi, status, err.toString());
+        // console.error(tileSetsApi, status, err.toString());
+        callback(this.handleError(xhr));
       }
     });
   }
@@ -36,19 +36,30 @@ class TileSetService {
         this.initTileSet(data, callback);
       },
       error: (xhr, status, err) => {
-        console.error(tileSetUrl, status, err.toString());
+        // console.error(tileSetsApi, status, err.toString());
+        callback(this.handleError(xhr));
       }
     });
+  }
+
+  handleError(xhr) {
+    var data = xhr.responseJSON;
+    if (data) {
+      // TODO: known errors go here
+    }
+    return { err: xhr.statusText, status: xhr.status };
   }
 
   initTileSet(tileSetDef, callback) {
     var tileSetImage = new Image();
     tileSetImage.onload = () => {
-      callback(new TileSet(
-        tileSetDef.id,
-        tileSetDef.name,
-        this.processTileSet(tileSetDef, tileSetImage)
-      ));
+      callback({
+        tileSet: new TileSet(
+          tileSetDef.id,
+          tileSetDef.name,
+          this.processTileSet(tileSetDef, tileSetImage)
+        )
+      });
     };
     //tileSetImage.crossOrigin = "Anonymous"; // CORS
     tileSetImage.src = tileSetDef.imageUrl;
@@ -85,7 +96,6 @@ class TileSetService {
         var tileDef = tileDefMappings[tileDefKey(x, y)];
         if (tileDef) {
           tiles[x][y] = new Tile(tileSetDef.name, tileDef.name, tileCanvas);
-          //this._tileNameMappings[tileDef.name] = tiles[x][y];
         }
       }
     }
@@ -119,6 +129,10 @@ class TileSet {
     }
   }
 
+  getId() {
+    return this._id;
+  }
+  
   getName() {
     return this._name;
   }

@@ -1,20 +1,20 @@
-var React = require('react');
-var Bootstrap = require('react-bootstrap');
-var RpgMaps = require('./rpg-maps.js');
-var tilePositionMixin = require('./tile-position-mixin.js');
-var tileSize = require('../config.js').tileSize;
+var React = require('react'),
+    Bootstrap = require('react-bootstrap'),
+    RpgMaps = require('./rpg-maps.js'),
+    tilePositionMixin = require('./tile-position-mixin.js'),
+    tileSize = require('../config.js').tileSize;
 
-var Panel = Bootstrap.Panel;
-var Modal = Bootstrap.Modal;
-var ButtonToolbar = Bootstrap.ButtonToolbar;
-var Button = Bootstrap.Button;
-var Input = Bootstrap.Input;
-var ButtonInput = Bootstrap.ButtonInput;
-var Collapse = Bootstrap.Collapse;
-var Alert = Bootstrap.Alert;
+var Panel = Bootstrap.Panel,
+    Modal = Bootstrap.Modal,
+    ButtonToolbar = Bootstrap.ButtonToolbar,
+    Button = Bootstrap.Button,
+    Input = Bootstrap.Input,
+    ButtonInput = Bootstrap.ButtonInput,
+    Collapse = Bootstrap.Collapse,
+    Alert = Bootstrap.Alert;
 
-var RpgMapService = RpgMaps.RpgMapService;
-var MaskTile = RpgMaps.MaskTile;
+var RpgMapService = RpgMaps.RpgMapService,
+    MaskTile = RpgMaps.MaskTile;
 
 /* =============================================================================
  * COMPONENT: MAP EDITOR
@@ -185,7 +185,7 @@ function OpenMapModal(props) {
   return (
     <Modal show={props.showModal} onHide={props.onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Choose Map</Modal.Title>
+        <Modal.Title>Maps</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <ul>{items}</ul>
@@ -317,10 +317,6 @@ const MapCanvas = React.createClass({
     return {
       showMap: false,
     };
-  },
-
-  hideMap: function() {
-    this.setState({ showMap: false });
   },
 
   loadMap: function(mapId, callback) {

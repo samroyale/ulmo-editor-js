@@ -1,4 +1,4 @@
-var tileSize = require('../config.js').tileSize;
+const tileSize = require('../config.js').tileSize;
 
 /* =============================================================================
  * MIXIN: TILE POSITION

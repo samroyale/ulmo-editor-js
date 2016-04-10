@@ -1,5 +1,5 @@
-var url = require('url');
-var proxy = require('proxy-middleware');
+var url = require('url'),
+    proxy = require('proxy-middleware');
 
 var proxyOptions = url.parse('http://localhost:8081/api');
 proxyOptions.route = '/api';

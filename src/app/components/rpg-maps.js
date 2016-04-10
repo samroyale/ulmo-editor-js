@@ -1,23 +1,22 @@
-var TileSets = require('./tile-sets.js');
-var config = require('../config.js');
+var TileSets = require('./tile-sets.js'),
+    config = require('../config.js');
 
 var TileSetService = TileSets.TileSetService;
 
-var rpgMapsApi = config.rpgMapsApi;
-var tileSize = config.tileSize;
-var baseTiles = config.baseTileColours.map(
-  colour => initBaseCanvas(colour, tileSize)
-);
+const rpgMapsApi = config.rpgMapsApi,
+      tileSize = config.tileSize;
 
-function initBaseCanvas(colour) {
-  var tileCanvas = document.createElement("canvas");
-  tileCanvas.width = tileSize;
-  tileCanvas.height = tileSize;
-  var ctx = tileCanvas.getContext('2d');
-  ctx.fillStyle = colour;
-  ctx.fillRect(0, 0, tileSize, tileSize);
-  return tileCanvas;
-}
+var baseTiles = config.baseTileColours.map(
+  colour => {
+    var tileCanvas = document.createElement("canvas");
+    tileCanvas.width = tileSize;
+    tileCanvas.height = tileSize;
+    var ctx = tileCanvas.getContext('2d');
+    ctx.fillStyle = colour;
+    ctx.fillRect(0, 0, tileSize, tileSize);
+    return tileCanvas;
+  }
+);
 
 /* =============================================================================
  * CLASS: RPG MAP SERVICE
@@ -78,17 +77,21 @@ class RpgMapService {
       },
       error: (xhr, status, err) => {
         // console.error(mapUrl, status, err.toString());
-        callback(this.handleError(mapDef, xhr.responseJSON));
+        callback(this.handleError(mapDef, xhr));
       }
     });
   }
 
-  handleError(mapDef, data) {
-    console.log(data.err);
-    if (data.code == 11000) {
-      return { err: "Map name already in use: " + mapDef.name };
+  handleError(mapDef, xhr) {
+    var data = xhr.responseJSON;
+    if (data) {
+      console.log(data.err);
+      if (data.code == 11000) {
+        return { err: "Map name already in use: " + mapDef.name };
+      }
+      return { err: data.err };
     }
-    return { err: data.err };
+    return { err: xhr.statusText };
   }
 
   handleSuccess(rpgMap, mapDef, data) {
@@ -125,13 +128,14 @@ class RpgMapService {
     }
     tileSetMappings.forEach((value, key) => {
       var tileSetService = new TileSetService();
-      tileSetService.loadTileSet("tileset?name=" + key, tileSet => {
-        this.tileSetLoaded(tileSet, tileSetMappings, rpgMapDef, callback);
+      tileSetService.loadTileSet("tileset?name=" + key, data => {
+        this.tileSetLoaded(data, tileSetMappings, rpgMapDef, callback);
       });
     });
   }
 
-  tileSetLoaded(tileSet, tileSetMappings, rpgMapDef, callback) {
+  tileSetLoaded(data, tileSetMappings, rpgMapDef, callback) {
+    var tileSet = data.tileSet; // TODO error handling
     console.log("> Tileset loaded: " + tileSet.getName());
     tileSetMappings.set(tileSet.getName(), tileSet);
     var allTileSetsLoaded = true;
