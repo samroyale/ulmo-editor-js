@@ -25,6 +25,7 @@ const TilePalette = React.createClass({
       showModal: false,
       tileSets: [],
       tileSetId: null,
+      loadError: null,
       currentTilePosition: null,
       currentTile: null
     };
@@ -51,13 +52,18 @@ const TilePalette = React.createClass({
     }
     if (data.err) {
       // console.log("Error [" + data.err + "]");
+      var info = data.status ? data.status + ": " + data.err : data.err;
       this.setState({
-        tileSetId: null,
-        loadError: "Could not load tileset " + tsid + " [" + data.status + ": " + data.err + "]",
+        loadError: "Could not load tileset " + tsid + " [" + info + "]",
       });
       return;
     }
     console.log("Something went wrong...");
+  },
+
+  loadTileSetsFromServer: function(event) {
+    var tileSetService = new TileSetService();
+    tileSetService.loadTileSets(this.tileSetsLoaded);
   },
 
   tileSetsLoaded: function(data) {
@@ -79,11 +85,6 @@ const TilePalette = React.createClass({
       return;
     }
     console.log("Something went wrong...");
-  },
-
-  loadTileSetsFromServer: function(event) {
-    var tileSetService = new TileSetService();
-    tileSetService.loadTileSets(this.tileSetsLoaded);
   },
 
   updateCurrentTile: function(tilePosition, tile) {
@@ -200,19 +201,9 @@ const TileSetCanvas = React.createClass({
       this._tileSet = data.tileSet;
       this.drawTileSet();
       this.setState({ showTileset: true });
-      callback(data);
-      return;
     }
-    if (data.err) {
-      // console.log("Error [" + data.err + "]");
-      this._tileSet = null;
-      // this.hideTileSet();
-      callback(data);
-      return;
-    }
-    console.log("Something went wrong...");
+    callback(data);
   },
-
 
   initEmptyTile: function() {
     var emptyCanvas = document.createElement("canvas");

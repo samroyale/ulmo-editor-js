@@ -30,6 +30,7 @@ const MapEditor = React.createClass({
       showSaveModal: false,
       maps: [],
       mapId: null,
+      loadError: null,
       saveError: null,
       currentTilePosition: null,
       currentTile: null
@@ -44,17 +45,10 @@ const MapEditor = React.createClass({
     });
   },
 
-  loadMapsFromServer: function(event) {
-    var rpgMapService = new RpgMapService();
-    rpgMapService.loadMaps(this.mapsLoaded);
-  },
-
-  mapsLoaded: function(mapDefs) {
-    this.setState({ maps: mapDefs, showLoadModal: true });
-  },
-
   mapSelected: function(mid) {
-    this._mapCanvas.loadMap(mid, this.mapLoaded)
+    this._mapCanvas.loadMap(mid, data => {
+      this.mapLoaded(mid, data)
+    });
   },
 
   newMap: function(event) {
@@ -65,20 +59,49 @@ const MapEditor = React.createClass({
     this._mapCanvas.newMap(rows, cols, this.mapLoaded);
   },
 
-  mapLoaded: function(data) {
-    // use typeof to distinguish between null and undefined - a null mapId is
-    // used to indicate that a new map has been initialized
-    if (typeof data.mapId) {
+  mapLoaded: function(mid, data) {
+    if (data.map) {
       this.closeModal();
-      // this.setState({ mapId: data.mapId, loadError: null });
-      this.setState({ mapId: data.mapId });
+      this.setState({
+        mapId: data.map.getId(),
+        loadError: null
+      });
       return;
     }
-    /*if (data.err) {
+    if (data.err) {
       // console.log("Error [" + data.err + "]");
-      this.setState({ loadError: data.err });
+      var info = data.status ? data.status + ": " + data.err : data.err;
+      this.setState({
+        loadError: "Could not load map " + mid + " [" + info + "]",
+      });
       return;
-    }*/
+    }
+    console.log("Something went wrong...");
+  },
+
+  loadMapsFromServer: function(event) {
+    var rpgMapService = new RpgMapService();
+    rpgMapService.loadMaps(this.mapsLoaded);
+  },
+
+  mapsLoaded: function(data) {
+    if (data.maps) {
+      this.setState({
+        maps: data.maps,
+        loadError: null,
+        showLoadModal: true
+      });
+      return;
+    }
+    if (data.err) {
+      // console.log("Error [" + data.err + "]");
+      this.setState({
+        maps: [],
+        loadError: "Could not load maps [" + data.status + ": " + data.err + "]",
+        showLoadModal: true
+      });
+      return;
+    }
     console.log("Something went wrong...");
   },
 
@@ -136,7 +159,8 @@ const MapEditor = React.createClass({
             showModal={this.state.showLoadModal}
             maps={this.state.maps}
             onMapSelected={this.mapSelected}
-            onClose={this.closeModal} />
+            onClose={this.closeModal}
+            error={this.state.loadError} />
 
         <NewMapModal
             showModal={this.state.showNewModal}
@@ -178,8 +202,10 @@ function MapToolbar(props) {
  * =============================================================================
  */
 function OpenMapModal(props) {
-  var items = props.maps.map(map => <MapItem key={map.id} map={map}
-      onMapSelected={props.onMapSelected} />
+  var showError = props.error && props.error.length > 0;
+  var items = props.maps.map(
+    map => <MapItem key={map.id} map={map}
+        onMapSelected={props.onMapSelected} />
   );
 
   return (
@@ -188,6 +214,11 @@ function OpenMapModal(props) {
         <Modal.Title>Maps</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        <Collapse in={showError}>
+          <div>
+            <Alert bsStyle="danger">{props.error}</Alert>
+          </div>
+        </Collapse>
         <ul>{items}</ul>
       </Modal.Body>
     </Modal>
@@ -321,22 +352,25 @@ const MapCanvas = React.createClass({
 
   loadMap: function(mapId, callback) {
     var rpgMapService = new RpgMapService();
-    rpgMapService.loadMap(mapId, rpgMap => {
-      this._rpgMap = rpgMap;
-      this.drawMap();
-      this.setState({ showMap: true });
-      callback({ mapId });
+    rpgMapService.loadMap(mapId, data => {
+      this.mapLoaded(data, callback);
     });
   },
 
   newMap: function(rows, cols, callback) {
     var rpgMapService = new RpgMapService();
-    rpgMapService.newMap(rows, cols, rpgMap => {
-      this._rpgMap = rpgMap;
+    rpgMapService.newMap(rows, cols, data => {
+      this.mapLoaded(data, callback);
+    });
+  },
+
+  mapLoaded: function(data, callback) {
+    if (data.map) {
+      this._rpgMap = data.map;
       this.drawMap();
       this.setState({ showMap: true });
-      callback({ mapId: null });
-    });
+    }
+    callback(data);
   },
 
   saveMap: function(callback) {

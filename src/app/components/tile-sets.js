@@ -45,13 +45,19 @@ class TileSetService {
   handleError(xhr) {
     var data = xhr.responseJSON;
     if (data) {
-      // TODO: known errors go here
+      // known errors go here
+      return { err: data.err, status: xhr.status };
     }
     return { err: xhr.statusText, status: xhr.status };
   }
 
   initTileSet(tileSetDef, callback) {
     var tileSetImage = new Image();
+    tileSetImage.onerror = () => {
+      callback({
+        err: tileSetDef.imageUrl + " failed to load"
+      });
+    };
     tileSetImage.onload = () => {
       callback({
         tileSet: new TileSet(
@@ -132,7 +138,7 @@ class TileSet {
   getId() {
     return this._id;
   }
-  
+
   getName() {
     return this._name;
   }

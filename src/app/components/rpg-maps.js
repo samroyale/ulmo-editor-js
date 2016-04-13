@@ -25,17 +25,17 @@ var baseTiles = config.baseTileColours.map(
  * =============================================================================
  */
 class RpgMapService {
-  constructor() {
-  }
-
   loadMaps(callback) {
     $.ajax({
       url: rpgMapsApi,
       dataType: 'json',
       cache: false,
-      success: callback,
+      success: data => {
+        callback({ maps: data });
+      },
       error: (xhr, status, err) => {
-        console.error(rpgMapsApi, status, err.toString());
+        // console.error(rpgMapsApi, status, err.toString());
+        callback(this.handleLoadError(xhr));
       }
     });
   }
@@ -51,9 +51,19 @@ class RpgMapService {
         this.initRpgMap(data, callback);
       },
       error: (xhr, status, err) => {
-        console.error(mapUrl, status, err.toString());
+        // console.error(mapUrl, status, err.toString());
+        callback(this.handleLoadError(xhr));
       }
     });
+  }
+
+  handleLoadError(xhr) {
+    var data = xhr.responseJSON;
+    if (data) {
+      // known errors go here
+      return { err: data.err, status: xhr.status };
+    }
+    return { err: xhr.statusText, status: xhr.status };
   }
 
   saveMap(rpgMap, callback) {
@@ -66,7 +76,7 @@ class RpgMapService {
   }
 
   doSave(mapUrl, reqType, rpgMap, mapDef, callback) {
-    console.log("Saving map [" +reqType + " " + mapUrl + "]");
+    console.log("Saving map [" + reqType + " " + mapUrl + "]");
     $.ajax({
       type: reqType,
       url: mapUrl,
@@ -85,13 +95,17 @@ class RpgMapService {
   handleError(mapDef, xhr) {
     var data = xhr.responseJSON;
     if (data) {
+      // known errors go here
       console.log(data.err);
       if (data.code == 11000) {
-        return { err: "Map name already in use: " + mapDef.name };
+        return {
+          err: "Map name already in use: " + mapDef.name,
+          status: xhr.status
+        };
       }
-      return { err: data.err };
+      return { err: data.err, status: xhr.status };
     }
-    return { err: xhr.statusText };
+    return { err: xhr.statusText, status: xhr.status };
   }
 
   handleSuccess(rpgMap, mapDef, data) {
@@ -123,7 +137,7 @@ class RpgMapService {
     });
     if (tileSetMappings.size == 0) {
       // no tilesets to load - either a new or empty map
-      callback(this.buildRpgMap(tileSetMappings, rpgMapDef));
+      callback({ map: this.buildRpgMap(tileSetMappings, rpgMapDef) });
       return;
     }
     tileSetMappings.forEach((value, key) => {
@@ -138,14 +152,11 @@ class RpgMapService {
     var tileSet = data.tileSet; // TODO error handling
     console.log("> Tileset loaded: " + tileSet.getName());
     tileSetMappings.set(tileSet.getName(), tileSet);
-    var allTileSetsLoaded = true;
-    tileSetMappings.forEach((value, key) => {
-      if (!value) {
-        allTileSetsLoaded = false;
-      }
-    });
+    var allTileSetsLoaded = [...tileSetMappings.values()].every(
+      val => val != null
+    );
     if (allTileSetsLoaded) {
-      callback(this.buildRpgMap(tileSetMappings, rpgMapDef));
+      callback({ map: this.buildRpgMap(tileSetMappings, rpgMapDef) });
     }
   }
 
