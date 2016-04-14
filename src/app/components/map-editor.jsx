@@ -56,7 +56,9 @@ const MapEditor = React.createClass({
   },
 
   newMapOfSize: function(rows, cols) {
-    this._mapCanvas.newMap(rows, cols, this.mapLoaded);
+    this._mapCanvas.newMap(rows, cols, data => {
+      this.mapLoaded(null, data)
+    });
   },
 
   mapLoaded: function(mid, data) {
@@ -318,13 +320,13 @@ const SaveAsModal = React.createClass({
           <Modal.Title>Save As</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <Collapse in={showError}>
+          <div>
+            <Alert bsStyle="warning">{this.props.error}</Alert>
+          </div>
+        </Collapse>
         <form onSubmit={this.handleSubmit}>
           <Input type="text" label="Name" placeholder="map name" value={this.state.mapName} onChange={this.handleNameChange} />
-          <Collapse in={showError}>
-            <div>
-              <Alert bsStyle="danger">{this.props.error}</Alert>
-            </div>
-          </Collapse>
           <ButtonInput type="submit" value="Save" />
         </form>
         </Modal.Body>
