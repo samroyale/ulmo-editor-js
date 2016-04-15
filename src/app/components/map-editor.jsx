@@ -346,6 +346,9 @@ const MapCanvas = React.createClass({
   _canvas: null,
   _highlight: null,
 
+  _startPosition: null,
+  _mouseDown: null,
+
   getInitialState: function() {
     return {
       showMap: false,
@@ -416,6 +419,45 @@ const MapCanvas = React.createClass({
     }
   },
 
+  unhighlightRange(fromPosition, toPosition) {
+    if (!toPosition) {
+      return;
+    }
+    //var startX = this.state.startTilePosition.x;
+    //var startY = this.state.startTilePosition.y;
+    var x = Math.min(fromPosition.x, toPosition.x);
+    var y = Math.min(fromPosition.y, toPosition.y);
+    var cols = Math.abs(fromPosition.x - toPosition.x) + 1;
+    var rows = Math.abs(fromPosition.y - toPosition.y) + 1;
+    var ctx = this._canvas.getContext('2d');
+    for (var i = x; i < x + cols; i++) {
+      for (var j = y; j < y + rows; j++) {
+        ctx.putImageData(this._rpgMap.getMapTile(i, j).getImage(), i * tileSize, j * tileSize);
+      }
+    }
+  },
+
+  highlightRange(fromPosition, toPosition) {
+    //var startX = this.state.startTilePosition.x;
+    //var startY = this.state.startTilePosition.y;
+    //this.removePreviousSelectedHighlight(this.state.startTilePosition);
+    var x = Math.min(fromPosition.x, toPosition.x);
+    var y = Math.min(fromPosition.y, toPosition.y);
+    var cols = Math.abs(fromPosition.x - toPosition.x) + 1;
+    var rows = Math.abs(fromPosition.y - toPosition.y) + 1;
+    var highlight = this.initHighlight(rows, cols);
+    var ctx = this._canvas.getContext('2d');
+    ctx.drawImage(highlight, x * tileSize, y * tileSize)
+  },
+
+  clearSelection() {
+    if (!this.state.startTilePosition) {
+      return;
+    }
+    this.unhighlightSelected(this.state.startTilePosition);
+    this.setState( { startTilePosition: null } );
+  },
+
   handleMouseMove: function(evt) {
     var tilePosition = this.getCurrentTilePosition(evt);
     if (this.props.tilePosition &&
@@ -423,11 +465,16 @@ const MapCanvas = React.createClass({
         tilePosition.y == this.props.tilePosition.y) {
       return;
     }
+    if (this.state.startPosition && !this._mouseDown) {
+      this.setState({ startPosition: null });
+    }
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
     this.props.onTilePositionUpdated(tilePosition, tile);
   },
 
   handleMouseOut: function() {
+    this._mouseDown = false;
+    this.setState({ startPosition: null });
     this.props.onTilePositionUpdated();
   },
 
@@ -442,11 +489,45 @@ const MapCanvas = React.createClass({
     this.props.onTilePositionUpdated(this.props.tilePosition, this.props.mapTile);
   },
 
+  handleMouseDown: function() {
+    if (!this.props.tilePosition) {
+      return;
+    }
+    console.log("set start position: " + this.props.tilePosition.x + "," + this.props.tilePosition.y)
+    this._mouseDown = true;
+    this.setState({ startPosition: this.props.tilePosition});
+    // this._startPosition = this.props.tilePosition;
+    //this.clearSelection();
+    /*this.setState({
+      mouseDown: true,
+      startTilePosition: this.props.tilePosition
+    });*/
+    //this.updateSelectedHighlight(this.props.tilePosition);
+  },
+
+  handleMouseUp: function() {
+    this._mouseDown = false;
+    /*this.setState({
+      mouseDown: false
+    });*/
+  },
+
   componentDidMount: function() {
     this._highlight = this.initTileHighlight();
   },
 
   componentDidUpdate: function(oldProps, oldState) {
+    // console.log("updated");
+    if (this.state.startPosition && oldState.startPosition) {
+      this.unhighlightRange(oldState.startPosition, oldProps.tilePosition);
+      if (this._mouseDown) {
+        this.highlightRange(this.state.startPosition, this.props.tilePosition);
+        return;
+      }
+    }
+    if (oldState.startPosition) {
+      this.unhighlightRange(oldState.startPosition, oldProps.tilePosition);
+    }
     if (oldProps.tilePosition) {
       this.unhighlightTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.mapTile);
     }
@@ -461,6 +542,8 @@ const MapCanvas = React.createClass({
       <div className="canvas-container">
         <canvas className={bsClass}
             onMouseMove={this.handleMouseMove}
+            onMouseDown={this.handleMouseDown}
+            onMouseUp={this.handleMouseUp}
             onMouseOut={this.handleMouseOut}
             onClick={this.handleMouseClick}
             ref={cvs => this._canvas = cvs} />

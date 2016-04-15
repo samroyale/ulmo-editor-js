@@ -5,6 +5,7 @@ const tileSize = require('../config.js').tileSize;
  * =============================================================================
  */
 const tilePositionMixin = {
+  /* Returns a tile position relative to the tile canvas */
   getCurrentTilePosition: function(evt) {
     var x;
     var y;
@@ -27,22 +28,27 @@ const tilePositionMixin = {
 
   /* Returns a tile highlight canvas */
   initTileHighlight: function() {
+    return this.initHighlight(1, 1);
+  },
+
+  initHighlight: function(rows, cols) {
+    console.log(rows + "," + cols);
     var highlightCanvas = document.createElement("canvas");
-    highlightCanvas.width = tileSize;
-    highlightCanvas.height = tileSize;
+    highlightCanvas.width = tileSize * cols;
+    highlightCanvas.height = tileSize * rows;
     var ctx = highlightCanvas.getContext('2d');
     // transparent rect
     ctx.beginPath();
-    ctx.rect(0, 0, tileSize, tileSize);
+    ctx.rect(0, 0, highlightCanvas.width, highlightCanvas.height);
     ctx.fillStyle = 'rgba(0, 0, 0, 0)';
     ctx.fill();
     ctx.closePath();
     // white border
     ctx.beginPath();
-    ctx.rect(0, 0, tileSize, 2);
-    ctx.rect(0, tileSize - 2, tileSize, 2);
-    ctx.rect(0, 0, 2, tileSize);
-    ctx.rect(tileSize - 2, 0, 2, tileSize);
+    ctx.rect(0, 0, tileSize * cols, 2);
+    ctx.rect(0, tileSize * rows - 2, tileSize * cols, 2);
+    ctx.rect(0, 0, 2, tileSize * rows);
+    ctx.rect(tileSize * cols - 2, 0, 2, tileSize * rows);
     ctx.fillStyle = 'white';
     ctx.fill();
     ctx.closePath();
