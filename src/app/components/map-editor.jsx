@@ -405,57 +405,65 @@ const MapCanvas = React.createClass({
     }
   },
 
-  unhighlightTile: function(x, y, previousTile) {
-    if (previousTile) {
-      var ctx = this._canvas.getContext('2d');
-      ctx.putImageData(previousTile.getImage(), x * tileSize, y * tileSize);
+  unhighlightTile: function(tilePosition, tile) {
+    if (!tilePosition || !tile) {
+      return;
     }
+    var ctx = this._canvas.getContext('2d');
+    ctx.putImageData(tile.getImage(),
+      tilePosition.x * tileSize,
+      tilePosition.y * tileSize);
   },
 
-  highlightTile: function(x, y, currentTile) {
-    if (currentTile) {
-      var ctx = this._canvas.getContext('2d');
-      ctx.drawImage(this._highlight, x * tileSize, y * tileSize)
+  highlightTile: function(tilePosition, tile) {
+    if (!tilePosition || !tile) {
+      return;
     }
+    var ctx = this._canvas.getContext('2d');
+    ctx.drawImage(this._highlight,
+      tilePosition.x * tileSize,
+      tilePosition.y * tileSize);
   },
 
   unhighlightRange(fromPosition, toPosition) {
-    if (!toPosition) {
-      return;
-    }
-    //var startX = this.state.startTilePosition.x;
-    //var startY = this.state.startTilePosition.y;
-    var x = Math.min(fromPosition.x, toPosition.x);
-    var y = Math.min(fromPosition.y, toPosition.y);
-    var cols = Math.abs(fromPosition.x - toPosition.x) + 1;
-    var rows = Math.abs(fromPosition.y - toPosition.y) + 1;
-    var ctx = this._canvas.getContext('2d');
-    for (var i = x; i < x + cols; i++) {
-      for (var j = y; j < y + rows; j++) {
-        ctx.putImageData(this._rpgMap.getMapTile(i, j).getImage(), i * tileSize, j * tileSize);
+    this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
+      for (var i = x; i < x + cols; i++) {
+        for (var j = y; j < y + rows; j++) {
+          ctx.putImageData(this._rpgMap.getMapTile(i, j).getImage(), i * tileSize, j * tileSize);
+        }
       }
-    }
+    });
   },
 
   highlightRange(fromPosition, toPosition) {
-    //var startX = this.state.startTilePosition.x;
-    //var startY = this.state.startTilePosition.y;
-    //this.removePreviousSelectedHighlight(this.state.startTilePosition);
+    this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
+      var highlight = this.initHighlight(rows, cols);
+      ctx.drawImage(highlight, x * tileSize, y * tileSize);
+    });
+  },
+
+  applySelectedTile(fromPosition, toPosition) {
+    this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
+      for (var i = x; i < x + cols; i++) {
+        for (var j = y; j < y + rows; j++) {
+          var mapTile = this._rpgMap.getMapTile(i, j);
+          mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
+          ctx.putImageData(mapTile.getImage(), i * tileSize, j * tileSize);
+        }
+      }
+    });
+  },
+
+  processRange(fromPosition, toPosition, func) {
+    if (!toPosition) {
+      return;
+    }
     var x = Math.min(fromPosition.x, toPosition.x);
     var y = Math.min(fromPosition.y, toPosition.y);
     var cols = Math.abs(fromPosition.x - toPosition.x) + 1;
     var rows = Math.abs(fromPosition.y - toPosition.y) + 1;
-    var highlight = this.initHighlight(rows, cols);
     var ctx = this._canvas.getContext('2d');
-    ctx.drawImage(highlight, x * tileSize, y * tileSize)
-  },
-
-  clearSelection() {
-    if (!this.state.startTilePosition) {
-      return;
-    }
-    this.unhighlightSelected(this.state.startTilePosition);
-    this.setState( { startTilePosition: null } );
+    func(x, y, cols, rows, ctx);
   },
 
   handleMouseMove: function(evt) {
@@ -478,7 +486,7 @@ const MapCanvas = React.createClass({
     this.props.onTilePositionUpdated();
   },
 
-  handleMouseClick: function() {
+  /*handleMouseClick: function() {
     if (!this.props.selectedTile) {
       return;
     }
@@ -487,29 +495,24 @@ const MapCanvas = React.createClass({
     }
     this.props.mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
     this.props.onTilePositionUpdated(this.props.tilePosition, this.props.mapTile);
-  },
+  },*/
 
   handleMouseDown: function() {
     if (!this.props.tilePosition) {
       return;
     }
-    console.log("set start position: " + this.props.tilePosition.x + "," + this.props.tilePosition.y)
     this._mouseDown = true;
     this.setState({ startPosition: this.props.tilePosition});
-    // this._startPosition = this.props.tilePosition;
-    //this.clearSelection();
-    /*this.setState({
-      mouseDown: true,
-      startTilePosition: this.props.tilePosition
-    });*/
-    //this.updateSelectedHighlight(this.props.tilePosition);
   },
 
   handleMouseUp: function() {
     this._mouseDown = false;
-    /*this.setState({
-      mouseDown: false
-    });*/
+    if (!this.props.selectedTile) {
+      return;
+    }
+    if (this.state.startPosition) {
+      this.applySelectedTile(this.state.startPosition, this.props.tilePosition);
+    }
   },
 
   componentDidMount: function() {
@@ -517,23 +520,15 @@ const MapCanvas = React.createClass({
   },
 
   componentDidUpdate: function(oldProps, oldState) {
-    // console.log("updated");
-    if (this.state.startPosition && oldState.startPosition) {
+    if (oldState.startPosition) {
       this.unhighlightRange(oldState.startPosition, oldProps.tilePosition);
-      if (this._mouseDown) {
+      if (this.state.startPosition) {
         this.highlightRange(this.state.startPosition, this.props.tilePosition);
         return;
       }
     }
-    if (oldState.startPosition) {
-      this.unhighlightRange(oldState.startPosition, oldProps.tilePosition);
-    }
-    if (oldProps.tilePosition) {
-      this.unhighlightTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.mapTile);
-    }
-    if (this.props.tilePosition) {
-      this.highlightTile(this.props.tilePosition.x, this.props.tilePosition.y, this.props.mapTile);
-    }
+    this.unhighlightTile(oldProps.tilePosition, oldProps.mapTile);
+    this.highlightTile(this.props.tilePosition, this.props.mapTile);
   },
 
   render: function() {

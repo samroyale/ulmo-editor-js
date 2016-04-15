@@ -32,7 +32,7 @@ const tilePositionMixin = {
   },
 
   initHighlight: function(rows, cols) {
-    console.log(rows + "," + cols);
+    // console.log(rows + ", " + cols);
     var highlightCanvas = document.createElement("canvas");
     highlightCanvas.width = tileSize * cols;
     highlightCanvas.height = tileSize * rows;
