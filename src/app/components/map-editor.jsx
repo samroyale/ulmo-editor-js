@@ -150,7 +150,6 @@ const MapEditor = React.createClass({
               onTilePositionUpdated={this.updateCurrentTile}
               selectedTile={this.props.selectedTile}
               tilePosition={this.state.currentTilePosition}
-              mapTile={this.state.currentTile}
               ref={comp => this._mapCanvas = comp} />
           <MapTileInfo
               tilePosition={this.state.currentTilePosition}
@@ -405,24 +404,26 @@ const MapCanvas = React.createClass({
     }
   },
 
-  unhighlightTile: function(tilePosition, tile) {
-    if (!tilePosition || !tile) {
+  unhighlightTile: function(tilePosition) {
+    if (!tilePosition) {
       return;
     }
-    var ctx = this._canvas.getContext('2d');
-    ctx.putImageData(tile.getImage(),
+    this._canvas.getContext('2d').putImageData(
+      this._rpgMap.getMapTile(tilePosition.x, tilePosition.y).getImage(),
       tilePosition.x * tileSize,
-      tilePosition.y * tileSize);
+      tilePosition.y * tileSize
+    );
   },
 
-  highlightTile: function(tilePosition, tile) {
-    if (!tilePosition || !tile) {
+  highlightTile: function(tilePosition) {
+    if (!tilePosition) {
       return;
     }
-    var ctx = this._canvas.getContext('2d');
-    ctx.drawImage(this._highlight,
+    this._canvas.getContext('2d').drawImage(
+      this._highlight,
       tilePosition.x * tileSize,
-      tilePosition.y * tileSize);
+      tilePosition.y * tileSize
+    );
   },
 
   unhighlightRange(fromPosition, toPosition) {
@@ -527,8 +528,8 @@ const MapCanvas = React.createClass({
         return;
       }
     }
-    this.unhighlightTile(oldProps.tilePosition, oldProps.mapTile);
-    this.highlightTile(this.props.tilePosition, this.props.mapTile);
+    this.unhighlightTile(oldProps.tilePosition);
+    this.highlightTile(this.props.tilePosition);
   },
 
   render: function() {
