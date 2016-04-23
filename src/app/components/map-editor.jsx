@@ -11,6 +11,9 @@ var Panel = Bootstrap.Panel,
     Input = Bootstrap.Input,
     ButtonInput = Bootstrap.ButtonInput,
     Collapse = Bootstrap.Collapse,
+    Overlay = Bootstrap.Overlay,
+    OverlayTrigger = Bootstrap.OverlayTrigger,
+    Popover = Bootstrap.Popover,
     Alert = Bootstrap.Alert;
 
 var RpgMapService = RpgMaps.RpgMapService,
@@ -351,6 +354,8 @@ const MapCanvas = React.createClass({
   getInitialState: function() {
     return {
       showMap: false,
+      showOverlay: false,
+      overlayPosition: {x: 0, y: 0}
     };
   },
 
@@ -453,6 +458,7 @@ const MapCanvas = React.createClass({
         }
       }
     });
+    this.setState({ updated: true });
   },
 
   processRange(fromPosition, toPosition, func) {
@@ -468,6 +474,9 @@ const MapCanvas = React.createClass({
   },
 
   handleMouseMove: function(evt) {
+    if (this.state.showOverlay) {
+      return;
+    }
     var tilePosition = this.getCurrentTilePosition(evt);
     if (this.props.tilePosition &&
         tilePosition.x == this.props.tilePosition.x &&
@@ -482,6 +491,9 @@ const MapCanvas = React.createClass({
   },
 
   handleMouseOut: function() {
+    if (this.state.showOverlay) {
+      return;
+    }
     this._mouseDown = false;
     this.setState({ startPosition: null });
     this.props.onTilePositionUpdated();
@@ -497,16 +509,40 @@ const MapCanvas = React.createClass({
     this.props.mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
     this.props.onTilePositionUpdated(this.props.tilePosition, this.props.mapTile);
   },*/
-
-  handleMouseDown: function() {
-    if (!this.props.tilePosition) {
+  handleRightClick: function(evt) {
+    evt.preventDefault();
+    var showOverlay = !this.state.showOverlay;
+    if (!showOverlay) {
+      this.setState({ showOverlay });
       return;
     }
-    this._mouseDown = true;
-    this.setState({ startPosition: this.props.tilePosition});
+    var overlayPosition = this.getOverlayPosition(evt);
+    this.setState({ showOverlay, overlayPosition });
   },
 
-  handleMouseUp: function() {
+  handleMouseDown: function(evt) {
+    if (this.state.showOverlay) {
+      return;
+    }
+    if (evt.button !== 0) {
+      return;
+    }
+    /*if (!this.props.tilePosition) {
+      return;
+    }*/
+    var tilePosition = this.getCurrentTilePosition(evt);
+    var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
+    this.props.onTilePositionUpdated(tilePosition, tile);
+
+    this._mouseDown = true;
+    this.setState({ startPosition: tilePosition});
+    // this.setState({ startPosition: this.props.tilePosition});
+  },
+
+  handleMouseUp: function(evt) {
+    if (evt.button !== 0) {
+      return;
+    }
     this._mouseDown = false;
     if (!this.props.selectedTile) {
       return;
@@ -532,6 +568,11 @@ const MapCanvas = React.createClass({
     this.highlightTile(this.props.tilePosition);
   },
 
+  hideOverlay: function() {
+    console.log("hide overlay!")
+    this.setState({ showOverlay: false });
+  },
+
   render: function() {
     var bsClass = this.state.showMap ? "show" : "hidden";
     return (
@@ -541,9 +582,49 @@ const MapCanvas = React.createClass({
             onMouseDown={this.handleMouseDown}
             onMouseUp={this.handleMouseUp}
             onMouseOut={this.handleMouseOut}
-            onClick={this.handleMouseClick}
+            onContextMenu={this.handleRightClick}
             ref={cvs => this._canvas = cvs} />
+
+        <MapCanvasPopup
+            show={this.state.showOverlay}
+            position={this.state.overlayPosition}
+            onHide={this.hideOverlay}
+            />
       </div>
+    );
+  }
+});
+
+/* =============================================================================
+ * COMPONENT: MAP CANVAS POPUP
+ * =============================================================================
+ */
+const MapCanvasPopup = React.createClass({
+  suppress: function(evt) {
+    evt.preventDefault();
+  },
+
+  render: function() {
+    console.log(this.props.position.x +"," + this.props.position.y);
+    var style = {
+      position: 'absolute',
+      backgroundColor: '#EEE',
+      boxShadow: '0 5px 10px rgba(0, 0, 0, 0.2)',
+      border: '1px solid #CCC',
+      marginLeft: this.props.position.x,
+      marginTop: this.props.position.y,
+      borderRadius: 3,
+      padding: 10
+    };
+    return (
+      <Overlay
+        show={this.props.show}
+        rootClose={true}
+        onHide={this.props.onHide}>
+        <div style={style} onContextMenu={this.suppress}>
+          <strong>Holy guacamole!</strong> Check this <a href="#">info.</a>
+        </div>
+      </Overlay>
     );
   }
 });

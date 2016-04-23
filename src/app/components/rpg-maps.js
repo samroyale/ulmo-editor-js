@@ -6,7 +6,7 @@ var TileSetService = TileSets.TileSetService;
 const rpgMapsApi = config.rpgMapsApi,
       tileSize = config.tileSize;
 
-var baseTiles = config.baseTileColours.map(
+const baseTiles = config.baseTileColours.map(
   colour => {
     var tileCanvas = document.createElement("canvas");
     tileCanvas.width = tileSize;
