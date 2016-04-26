@@ -7,14 +7,16 @@ var React = require('react'),
 var Panel = Bootstrap.Panel,
     Modal = Bootstrap.Modal,
     ButtonToolbar = Bootstrap.ButtonToolbar,
+    ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
     Input = Bootstrap.Input,
     ButtonInput = Bootstrap.ButtonInput,
     Collapse = Bootstrap.Collapse,
     Overlay = Bootstrap.Overlay,
-    OverlayTrigger = Bootstrap.OverlayTrigger,
     Popover = Bootstrap.Popover,
-    Alert = Bootstrap.Alert;
+    MenuItem = Bootstrap.MenuItem,
+    Alert = Bootstrap.Alert,
+    DropdownButton = Bootstrap.DropdownButton;
 
 var RpgMapService = RpgMaps.RpgMapService,
     MaskTile = RpgMaps.MaskTile;
@@ -499,16 +501,6 @@ const MapCanvas = React.createClass({
     this.props.onTilePositionUpdated();
   },
 
-  /*handleMouseClick: function() {
-    if (!this.props.selectedTile) {
-      return;
-    }
-    if (!this.props.mapTile) {
-      return;
-    }
-    this.props.mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
-    this.props.onTilePositionUpdated(this.props.tilePosition, this.props.mapTile);
-  },*/
   handleRightClick: function(evt) {
     evt.preventDefault();
     var showOverlay = !this.state.showOverlay;
@@ -527,16 +519,11 @@ const MapCanvas = React.createClass({
     if (evt.button !== 0) {
       return;
     }
-    /*if (!this.props.tilePosition) {
-      return;
-    }*/
+    this._mouseDown = true;
     var tilePosition = this.getCurrentTilePosition(evt);
+    this.setState({ startPosition: tilePosition});
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
     this.props.onTilePositionUpdated(tilePosition, tile);
-
-    this._mouseDown = true;
-    this.setState({ startPosition: tilePosition});
-    // this.setState({ startPosition: this.props.tilePosition});
   },
 
   handleMouseUp: function(evt) {
@@ -588,8 +575,7 @@ const MapCanvas = React.createClass({
         <MapCanvasPopup
             show={this.state.showOverlay}
             position={this.state.overlayPosition}
-            onHide={this.hideOverlay}
-            />
+            onHide={this.hideOverlay} />
       </div>
     );
   }
@@ -604,6 +590,10 @@ const MapCanvasPopup = React.createClass({
     evt.preventDefault();
   },
 
+  onSelectAlert: function() {
+    alert("OMG");
+  },
+
   render: function() {
     console.log(this.props.position.x +"," + this.props.position.y);
     var style = {
@@ -613,8 +603,8 @@ const MapCanvasPopup = React.createClass({
       border: '1px solid #CCC',
       marginLeft: this.props.position.x,
       marginTop: this.props.position.y,
-      borderRadius: 3,
-      padding: 10
+      borderRadius: 4,
+      padding: 8
     };
     return (
       <Overlay
@@ -622,7 +612,24 @@ const MapCanvasPopup = React.createClass({
         rootClose={true}
         onHide={this.props.onHide}>
         <div style={style} onContextMenu={this.suppress}>
-          <strong>Holy guacamole!</strong> Check this <a href="#">info.</a>
+        <ButtonGroup vertical>
+            <Button>Button</Button>
+            <Button>Button</Button>
+            <DropdownButton title="Dropdown" id="bg-vertical-dropdown-1">
+              <MenuItem eventKey="1">Dropdown link</MenuItem>
+              <MenuItem eventKey="2">Dropdown link</MenuItem>
+            </DropdownButton>
+            <Button>Button</Button>
+            <Button>Button</Button>
+            <DropdownButton title="Dropdown" id="bg-vertical-dropdown-2">
+              <MenuItem eventKey="1">Dropdown link</MenuItem>
+              <MenuItem eventKey="2">Dropdown link</MenuItem>
+            </DropdownButton>
+            <DropdownButton title="Dropdown" id="bg-vertical-dropdown-3">
+              <MenuItem eventKey="1">Dropdown link</MenuItem>
+              <MenuItem eventKey="2">Dropdown link</MenuItem>
+            </DropdownButton>
+          </ButtonGroup>
         </div>
       </Overlay>
     );
