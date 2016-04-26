@@ -612,7 +612,7 @@ const MapCanvasPopup = React.createClass({
         rootClose={true}
         onHide={this.props.onHide}>
         <div style={style} onContextMenu={this.suppress}>
-        <ButtonGroup vertical>
+          <ButtonGroup vertical>
             <Button>Button</Button>
             <Button>Button</Button>
             <DropdownButton title="Dropdown" id="bg-vertical-dropdown-1">

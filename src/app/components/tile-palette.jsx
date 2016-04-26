@@ -272,6 +272,10 @@ const TileSetCanvas = React.createClass({
     }
   },
 
+  suppress: function(evt) {
+    evt.preventDefault();
+  },
+
   componentDidMount: function() {
     this._highlight = this.initTileHighlight();
   },
@@ -293,6 +297,7 @@ const TileSetCanvas = React.createClass({
             onMouseMove={this.handleMouseMove}
             onMouseOut={this.handleMouseOut}
             onClick={this.handleMouseClick}
+            onContextMenu={this.suppress}
             ref={cvs => this._canvas = cvs} />
       </div>
     );
