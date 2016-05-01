@@ -328,6 +328,23 @@ class MapTile {
     this._levels = levels;
   }*/
 
+  sendToBack() {
+    var topTile = this._maskTiles.pop();
+    this._maskTiles.unshift(topTile);
+    this._imageData = this.initImageData();
+  }
+
+  keepTop() {
+    var topTile = this._maskTiles.pop();
+    this._maskTiles = [topTile];
+    this._imageData = this.initImageData();
+  }
+
+  clear() {
+    this._maskTiles = [];
+    this._imageData = this.initImageData();
+  }
+
   getDto(x, y) {
     if (this._maskTiles) {
       return {

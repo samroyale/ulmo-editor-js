@@ -350,14 +350,14 @@ const MapCanvas = React.createClass({
   _canvas: null,
   _highlight: null,
 
-  _startPosition: null,
   _mouseDown: null,
 
   getInitialState: function() {
     return {
       showMap: false,
       showOverlay: false,
-      overlayPosition: {x: 0, y: 0}
+      overlayPosition: {x: 0, y: 0},
+      buttonsMetadata: []
     };
   },
 
@@ -433,16 +433,6 @@ const MapCanvas = React.createClass({
     );
   },
 
-  unhighlightRange(fromPosition, toPosition) {
-    this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
-      for (var i = x; i < x + cols; i++) {
-        for (var j = y; j < y + rows; j++) {
-          ctx.putImageData(this._rpgMap.getMapTile(i, j).getImage(), i * tileSize, j * tileSize);
-        }
-      }
-    });
-  },
-
   highlightRange(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
       var highlight = this.initHighlight(rows, cols);
@@ -450,17 +440,61 @@ const MapCanvas = React.createClass({
     });
   },
 
-  applySelectedTile(fromPosition, toPosition) {
+  unhighlightRange(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
       for (var i = x; i < x + cols; i++) {
         for (var j = y; j < y + rows; j++) {
           var mapTile = this._rpgMap.getMapTile(i, j);
-          mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
           ctx.putImageData(mapTile.getImage(), i * tileSize, j * tileSize);
         }
       }
     });
-    this.setState({ updated: true });
+  },
+
+  applySelectedTile(fromPosition, toPosition) {
+    this.processSelectedTiles(mapTile => {
+      mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
+    });
+  },
+
+  sendToBack() {
+    this.setState({ showOverlay: false });
+    this.processSelectedTiles(mapTile => {
+      mapTile.sendToBack();
+    });
+  },
+
+  keepTop() {
+    this.setState({ showOverlay: false });
+    this.processSelectedTiles(mapTile => {
+      mapTile.keepTop();
+    });
+  },
+
+  clear() {
+    this.setState({ showOverlay: false });
+    this.processSelectedTiles(mapTile => {
+      mapTile.clear();
+    });
+  },
+
+  processSelectedTiles(func) {
+    var toPosition = this.props.tilePosition;
+    var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
+    this.processRange(
+      fromPosition,
+      this.props.tilePosition,
+      (x, y, cols, rows, ctx) => {
+        for (var i = x; i < x + cols; i++) {
+          for (var j = y; j < y + rows; j++) {
+            var mapTile = this._rpgMap.getMapTile(i, j);
+            func(mapTile);
+            ctx.putImageData(mapTile.getImage(), i * tileSize, j * tileSize);
+          }
+        }
+      }
+    );
+    this.setState({ updated: Date.now() });
   },
 
   processRange(fromPosition, toPosition, func) {
@@ -509,7 +543,20 @@ const MapCanvas = React.createClass({
       return;
     }
     var overlayPosition = this.getOverlayPosition(evt);
-    this.setState({ showOverlay, overlayPosition });
+    this.setState({
+      showOverlay,
+      overlayPosition,
+      buttonsMetadata: this.buttonsMetadata()
+    });
+  },
+
+  buttonsMetadata: function() {
+    return [
+      {label: 'Send to back', onClick: this.sendToBack},
+      {label: 'Keep top', onClick: this.keepTop},
+      {label: 'Clear', onClick: this.clear},
+      {label: 'Sorry', disabled: true, onClick: null}
+    ];
   },
 
   handleMouseDown: function(evt) {
@@ -534,9 +581,7 @@ const MapCanvas = React.createClass({
     if (!this.props.selectedTile) {
       return;
     }
-    if (this.state.startPosition) {
-      this.applySelectedTile(this.state.startPosition, this.props.tilePosition);
-    }
+    this.applySelectedTile(this.state.startPosition, this.props.tilePosition);
   },
 
   componentDidMount: function() {
@@ -556,7 +601,6 @@ const MapCanvas = React.createClass({
   },
 
   hideOverlay: function() {
-    console.log("hide overlay!")
     this.setState({ showOverlay: false });
   },
 
@@ -575,6 +619,7 @@ const MapCanvas = React.createClass({
         <MapCanvasPopup
             show={this.state.showOverlay}
             position={this.state.overlayPosition}
+            buttons={this.state.buttonsMetadata}
             onHide={this.hideOverlay} />
       </div>
     );
@@ -595,41 +640,21 @@ const MapCanvasPopup = React.createClass({
   },
 
   render: function() {
-    console.log(this.props.position.x +"," + this.props.position.y);
     var style = {
-      position: 'absolute',
-      backgroundColor: '#EEE',
-      boxShadow: '0 5px 10px rgba(0, 0, 0, 0.2)',
-      border: '1px solid #CCC',
       marginLeft: this.props.position.x,
-      marginTop: this.props.position.y,
-      borderRadius: 4,
-      padding: 8
+      marginTop: this.props.position.y
     };
+    var buttons = this.props.buttons.map(
+      button => <Button key={button.label} disabled={button.disabled}
+          onClick={button.onClick}>{button.label}</Button>
+    );
     return (
       <Overlay
         show={this.props.show}
         rootClose={true}
         onHide={this.props.onHide}>
-        <div style={style} onContextMenu={this.suppress}>
-          <ButtonGroup vertical>
-            <Button>Button</Button>
-            <Button>Button</Button>
-            <DropdownButton title="Dropdown" id="bg-vertical-dropdown-1">
-              <MenuItem eventKey="1">Dropdown link</MenuItem>
-              <MenuItem eventKey="2">Dropdown link</MenuItem>
-            </DropdownButton>
-            <Button>Button</Button>
-            <Button>Button</Button>
-            <DropdownButton title="Dropdown" id="bg-vertical-dropdown-2">
-              <MenuItem eventKey="1">Dropdown link</MenuItem>
-              <MenuItem eventKey="2">Dropdown link</MenuItem>
-            </DropdownButton>
-            <DropdownButton title="Dropdown" id="bg-vertical-dropdown-3">
-              <MenuItem eventKey="1">Dropdown link</MenuItem>
-              <MenuItem eventKey="2">Dropdown link</MenuItem>
-            </DropdownButton>
-          </ButtonGroup>
+        <div className="map-overlay" style={style} onContextMenu={this.suppress}>
+          <ButtonGroup vertical>{buttons}</ButtonGroup>
         </div>
       </Overlay>
     );
