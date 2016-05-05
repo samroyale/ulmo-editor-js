@@ -290,7 +290,7 @@ const TileSetCanvas = React.createClass({
   },
 
   render: function() {
-    var bsClass = this.state.showTileset ? "show tileset" : "hidden";
+    var bsClass = this.state.showTileset ? "show tiles" : "hidden";
     return (
       <div className="canvas-container">
         <canvas className={bsClass}

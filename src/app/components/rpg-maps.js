@@ -345,6 +345,14 @@ class MapTile {
     this._imageData = this.initImageData();
   }
 
+  copy() {
+    return new MapTile(
+      this._baseTileCanvas,
+      this._maskTiles.slice(0),
+      this._levels.slice(0)
+    );
+  }
+
   getDto(x, y) {
     if (this._maskTiles) {
       return {
