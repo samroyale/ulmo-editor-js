@@ -1,8 +1,10 @@
 var React = require('react'),
+    ReactDOM = require('react-dom'),
     Bootstrap = require('react-bootstrap'),
     RpgMaps = require('./rpg-maps.js'),
     tilePositionMixin = require('./tile-position-mixin.js'),
-    tileSize = require('../config.js').tileSize;
+    tileSize = require('../config.js').tileSize,
+    getDrawingContext = require('../utils.js').getScalableDrawingContext;
 
 var Modal = Bootstrap.Modal,
     ButtonToolbar = Bootstrap.ButtonToolbar,
@@ -17,7 +19,10 @@ var Modal = Bootstrap.Modal,
     Glyphicon = Bootstrap.Glyphicon,
     DropdownButton = Bootstrap.DropdownButton,
     ListGroup = Bootstrap.ListGroup,
-    ListGroupItem = Bootstrap.ListGroupItem;
+    ListGroupItem = Bootstrap.ListGroupItem,
+    Grid = Bootstrap.Grid,
+    Row = Bootstrap.Row,
+    Col = Bootstrap.Col;
 
 var RpgMapService = RpgMaps.RpgMapService,
     MaskTile = RpgMaps.MaskTile;
@@ -117,14 +122,14 @@ const MapCanvas = React.createClass({
     );
   },
 
-  highlightRange(fromPosition, toPosition) {
+  highlightRange: function(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
       var highlight = this.initHighlight(rows, cols);
       ctx.drawImage(highlight, x * tileSize, y * tileSize);
     });
   },
 
-  unhighlightRange(fromPosition, toPosition) {
+  unhighlightRange: function(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
       for (var i = x; i < x + cols; i++) {
         for (var j = y; j < y + rows; j++) {
@@ -152,42 +157,43 @@ const MapCanvas = React.createClass({
     return highlightedTiles;
   },*/
 
-  applySelectedTile(fromPosition, toPosition) {
+  applySelectedTile: function(fromPosition, toPosition) {
     this.processHighlightedTiles(mapTile => {
       mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
     });
   },
 
-  sendToBack() {
+  sendToBack: function() {
     this.setState({ showOverlay: false });
     this.processHighlightedTiles(mapTile => {
       mapTile.sendToBack();
     });
   },
 
-  keepTop() {
+  keepTop: function() {
     this.setState({ showOverlay: false });
     this.processHighlightedTiles(mapTile => {
       mapTile.keepTop();
     });
   },
 
-  clear() {
+  clear: function() {
     this.setState({ showOverlay: false });
     this.processHighlightedTiles(mapTile => {
       mapTile.clear();
     });
   },
 
-  edit() {
+  edit: function() {
     var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
     this.setState({
+      showOverlay: false,
       showModal: true,
       editableTile: mapTile.copy()
     });
   },
 
-  processHighlightedTiles(func) {
+  processHighlightedTiles: function(func) {
     var toPosition = this.props.tilePosition;
     var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
     this.processRange(
@@ -203,10 +209,10 @@ const MapCanvas = React.createClass({
         }
       }
     );
-    this.setState({ updated: Date.now() });
+    this.forceUpdate();
   },
 
-  processRange(fromPosition, toPosition, func) {
+  processRange: function(fromPosition, toPosition, func) {
     if (!toPosition) {
       return;
     }
@@ -314,7 +320,10 @@ const MapCanvas = React.createClass({
   },
 
   closeModal: function() {
-    this.setState({ showModal: false });
+    this.setState({
+      showModal: false,
+      editableTile: null
+    });
   },
 
   render: function() {
@@ -381,32 +390,70 @@ const MapCanvasPopup = React.createClass({
  */
 const EditTilesModal = React.createClass({
 
-  _canvasGroup: null,
+  moveTile: function(evt, func) {
+    var buttonId = evt.currentTarget.id;
+    var maskTiles = this.props.editableTile.getMaskTiles();
+    var index = maskTiles.length - parseInt(buttonId.slice(3), 10) - 1;
+    var maskTile = maskTiles[index];
+    func(maskTiles, maskTile, index);
+    this.forceUpdate();
+  },
 
-  getScalableDrawingContext: function(canvas) {
-    var context = canvas.getContext("2d");
-    context.imageSmoothingEnabled = false;
-    context.webkitImageSmoothingEnabled = false;
-    context.mozImageSmoothingEnabled = false;
-    return context;
+  moveTop: function(evt) {
+    this.moveTile(evt, (maskTiles, maskTile, index) => {
+      if (index < maskTiles.length - 1) {
+        maskTiles.splice(index, 1);
+        maskTiles.push(maskTile);
+      }
+    });
+  },
+
+  moveUp: function(evt) {
+    this.moveTile(evt, (maskTiles, maskTile, index) => {
+      if (index < maskTiles.length - 1) {
+        maskTiles.splice(index, 1);
+        maskTiles.splice(index + 1, 0, maskTile);
+      }
+    });
+  },
+
+  moveDown: function(evt) {
+    this.moveTile(evt, (maskTiles, maskTile, index) => {
+      if (index > 0) {
+        maskTiles.splice(index, 1);
+        maskTiles.splice(index - 1, 0, maskTile);
+      }
+    });
+  },
+
+  moveBottom: function(evt) {
+    this.moveTile(evt, (maskTiles, maskTile, index) => {
+      if (index > 0) {
+        maskTiles.splice(index, 1);
+        maskTiles.splice(0, 0, maskTile);
+      }
+    });
   },
 
   componentDidUpdate: function(oldProps, oldState) {
-    if (this._canvasGroup.length > 0) {
-      this._canvasGroup.reverse().forEach((cvs, i) => {
-        cvs.width = tileSize * 2;
-        cvs.height = tileSize * 2;
-        var maskTiles = this.props.editableTile.getMaskTiles();
-        var tileImage = maskTiles[i].getTile().getCanvas();
-        var ctx = this.getScalableDrawingContext(cvs);
-        ctx.drawImage(tileImage, 0, 0, cvs.width, cvs.height);
-      });
+    if (!this.props.editableTile) {
+      return;
     }
+    var maskTiles = this.props.editableTile.getMaskTiles();
+    if (maskTiles.length === 0) {
+      return;
+    }
+    maskTiles.forEach((maskTile, i) => {
+      var index = maskTiles.length - i - 1;
+      var cvs = this.refs["cvs" + index];
+      cvs.width = tileSize * 2;
+      cvs.height = tileSize * 2;
+      var ctx = getDrawingContext(cvs);
+      ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, cvs.width, cvs.height);
+    });
   },
 
   tileListGroup: function() {
-    this._canvasGroup = [];
-
     if (!this.props.editableTile) {
       return <ListGroup />;
     }
@@ -417,18 +464,25 @@ const EditTilesModal = React.createClass({
     var tileItems = maskTiles.map((maskTile, i) => {
       return (
         <ListGroupItem key={i}>
-          <div className="tile-canvas-container">
-            <canvas className="tiles" ref={cvs => this._canvasGroup.push(cvs)} />
-          </div>
-          <ButtonToolbar>
-  <ButtonGroup>
-    <Button><Glyphicon glyph="align-left" /></Button>
-    <Button><Glyphicon glyph="align-center" /></Button>
-    <Button><Glyphicon glyph="align-right" /></Button>
-    <Button><Glyphicon glyph="align-justify" /></Button>
-  </ButtonGroup>
-</ButtonToolbar>
-
+          <Grid>
+            <Row className="show-grid">
+              <Col sm={1}>
+                <div className="tile-canvas-container">
+                  <canvas className="tiles" ref={"cvs" + i} />
+                </div>
+              </Col>
+              <Col sm={2}>
+                <ButtonToolbar className="tile-buttons">
+                  <ButtonGroup>
+                    <Button id={"btn" + i} onClick={this.moveTop}><Glyphicon glyph="triangle-top" /></Button>
+                    <Button id={"btn" + i} onClick={this.moveUp}><Glyphicon glyph="menu-up" /></Button>
+                    <Button id={"btn" + i} onClick={this.moveDown}><Glyphicon glyph="menu-down" /></Button>
+                    <Button id={"btn" + i} onClick={this.moveBottom}><Glyphicon glyph="triangle-bottom" /></Button>
+                  </ButtonGroup>
+                </ButtonToolbar>
+              </Col>
+            </Row>
+          </Grid>
         </ListGroupItem>
       );
     });
@@ -448,17 +502,5 @@ const EditTilesModal = React.createClass({
     );
   }
 });
-
-/* =============================================================================
- * COMPONENT: MAP TILE INFO
- * =============================================================================
- */
-function MapTileInfo(props) {
-  if (props.tilePosition && props.mapTile) {
-    var levelsInfo = "[" + props.mapTile.getLevels().toString() + "]";
-    return (<p className="no-margin">{props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo}</p>);
-  }
-  return (<p className="no-margin">-</p>);
-}
 
 module.exports = MapCanvas;

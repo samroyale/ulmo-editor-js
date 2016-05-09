@@ -1,5 +1,6 @@
 var TileSets = require('./tile-sets.js'),
-    config = require('../config.js');
+    config = require('../config.js'),
+    getDrawingContext = require('../utils.js').getScalableDrawingContext;
 
 const tileSetsApi = config.tileSetsApi,
       tileSize = config.tileSize;
@@ -83,7 +84,7 @@ class TileSetService {
     var tileSetCanvas = document.createElement("canvas");
     tileSetCanvas.width = tileSetImage.width * 2;
     tileSetCanvas.height = tileSetImage.height * 2;
-    var ctx = this.getDrawingContext(tileSetCanvas);
+    var ctx = getDrawingContext(tileSetCanvas);
     ctx.drawImage(tileSetImage, 0, 0, tileSetCanvas.width, tileSetCanvas.height);
     // extract tiles and store them in a 2D array
     var cols = Math.floor(tileSetCanvas.width / tileSize);
@@ -106,14 +107,6 @@ class TileSetService {
       }
     }
     return tiles;
-  }
-
-  getDrawingContext(canvas) {
-    var context = canvas.getContext("2d");
-    context.imageSmoothingEnabled = false;
-    context.webkitImageSmoothingEnabled = false;
-    context.mozImageSmoothingEnabled = false;
-    return context;
   }
 }
 
