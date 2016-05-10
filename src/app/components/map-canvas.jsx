@@ -435,6 +435,14 @@ const EditTilesModal = React.createClass({
     });
   },
 
+  delete: function(evt) {
+    this.moveTile(evt, (maskTiles, maskTile, index) => {
+      if (index > 0) {
+        maskTiles.splice(index, 1);
+      }
+    });
+  },
+
   componentDidUpdate: function(oldProps, oldState) {
     if (!this.props.editableTile) {
       return;
@@ -466,7 +474,8 @@ const EditTilesModal = React.createClass({
           onMoveTop={this.moveTop}
           onMoveUp={this.moveUp}
           onMoveDown={this.moveDown}
-          onMoveBottom={this.moveBottom} />
+          onMoveBottom={this.moveBottom}
+          onDelete={this.delete} />
       );
     });
     return (<ListGroup>{tileItems}</ListGroup>);
@@ -487,7 +496,7 @@ const EditTilesModal = React.createClass({
 });
 
 /* =============================================================================
- * COMPONENT: EDIT TILES MODAL
+ * COMPONENT: TILE LIST ITEM
  * =============================================================================
  */
 const TileListItem = React.createClass({
@@ -506,12 +515,12 @@ const TileListItem = React.createClass({
       <ListGroupItem>
         <Grid>
           <Row className="show-grid">
-            <Col sm={1}>
+            <Col lg={1}>
               <div className="tile-canvas-container">
                 <canvas className="tiles" ref={cvs => this._canvas = cvs} />
               </div>
             </Col>
-            <Col sm={2}>
+            <Col lg={2}>
               <ButtonToolbar className="tile-buttons">
                 <ButtonGroup>
                   <Button id={this.props.buttonId} onClick={this.props.onMoveTop}><Glyphicon glyph="triangle-top" /></Button>
@@ -519,6 +528,11 @@ const TileListItem = React.createClass({
                   <Button id={this.props.buttonId} onClick={this.props.onMoveDown}><Glyphicon glyph="menu-down" /></Button>
                   <Button id={this.props.buttonId} onClick={this.props.onMoveBottom}><Glyphicon glyph="triangle-bottom" /></Button>
                 </ButtonGroup>
+              </ButtonToolbar>
+            </Col>
+            <Col lg={1}>
+              <ButtonToolbar className="tile-buttons">
+                <Button id={this.props.buttonId} onClick={this.props.onDelete}><Glyphicon glyph="trash" /></Button>
               </ButtonToolbar>
             </Col>
           </Row>
