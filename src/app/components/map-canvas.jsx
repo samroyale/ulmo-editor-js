@@ -445,11 +445,8 @@ const EditTilesModal = React.createClass({
     }
     maskTiles.forEach((maskTile, i) => {
       var index = maskTiles.length - i - 1;
-      var cvs = this.refs["cvs" + index];
-      cvs.width = tileSize * 2;
-      cvs.height = tileSize * 2;
-      var ctx = getDrawingContext(cvs);
-      ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, cvs.width, cvs.height);
+      var item = this.refs["item" + index];
+      item.drawToCanvas(maskTile);
     });
   },
 
@@ -463,27 +460,13 @@ const EditTilesModal = React.createClass({
     }
     var tileItems = maskTiles.map((maskTile, i) => {
       return (
-        <ListGroupItem key={i}>
-          <Grid>
-            <Row className="show-grid">
-              <Col sm={1}>
-                <div className="tile-canvas-container">
-                  <canvas className="tiles" ref={"cvs" + i} />
-                </div>
-              </Col>
-              <Col sm={2}>
-                <ButtonToolbar className="tile-buttons">
-                  <ButtonGroup>
-                    <Button id={"btn" + i} onClick={this.moveTop}><Glyphicon glyph="triangle-top" /></Button>
-                    <Button id={"btn" + i} onClick={this.moveUp}><Glyphicon glyph="menu-up" /></Button>
-                    <Button id={"btn" + i} onClick={this.moveDown}><Glyphicon glyph="menu-down" /></Button>
-                    <Button id={"btn" + i} onClick={this.moveBottom}><Glyphicon glyph="triangle-bottom" /></Button>
-                  </ButtonGroup>
-                </ButtonToolbar>
-              </Col>
-            </Row>
-          </Grid>
-        </ListGroupItem>
+        <TileListItem key={i}
+          ref={"item" + i}
+          buttonId={"btn" + i}
+          onMoveTop={this.moveTop}
+          onMoveUp={this.moveUp}
+          onMoveDown={this.moveDown}
+          onMoveBottom={this.moveBottom} />
       );
     });
     return (<ListGroup>{tileItems}</ListGroup>);
@@ -499,6 +482,48 @@ const EditTilesModal = React.createClass({
           {this.tileListGroup()}
         </Modal.Body>
       </Modal>
+    );
+  }
+});
+
+/* =============================================================================
+ * COMPONENT: EDIT TILES MODAL
+ * =============================================================================
+ */
+const TileListItem = React.createClass({
+
+  _canvas: null,
+
+  drawToCanvas: function(maskTile) {
+    this._canvas.width = tileSize * 2;
+    this._canvas.height = tileSize * 2;
+    var ctx = getDrawingContext(this._canvas);
+    ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
+  },
+
+  render: function() {
+    return (
+      <ListGroupItem>
+        <Grid>
+          <Row className="show-grid">
+            <Col sm={1}>
+              <div className="tile-canvas-container">
+                <canvas className="tiles" ref={cvs => this._canvas = cvs} />
+              </div>
+            </Col>
+            <Col sm={2}>
+              <ButtonToolbar className="tile-buttons">
+                <ButtonGroup>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveTop}><Glyphicon glyph="triangle-top" /></Button>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveUp}><Glyphicon glyph="menu-up" /></Button>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveDown}><Glyphicon glyph="menu-down" /></Button>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveBottom}><Glyphicon glyph="triangle-bottom" /></Button>
+                </ButtonGroup>
+              </ButtonToolbar>
+            </Col>
+          </Row>
+        </Grid>
+      </ListGroupItem>
     );
   }
 });
