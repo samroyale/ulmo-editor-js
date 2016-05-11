@@ -161,36 +161,49 @@ const MapCanvas = React.createClass({
     this.processHighlightedTiles(mapTile => {
       mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
     });
+    this.forceUpdate();
   },
 
   sendToBack: function() {
-    this.setState({ showOverlay: false });
     this.processHighlightedTiles(mapTile => {
       mapTile.sendToBack();
     });
+    this.hideOverlay();
   },
 
   keepTop: function() {
-    this.setState({ showOverlay: false });
     this.processHighlightedTiles(mapTile => {
       mapTile.keepTop();
     });
+    this.hideOverlay();
   },
 
   clear: function() {
-    this.setState({ showOverlay: false });
     this.processHighlightedTiles(mapTile => {
       mapTile.clear();
     });
+    this.hideOverlay();
   },
 
-  edit: function() {
+  editTile: function() {
     var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
     this.setState({
       showOverlay: false,
       showModal: true,
       editableTile: mapTile.copy()
     });
+  },
+
+  applyTileEdit: function() {
+    this._rpgMap.putMapTile(
+      this.props.tilePosition.x,
+      this.props.tilePosition.y,
+      this.state.editableTile
+    );
+    this.processHighlightedTiles(mapTile => {
+      mapTile.initImageData();
+    });
+    this.closeModal();
   },
 
   processHighlightedTiles: function(func) {
@@ -209,7 +222,6 @@ const MapCanvas = React.createClass({
         }
       }
     );
-    this.forceUpdate();
   },
 
   processRange: function(fromPosition, toPosition, func) {
@@ -232,7 +244,7 @@ const MapCanvas = React.createClass({
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
       {label: 'Clear', onClick: this.clear},
-      {label: 'Edit', onClick: this.edit},
+      {label: 'Edit', onClick: this.editTile},
       {label: 'Sorry', disabled: true, onClick: null}
     ];
   },
@@ -347,7 +359,8 @@ const MapCanvas = React.createClass({
         <EditTilesModal
             showModal={this.state.showModal}
             editableTile={this.state.editableTile}
-            onClose={this.closeModal} />
+            onClose={this.closeModal}
+            onSubmit={this.applyTileEdit} />
       </div>
     );
   }
@@ -437,9 +450,7 @@ const EditTilesModal = React.createClass({
 
   delete: function(evt) {
     this.moveTile(evt, (maskTiles, maskTile, index) => {
-      if (index > 0) {
-        maskTiles.splice(index, 1);
-      }
+      maskTiles.splice(index, 1);
     });
   },
 
@@ -458,6 +469,22 @@ const EditTilesModal = React.createClass({
     });
   },
 
+  tilePosition: function(tileIndex, lastIndex) {
+    var position = [];
+    if (tileIndex === 0) {
+      position.push("first")
+    }
+    if (tileIndex === lastIndex) {
+      position.push("last")
+    }
+    return position;
+  },
+
+  handleSubmit: function(e) {
+    e.preventDefault();
+    this.props.onSubmit();
+  },
+
   tileListGroup: function() {
     if (!this.props.editableTile) {
       return <ListGroup />;
@@ -467,10 +494,12 @@ const EditTilesModal = React.createClass({
       return <ListGroup />;
     }
     var tileItems = maskTiles.map((maskTile, i) => {
+      var tilePosition = this.tilePosition(i, maskTiles.length - 1);
       return (
         <TileListItem key={i}
           ref={"item" + i}
           buttonId={"btn" + i}
+          position={tilePosition}
           onMoveTop={this.moveTop}
           onMoveUp={this.moveUp}
           onMoveDown={this.moveDown}
@@ -489,6 +518,9 @@ const EditTilesModal = React.createClass({
         </Modal.Header>
         <Modal.Body>
           {this.tileListGroup()}
+          <form onSubmit={this.handleSubmit}>
+            <ButtonInput type="submit" value="OK" />
+          </form>
         </Modal.Body>
       </Modal>
     );
@@ -511,6 +543,8 @@ const TileListItem = React.createClass({
   },
 
   render: function() {
+    var disabledFirst = this.props.position.includes("first");
+    var disabledLast = this.props.position.includes("last");
     return (
       <ListGroupItem>
         <Grid>
@@ -523,16 +557,26 @@ const TileListItem = React.createClass({
             <Col lg={2}>
               <ButtonToolbar className="tile-buttons">
                 <ButtonGroup>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveTop}><Glyphicon glyph="triangle-top" /></Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveUp}><Glyphicon glyph="menu-up" /></Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveDown}><Glyphicon glyph="menu-down" /></Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveBottom}><Glyphicon glyph="triangle-bottom" /></Button>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveTop} disabled={disabledFirst}>
+                    <Glyphicon glyph="triangle-top" />
+                  </Button>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveUp} disabled={disabledFirst}>
+                    <Glyphicon glyph="menu-up" />
+                  </Button>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveDown} disabled={disabledLast}>
+                    <Glyphicon glyph="menu-down" />
+                  </Button>
+                  <Button id={this.props.buttonId} onClick={this.props.onMoveBottom} disabled={disabledLast}>
+                    <Glyphicon glyph="triangle-bottom" />
+                  </Button>
                 </ButtonGroup>
               </ButtonToolbar>
             </Col>
             <Col lg={1}>
               <ButtonToolbar className="tile-buttons">
-                <Button id={this.props.buttonId} onClick={this.props.onDelete}><Glyphicon glyph="trash" /></Button>
+                <Button id={this.props.buttonId} onClick={this.props.onDelete}>
+                  <Glyphicon glyph="trash" />
+                </Button>
               </ButtonToolbar>
             </Col>
           </Row>

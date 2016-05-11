@@ -242,6 +242,10 @@ class RpgMap {
     return this._mapTiles[x][y];
   }
 
+  putMapTile(x, y, mapTile) {
+    this._mapTiles[x][y] = mapTile;
+  }
+
   getCols() {
     return this._mapTiles.length;
   }
@@ -285,21 +289,21 @@ class MapTile {
     this._baseTileCanvas = baseTileCanvas;
     this._maskTiles = maskTiles ? maskTiles : [];
     this._levels = levels ? levels : [];
-    this._imageData = this.initImageData();
+    this.initImageData();
   }
 
   initImageData() {
-    var emptyCanvas = document.createElement("canvas");
-    emptyCanvas.width = this._baseTileCanvas.width;
-    emptyCanvas.height = this._baseTileCanvas.height;
-    var ctx = emptyCanvas.getContext('2d');
+    var tileCanvas = document.createElement("canvas");
+    tileCanvas.width = tileSize;
+    tileCanvas.height = tileSize;
+    var ctx = tileCanvas.getContext('2d');
     ctx.drawImage(this._baseTileCanvas, 0, 0);
     if (this._maskTiles) {
       this._maskTiles.forEach(maskTile => {
         ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0);
       });
     }
-    return ctx.getImageData(0, 0, emptyCanvas.width, emptyCanvas.height);
+    this._imageData = ctx.getImageData(0, 0, tileCanvas.width, tileCanvas.height);
   }
 
   /*setMaskTiles(maskTiles) {
@@ -321,7 +325,7 @@ class MapTile {
 
   addMaskTile(maskTile) {
     this._maskTiles.push(maskTile);
-    this._imageData = this.initImageData();
+    this.initImageData();
   }
 
   /*setLevels(levels) {
@@ -331,18 +335,18 @@ class MapTile {
   sendToBack() {
     var topTile = this._maskTiles.pop();
     this._maskTiles.unshift(topTile);
-    this._imageData = this.initImageData();
+    this.initImageData();
   }
 
   keepTop() {
     var topTile = this._maskTiles.pop();
     this._maskTiles = [topTile];
-    this._imageData = this.initImageData();
+    this.initImageData();
   }
 
   clear() {
     this._maskTiles = [];
-    this._imageData = this.initImageData();
+    this.initImageData();
   }
 
   copy() {
