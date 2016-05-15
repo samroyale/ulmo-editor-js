@@ -269,12 +269,7 @@ class RpgMap {
         }
       }
     }
-    return {
-      name,
-      rows,
-      cols,
-      mapTiles
-    }
+    return { name, rows, cols, mapTiles };
   }
 }
 
@@ -293,17 +288,25 @@ class MapTile {
   }
 
   initImageData() {
+    var tileCanvas = this.getCanvas(this._baseTileCanvas);
+    var ctx = tileCanvas.getContext('2d');
+    this._imageData = ctx.getImageData(0, 0, tileCanvas.width, tileCanvas.height);
+  }
+
+  getCanvas(baseTileCanvas) {
     var tileCanvas = document.createElement("canvas");
     tileCanvas.width = tileSize;
     tileCanvas.height = tileSize;
     var ctx = tileCanvas.getContext('2d');
-    ctx.drawImage(this._baseTileCanvas, 0, 0);
+    if (baseTileCanvas) {
+      ctx.drawImage(this._baseTileCanvas, 0, 0);
+    }
     if (this._maskTiles) {
       this._maskTiles.forEach(maskTile => {
         ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0);
       });
     }
-    this._imageData = ctx.getImageData(0, 0, tileCanvas.width, tileCanvas.height);
+    return tileCanvas;
   }
 
   /*setMaskTiles(maskTiles) {

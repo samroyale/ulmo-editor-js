@@ -261,6 +261,10 @@ const NewMapModal = React.createClass({
 
   handleSubmit: function(e) {
     e.preventDefault();
+    this.newMap();
+  },
+
+  newMap: function() {
     var rows = parseInt(this.state.rowsVal, 10);
     var cols = parseInt(this.state.colsVal, 10);
     if (rows > 0 && cols > 0) {
@@ -275,12 +279,15 @@ const NewMapModal = React.createClass({
           <Modal.Title>New Map</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-        <form onSubmit={this.handleSubmit}>
-          <Input type="text" label="Rows" placeholder="0-32" value={this.state.rowsVal} onChange={this.handleRowsChange} />
-          <Input type="text" label="Cols" placeholder="0-32" value={this.state.colsVal} onChange={this.handleColsChange} />
-          <ButtonInput type="submit" value="OK" />
-        </form>
+          <form onSubmit={this.handleSubmit}>
+            <Input type="text" label="Rows" placeholder="0-32" value={this.state.rowsVal} onChange={this.handleRowsChange} />
+            <Input type="text" label="Cols" placeholder="0-32" value={this.state.colsVal} onChange={this.handleColsChange} />
+          </form>
         </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={this.newMap} bsStyle="primary">OK</Button>
+        </Modal.Footer>
       </Modal>
     );
   }

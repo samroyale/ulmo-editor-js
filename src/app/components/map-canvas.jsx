@@ -22,7 +22,8 @@ var Modal = Bootstrap.Modal,
     ListGroupItem = Bootstrap.ListGroupItem,
     Grid = Bootstrap.Grid,
     Row = Bootstrap.Row,
-    Col = Bootstrap.Col;
+    Col = Bootstrap.Col,
+    Panel = Bootstrap.Panel;
 
 var RpgMapService = RpgMaps.RpgMapService,
     MaskTile = RpgMaps.MaskTile;
@@ -403,6 +404,8 @@ const MapCanvasPopup = React.createClass({
  */
 const EditTilesModal = React.createClass({
 
+  _tileCanvas: null,
+
   moveTile: function(evt, func) {
     var buttonId = evt.currentTarget.id;
     var maskTiles = this.props.editableTile.getMaskTiles();
@@ -459,14 +462,14 @@ const EditTilesModal = React.createClass({
       return;
     }
     var maskTiles = this.props.editableTile.getMaskTiles();
-    if (maskTiles.length === 0) {
-      return;
-    }
     maskTiles.forEach((maskTile, i) => {
       var index = maskTiles.length - i - 1;
       var item = this.refs["item" + index];
       item.drawToCanvas(maskTile);
     });
+    var ctx = getDrawingContext(this._tileCanvas);
+    ctx.clearRect(0, 0, this._tileCanvas.width, this._tileCanvas.height);
+    ctx.drawImage(this.props.editableTile.getCanvas(), 0, 0, this._tileCanvas.width, this._tileCanvas.height);
   },
 
   tilePosition: function(tileIndex, lastIndex) {
@@ -478,11 +481,6 @@ const EditTilesModal = React.createClass({
       position.push("last")
     }
     return position;
-  },
-
-  handleSubmit: function(e) {
-    e.preventDefault();
-    this.props.onSubmit();
   },
 
   tileListGroup: function() {
@@ -507,21 +505,32 @@ const EditTilesModal = React.createClass({
           onDelete={this.delete} />
       );
     });
-    return (<ListGroup>{tileItems}</ListGroup>);
+    return (<ListGroup className="edit-tiles-section">{tileItems}</ListGroup>);
   },
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={this.props.showModal} onHide={this.props.onClose} bsSize="medium">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tiles</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {this.tileListGroup()}
-          <form onSubmit={this.handleSubmit}>
-            <ButtonInput type="submit" value="OK" />
-          </form>
+          <Grid>
+            <Row>
+              <Col className="edit-tiles-col" lg={4}>{this.tileListGroup()}</Col>
+              <Col className="edit-tiles-col" lg={2}>
+                <Panel className="tile-preview-panel">
+                  <canvas className="tiles tile-preview" width={tileSize * 2} height={tileSize * 2}
+                      ref={cvs => this._tileCanvas = cvs} />
+                </Panel>
+              </Col>
+            </Row>
+          </Grid>
         </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={this.props.onSubmit} bsStyle="primary">OK</Button>
+        </Modal.Footer>
       </Modal>
     );
   }
@@ -536,8 +545,6 @@ const TileListItem = React.createClass({
   _canvas: null,
 
   drawToCanvas: function(maskTile) {
-    this._canvas.width = tileSize * 2;
-    this._canvas.height = tileSize * 2;
     var ctx = getDrawingContext(this._canvas);
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
   },
@@ -548,13 +555,14 @@ const TileListItem = React.createClass({
     return (
       <ListGroupItem>
         <Grid>
-          <Row className="show-grid">
-            <Col lg={1}>
+          <Row>
+            <Col className="edit-tiles-item-col" lg={1}>
               <div className="tile-canvas-container">
-                <canvas className="tiles" ref={cvs => this._canvas = cvs} />
+                <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
+                    ref={cvs => this._canvas = cvs} />
               </div>
             </Col>
-            <Col lg={2}>
+            <Col className="edit-tiles-item-col" lg={2}>
               <ButtonToolbar className="tile-buttons">
                 <ButtonGroup>
                   <Button id={this.props.buttonId} onClick={this.props.onMoveTop} disabled={disabledFirst}>
@@ -572,7 +580,7 @@ const TileListItem = React.createClass({
                 </ButtonGroup>
               </ButtonToolbar>
             </Col>
-            <Col lg={1}>
+            <Col className="edit-tiles-item-col" lg={1}>
               <ButtonToolbar className="tile-buttons">
                 <Button id={this.props.buttonId} onClick={this.props.onDelete}>
                   <Glyphicon glyph="trash" />
