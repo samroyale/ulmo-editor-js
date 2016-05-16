@@ -28,6 +28,7 @@ const MapEditor = React.createClass({
       showLoadModal: false,
       showNewModal: false,
       showSaveModal: false,
+      mapDirty: false,
       maps: [],
       mapId: null,
       loadError: null,
@@ -63,9 +64,11 @@ const MapEditor = React.createClass({
 
   mapLoaded: function(mid, data) {
     if (data.map) {
+      var dirty = mid ? false : true; // true for new maps
       this.closeModal();
       this.setState({
         mapId: data.map.getId(),
+        mapDirty: dirty,
         loadError: null
       });
       return;
@@ -123,7 +126,11 @@ const MapEditor = React.createClass({
     if (data.mapId) {
       // console.log("Map saved [" + data.mapName + "/" + data.mapId + "]");
       this.closeModal();
-      this.setState({ mapId: data.mapId, saveError: null });
+      this.setState({
+        mapId: data.mapId,
+        mapDirty: false,
+        saveError: null,
+      });
       return;
     }
     if (data.err) {
@@ -132,6 +139,10 @@ const MapEditor = React.createClass({
       return;
     }
     console.log("Something went wrong...");
+  },
+
+  mapUpdated: function() {
+    this.setState({ mapDirty: true });
   },
 
   updateCurrentTile: function(tilePosition, tile) {
@@ -143,13 +154,15 @@ const MapEditor = React.createClass({
       <div>
         <Panel className="component">
           <MapToolbar
+              mapDirty={this.state.mapDirty}
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
               onSaveMap={this.saveMap} />
           <MapCanvas
-              onTilePositionUpdated={this.updateCurrentTile}
               selectedTile={this.props.selectedTile}
               tilePosition={this.state.currentTilePosition}
+              onTilePositionUpdated={this.updateCurrentTile}
+              onMapUpdated={this.mapUpdated}
               ref={comp => this._mapCanvas = comp} />
           <MapTileInfo
               tilePosition={this.state.currentTilePosition}
@@ -191,7 +204,7 @@ function MapToolbar(props) {
       <Button bsStyle="primary" onClick={props.onNewMap}>
         New Map
       </Button>
-      <Button bsStyle="primary" onClick={props.onSaveMap}>
+      <Button bsStyle="primary" onClick={props.onSaveMap} disabled={!props.mapDirty}>
         Save Map
       </Button>
     </ButtonToolbar>
@@ -222,6 +235,9 @@ function OpenMapModal(props) {
         </Collapse>
         <ul>{items}</ul>
       </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onClose}>Cancel</Button>
+      </Modal.Footer>
     </Modal>
   );
 }
@@ -274,14 +290,16 @@ const NewMapModal = React.createClass({
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={this.props.showModal} onHide={this.props.onClose} bsSize="small">
         <Modal.Header closeButton>
           <Modal.Title>New Map</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form onSubmit={this.handleSubmit}>
-            <Input type="text" label="Rows" placeholder="0-32" value={this.state.rowsVal} onChange={this.handleRowsChange} />
-            <Input type="text" label="Cols" placeholder="0-32" value={this.state.colsVal} onChange={this.handleColsChange} />
+            <Input type="text" label="Rows" placeholder="0-32"
+                value={this.state.rowsVal} onChange={this.handleRowsChange} />
+            <Input type="text" label="Cols" placeholder="0-32"
+                value={this.state.colsVal} onChange={this.handleColsChange} />
           </form>
         </Modal.Body>
         <Modal.Footer>
@@ -312,6 +330,10 @@ const SaveAsModal = React.createClass({
 
   handleSubmit: function(e) {
     e.preventDefault();
+    this.saveMap();
+  },
+
+  saveMap: function() {
     var mapName = this.state.mapName;
     if (mapName.length > 0) {
       this.props.onSaveAs(mapName);
@@ -321,21 +343,25 @@ const SaveAsModal = React.createClass({
   render: function() {
     var showError = this.props.error && this.props.error.length > 0;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={this.props.showModal} onHide={this.props.onClose} bsSize="small">
         <Modal.Header closeButton>
           <Modal.Title>Save As</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-        <Collapse in={showError}>
-          <div>
-            <Alert bsStyle="warning">{this.props.error}</Alert>
-          </div>
-        </Collapse>
-        <form onSubmit={this.handleSubmit}>
-          <Input type="text" label="Name" placeholder="map name" value={this.state.mapName} onChange={this.handleNameChange} />
-          <ButtonInput type="submit" value="Save" />
-        </form>
+          <Collapse in={showError}>
+            <div>
+              <Alert bsStyle="warning">{this.props.error}</Alert>
+            </div>
+          </Collapse>
+          <form onSubmit={this.handleSubmit}>
+            <Input type="text" label="Name" placeholder="map name"
+                value={this.state.mapName} onChange={this.handleNameChange} />
+          </form>
         </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={this.saveMap} bsStyle="primary">OK</Button>
+        </Modal.Footer>
       </Modal>
     );
   }
@@ -348,7 +374,11 @@ const SaveAsModal = React.createClass({
 function MapTileInfo(props) {
   if (props.tilePosition && props.mapTile) {
     var levelsInfo = "[" + props.mapTile.getLevels().toString() + "]";
-    return (<p className="no-margin">{props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo}</p>);
+    return (
+      <p className="no-margin">
+        {props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo}
+      </p>
+    );
   }
   return (<p className="no-margin">-</p>);
 }

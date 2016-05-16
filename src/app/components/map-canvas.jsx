@@ -223,6 +223,7 @@ const MapCanvas = React.createClass({
         }
       }
     );
+    this.props.onMapUpdated();
   },
 
   processRange: function(fromPosition, toPosition, func) {
@@ -403,8 +404,7 @@ const MapCanvasPopup = React.createClass({
  * =============================================================================
  */
 const EditTilesModal = React.createClass({
-
-  _tileCanvas: null,
+  _previewCanvas: null,
 
   moveTile: function(evt, func) {
     var buttonId = evt.currentTarget.id;
@@ -467,9 +467,9 @@ const EditTilesModal = React.createClass({
       var item = this.refs["item" + index];
       item.drawToCanvas(maskTile);
     });
-    var ctx = getDrawingContext(this._tileCanvas);
-    ctx.clearRect(0, 0, this._tileCanvas.width, this._tileCanvas.height);
-    ctx.drawImage(this.props.editableTile.getCanvas(), 0, 0, this._tileCanvas.width, this._tileCanvas.height);
+    var ctx = getDrawingContext(this._previewCanvas);
+    ctx.clearRect(0, 0, this._previewCanvas.width, this._previewCanvas.height);
+    ctx.drawImage(this.props.editableTile.getCanvas(), 0, 0, this._previewCanvas.width, this._previewCanvas.height);
   },
 
   tilePosition: function(tileIndex, lastIndex) {
@@ -485,11 +485,11 @@ const EditTilesModal = React.createClass({
 
   tileListGroup: function() {
     if (!this.props.editableTile) {
-      return <ListGroup />;
+      return <ListGroup fill />;
     }
     var maskTiles = this.props.editableTile.getMaskTiles();
     if (maskTiles.length === 0) {
-      return <ListGroup />;
+      return <ListGroup fill />;
     }
     var tileItems = maskTiles.map((maskTile, i) => {
       var tilePosition = this.tilePosition(i, maskTiles.length - 1);
@@ -505,23 +505,27 @@ const EditTilesModal = React.createClass({
           onDelete={this.delete} />
       );
     });
-    return (<ListGroup className="edit-tiles-section">{tileItems}</ListGroup>);
+    return (<ListGroup fill>{tileItems}</ListGroup>);
   },
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} bsSize="medium">
+      <Modal show={this.props.showModal} onHide={this.props.onClose}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Tiles</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Grid>
             <Row>
-              <Col className="edit-tiles-col" lg={4}>{this.tileListGroup()}</Col>
+              <Col className="edit-tiles-col" lg={4}>
+                <Panel className="tile-images-panel" header="Images">
+                  {this.tileListGroup()}
+                </Panel>
+              </Col>
               <Col className="edit-tiles-col" lg={2}>
-                <Panel className="tile-preview-panel">
+                <Panel className="tile-preview-panel" header="Preview">
                   <canvas className="tiles tile-preview" width={tileSize * 2} height={tileSize * 2}
-                      ref={cvs => this._tileCanvas = cvs} />
+                      ref={cvs => this._previewCanvas = cvs} />
                 </Panel>
               </Col>
             </Row>
@@ -541,7 +545,6 @@ const EditTilesModal = React.createClass({
  * =============================================================================
  */
 const TileListItem = React.createClass({
-
   _canvas: null,
 
   drawToCanvas: function(maskTile) {
