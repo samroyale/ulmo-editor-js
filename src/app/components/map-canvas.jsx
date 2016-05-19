@@ -1,32 +1,16 @@
 var React = require('react'),
-    ReactDOM = require('react-dom'),
     Bootstrap = require('react-bootstrap'),
     RpgMaps = require('./rpg-maps.js'),
+    MapModal = require('./map-modal.jsx'),
     tilePositionMixin = require('./tile-position-mixin.js'),
-    tileSize = require('../config.js').tileSize,
-    getDrawingContext = require('../utils.js').getScalableDrawingContext;
+    tileSize = require('../config.js').tileSize;
 
-var Modal = Bootstrap.Modal,
-    ButtonToolbar = Bootstrap.ButtonToolbar,
+var Overlay = Bootstrap.Overlay,
     ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
-    Input = Bootstrap.Input,
-    ButtonInput = Bootstrap.ButtonInput,
-    Collapse = Bootstrap.Collapse,
-    Overlay = Bootstrap.Overlay,
-    Popover = Bootstrap.Popover,
-    Alert = Bootstrap.Alert,
-    Glyphicon = Bootstrap.Glyphicon,
-    DropdownButton = Bootstrap.DropdownButton,
-    ListGroup = Bootstrap.ListGroup,
-    ListGroupItem = Bootstrap.ListGroupItem,
-    Grid = Bootstrap.Grid,
-    Row = Bootstrap.Row,
-    Col = Bootstrap.Col,
-    Panel = Bootstrap.Panel;
+    DropdownButton = Bootstrap.DropdownButton;
 
-var RpgMapService = RpgMaps.RpgMapService,
-    MaskTile = RpgMaps.MaskTile;
+var RpgMapService = RpgMaps.RpgMapService;
 
 /* =============================================================================
  * COMPONENT: MAP CANVAS
@@ -46,7 +30,9 @@ const MapCanvas = React.createClass({
       showMap: false,
       showOverlay: false,
       overlayPosition: {x: 0, y: 0},
-      showModal: false,
+      showLevelsModal: false,
+      showImagesModal: false,
+      showMasksModal: false,
       editableTile: null
     };
   },
@@ -160,7 +146,7 @@ const MapCanvas = React.createClass({
 
   applySelectedTile: function(fromPosition, toPosition) {
     this.processHighlightedTiles(mapTile => {
-      mapTile.addMaskTile(new MaskTile(this.props.selectedTile));
+      mapTile.addMaskTile(new RpgMaps.MaskTile(this.props.selectedTile));
     });
     this.forceUpdate();
   },
@@ -186,11 +172,29 @@ const MapCanvas = React.createClass({
     this.hideOverlay();
   },
 
-  editTile: function() {
+  editLevels: function() {
     var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
     this.setState({
       showOverlay: false,
-      showModal: true,
+      showLevelsModal: true,
+      editableTile: mapTile.copy()
+    });
+  },
+
+  editImages: function() {
+    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
+    this.setState({
+      showOverlay: false,
+      showImagesModal: true,
+      editableTile: mapTile.copy()
+    });
+  },
+
+  editMasks: function() {
+    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
+    this.setState({
+      showOverlay: false,
+      showMasksModal: true,
       editableTile: mapTile.copy()
     });
   },
@@ -246,7 +250,9 @@ const MapCanvas = React.createClass({
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
       {label: 'Clear', onClick: this.clear},
-      {label: 'Edit', onClick: this.editTile},
+      {label: 'Edit Levels', onClick: this.editLevels},
+      {label: 'Edit Images', onClick: this.editImages},
+      {label: 'Edit Masks', onClick: this.editMasks},
       {label: 'Sorry', disabled: true, onClick: null}
     ];
   },
@@ -335,7 +341,9 @@ const MapCanvas = React.createClass({
 
   closeModal: function() {
     this.setState({
-      showModal: false,
+      showLevelsModal: false,
+      showImagesModal: false,
+      showMasksModal: false,
       editableTile: null
     });
   },
@@ -358,8 +366,14 @@ const MapCanvas = React.createClass({
             buttons={this.buttonsMetadata()}
             onHide={this.hideOverlay} />
 
-        <EditTilesModal
-            showModal={this.state.showModal}
+        <MapModal.EditImagesModal
+            showModal={this.state.showImagesModal}
+            editableTile={this.state.editableTile}
+            onClose={this.closeModal}
+            onSubmit={this.applyTileEdit} />
+
+        <MapModal.EditMasksModal
+            showModal={this.state.showMasksModal}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
             onSubmit={this.applyTileEdit} />
@@ -395,204 +409,6 @@ const MapCanvasPopup = React.createClass({
           <ButtonGroup vertical>{buttons}</ButtonGroup>
         </div>
       </Overlay>
-    );
-  }
-});
-
-/* =============================================================================
- * COMPONENT: EDIT TILES MODAL
- * =============================================================================
- */
-const EditTilesModal = React.createClass({
-  _previewCanvas: null,
-
-  moveTile: function(evt, func) {
-    var buttonId = evt.currentTarget.id;
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    var index = maskTiles.length - parseInt(buttonId.slice(3), 10) - 1;
-    var maskTile = maskTiles[index];
-    func(maskTiles, maskTile, index);
-    this.forceUpdate();
-  },
-
-  moveTop: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
-      if (index < maskTiles.length - 1) {
-        maskTiles.splice(index, 1);
-        maskTiles.push(maskTile);
-      }
-    });
-  },
-
-  moveUp: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
-      if (index < maskTiles.length - 1) {
-        maskTiles.splice(index, 1);
-        maskTiles.splice(index + 1, 0, maskTile);
-      }
-    });
-  },
-
-  moveDown: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
-      if (index > 0) {
-        maskTiles.splice(index, 1);
-        maskTiles.splice(index - 1, 0, maskTile);
-      }
-    });
-  },
-
-  moveBottom: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
-      if (index > 0) {
-        maskTiles.splice(index, 1);
-        maskTiles.splice(0, 0, maskTile);
-      }
-    });
-  },
-
-  delete: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
-      maskTiles.splice(index, 1);
-    });
-  },
-
-  componentDidUpdate: function(oldProps, oldState) {
-    if (!this.props.editableTile) {
-      return;
-    }
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    maskTiles.forEach((maskTile, i) => {
-      var index = maskTiles.length - i - 1;
-      var item = this.refs["item" + index];
-      item.drawToCanvas(maskTile);
-    });
-    var ctx = getDrawingContext(this._previewCanvas);
-    ctx.clearRect(0, 0, this._previewCanvas.width, this._previewCanvas.height);
-    ctx.drawImage(this.props.editableTile.getCanvas(), 0, 0, this._previewCanvas.width, this._previewCanvas.height);
-  },
-
-  tilePosition: function(tileIndex, lastIndex) {
-    var position = [];
-    if (tileIndex === 0) {
-      position.push("first")
-    }
-    if (tileIndex === lastIndex) {
-      position.push("last")
-    }
-    return position;
-  },
-
-  tileListGroup: function() {
-    if (!this.props.editableTile) {
-      return <ListGroup fill />;
-    }
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    if (maskTiles.length === 0) {
-      return <ListGroup fill />;
-    }
-    var tileItems = maskTiles.map((maskTile, i) => {
-      var tilePosition = this.tilePosition(i, maskTiles.length - 1);
-      return (
-        <TileListItem key={i}
-          ref={"item" + i}
-          buttonId={"btn" + i}
-          position={tilePosition}
-          onMoveTop={this.moveTop}
-          onMoveUp={this.moveUp}
-          onMoveDown={this.moveDown}
-          onMoveBottom={this.moveBottom}
-          onDelete={this.delete} />
-      );
-    });
-    return (<ListGroup fill>{tileItems}</ListGroup>);
-  },
-
-  render: function() {
-    return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Tiles</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Grid>
-            <Row>
-              <Col className="edit-tiles-col" lg={4}>
-                <Panel className="tile-images-panel" header="Images">
-                  {this.tileListGroup()}
-                </Panel>
-              </Col>
-              <Col className="edit-tiles-col" lg={2}>
-                <Panel className="tile-preview-panel" header="Preview">
-                  <canvas className="tiles tile-preview" width={tileSize * 2} height={tileSize * 2}
-                      ref={cvs => this._previewCanvas = cvs} />
-                </Panel>
-              </Col>
-            </Row>
-          </Grid>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={this.props.onClose}>Cancel</Button>
-          <Button onClick={this.props.onSubmit} bsStyle="primary">OK</Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  }
-});
-
-/* =============================================================================
- * COMPONENT: TILE LIST ITEM
- * =============================================================================
- */
-const TileListItem = React.createClass({
-  _canvas: null,
-
-  drawToCanvas: function(maskTile) {
-    var ctx = getDrawingContext(this._canvas);
-    ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
-  },
-
-  render: function() {
-    var disabledFirst = this.props.position.includes("first");
-    var disabledLast = this.props.position.includes("last");
-    return (
-      <ListGroupItem>
-        <Grid>
-          <Row>
-            <Col className="edit-tiles-item-col" lg={1}>
-              <div className="tile-canvas-container">
-                <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
-                    ref={cvs => this._canvas = cvs} />
-              </div>
-            </Col>
-            <Col className="edit-tiles-item-col" lg={2}>
-              <ButtonToolbar className="tile-buttons">
-                <ButtonGroup>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveTop} disabled={disabledFirst}>
-                    <Glyphicon glyph="triangle-top" />
-                  </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveUp} disabled={disabledFirst}>
-                    <Glyphicon glyph="menu-up" />
-                  </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveDown} disabled={disabledLast}>
-                    <Glyphicon glyph="menu-down" />
-                  </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveBottom} disabled={disabledLast}>
-                    <Glyphicon glyph="triangle-bottom" />
-                  </Button>
-                </ButtonGroup>
-              </ButtonToolbar>
-            </Col>
-            <Col className="edit-tiles-item-col" lg={1}>
-              <ButtonToolbar className="tile-buttons">
-                <Button id={this.props.buttonId} onClick={this.props.onDelete}>
-                  <Glyphicon glyph="trash" />
-                </Button>
-              </ButtonToolbar>
-            </Col>
-          </Row>
-        </Grid>
-      </ListGroupItem>
     );
   }
 });

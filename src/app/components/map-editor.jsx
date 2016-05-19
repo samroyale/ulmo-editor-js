@@ -13,8 +13,7 @@ var Panel = Bootstrap.Panel,
     Collapse = Bootstrap.Collapse,
     Alert = Bootstrap.Alert;
 
-var RpgMapService = RpgMaps.RpgMapService,
-    MaskTile = RpgMaps.MaskTile;
+var RpgMapService = RpgMaps.RpgMapService;
 
 /* =============================================================================
  * COMPONENT: MAP EDITOR
@@ -374,9 +373,15 @@ const SaveAsModal = React.createClass({
 function MapTileInfo(props) {
   if (props.tilePosition && props.mapTile) {
     var levelsInfo = "[" + props.mapTile.getLevels().toString() + "]";
+    var masks = props.mapTile.getMaskTiles().filter(maskTile => {
+      return maskTile.getMaskLevel() ? true : false;
+    }).map( maskTile => {
+      return maskTile.getMaskLevel();
+    });
+    var masksInfo = "[" + masks.toString() + "]";
     return (
       <p className="no-margin">
-        {props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo}
+        {props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo} {masksInfo}
       </p>
     );
   }

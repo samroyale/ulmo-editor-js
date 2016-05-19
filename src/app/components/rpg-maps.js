@@ -390,6 +390,14 @@ class MaskTile {
     return this._tile;
   }
 
+  getMaskLevel() {
+    return this._maskLevel;
+  }
+
+  setMaskLevel(maskLevel) {
+    this._maskLevel = maskLevel;
+  }
+
   getDto() {
     return {
       tileSet: this._tile.getTileSetName(),
