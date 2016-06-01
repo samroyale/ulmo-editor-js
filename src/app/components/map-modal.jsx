@@ -15,7 +15,8 @@ var Modal = Bootstrap.Modal,
     Button = Bootstrap.Button,
     Glyphicon = Bootstrap.Glyphicon,
     FormGroup = Bootstrap.FormGroup,
-    Input = Bootstrap.Input,
+    ControlLabel = Bootstrap.ControlLabel,
+    FormControl = Bootstrap.FormControl,
     Checkbox = Bootstrap.Checkbox;
 
 /* =============================================================================
@@ -292,6 +293,7 @@ const EditMasksModal = React.createClass({
       }
       return (
         <TileMaskItem key={i}
+          index={i}
           ref={"item" + i}
           level={maskLevel}
           vertical={maskVertical} />
@@ -310,9 +312,11 @@ const EditMasksModal = React.createClass({
           <Grid>
             <Row>
               <Col className="edit-tiles-col" lg={5}>
-                <Panel className="tile-masks-panel" header="Masks">
-                  {this.tileListGroup()}
-                </Panel>
+                <form>
+                  <Panel className="tile-masks-panel" header="Masks">
+                    {this.tileListGroup()}
+                  </Panel>
+                </form>
               </Col>
             </Row>
           </Grid>
@@ -377,30 +381,33 @@ const TileMaskItem = React.createClass({
   render: function() {
     return (
       <ListGroupItem>
-        <form>
-          <Grid>
-            <Row>
-              <Col className="edit-tiles-item-col" lg={1}>
-                <div className="tile-canvas-container">
-                  <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
-                      ref={cvs => this._canvas = cvs} />
-                </div>
-              </Col>
-              <Col className="edit-tiles-item-col" lg={2}>
-                <div className="tile-controls">
-                  <Input type="text" placeholder="level"
+        <Grid>
+          <Row>
+            <Col className="edit-tiles-item-col" lg={1}>
+              <div className="tile-canvas-container">
+                <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
+                    ref={cvs => this._canvas = cvs} />
+              </div>
+            </Col>
+            <Col className="edit-tiles-item-col" lg={2}>
+              <div className="tile-controls">
+                <FormGroup controlId={"levelGroup" + this.props.index}>
+                  <FormControl type="text" placeholder="level"
                       value={this.state.levelVal} onChange={this.handleLevelChange} />
-                </div>
-              </Col>
-              <Col className="edit-tiles-item-col" lg={1}>
-                <div className="tile-checkbox">
-                  <Input type="checkbox" label="Vertical"
-                      checked={this.state.verticalVal} onChange={this.handleVerticalChange} />
-                </div>
-              </Col>
-            </Row>
-          </Grid>
-        </form>
+                </FormGroup>
+              </div>
+            </Col>
+            <Col className="edit-tiles-item-col" lg={1}>
+              <div className="tile-checkbox">
+                <FormGroup controlId={"verticalGroup" + this.props.index}>
+                  <Checkbox checked={this.state.verticalVal} onChange={this.handleVerticalChange}>
+                    Vertical
+                  </Checkbox>
+                </FormGroup>
+              </div>
+            </Col>
+          </Row>
+        </Grid>
       </ListGroupItem>
     );
   }

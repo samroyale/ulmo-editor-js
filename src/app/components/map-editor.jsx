@@ -8,10 +8,11 @@ var Panel = Bootstrap.Panel,
     ButtonToolbar = Bootstrap.ButtonToolbar,
     ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
-    Input = Bootstrap.Input,
-    ButtonInput = Bootstrap.ButtonInput,
     Collapse = Bootstrap.Collapse,
-    Alert = Bootstrap.Alert;
+    Alert = Bootstrap.Alert,
+    FormGroup = Bootstrap.FormGroup,
+    ControlLabel = Bootstrap.ControlLabel,
+    FormControl = Bootstrap.FormControl;
 
 var RpgMapService = RpgMaps.RpgMapService;
 
@@ -224,7 +225,7 @@ function OpenMapModal(props) {
   return (
     <Modal show={props.showModal} onHide={props.onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Maps</Modal.Title>
+        <Modal.Title>Open Map</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Collapse in={showError}>
@@ -275,6 +276,7 @@ const NewMapModal = React.createClass({
   },
 
   handleSubmit: function(e) {
+    console.log("submitted");
     e.preventDefault();
     this.newMap();
   },
@@ -295,15 +297,21 @@ const NewMapModal = React.createClass({
         </Modal.Header>
         <Modal.Body>
           <form onSubmit={this.handleSubmit}>
-            <Input type="text" label="Rows" placeholder="0-32"
-                value={this.state.rowsVal} onChange={this.handleRowsChange} />
-            <Input type="text" label="Cols" placeholder="0-32"
-                value={this.state.colsVal} onChange={this.handleColsChange} />
+            <FormGroup controlId="rowsGroup">
+              <ControlLabel>Rows</ControlLabel>
+              <FormControl type="text" placeholder="0-32"
+                  value={this.state.rowsVal} onChange={this.handleRowsChange} />
+            </FormGroup>
+            <FormGroup controlId="colsGroup">
+              <ControlLabel>Cols</ControlLabel>
+              <FormControl type="text" placeholder="0-32"
+                  value={this.state.colsVal} onChange={this.handleColsChange} />
+            </FormGroup>
           </form>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.props.onClose}>Cancel</Button>
           <Button onClick={this.newMap} bsStyle="primary">OK</Button>
+          <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
@@ -353,13 +361,16 @@ const SaveAsModal = React.createClass({
             </div>
           </Collapse>
           <form onSubmit={this.handleSubmit}>
-            <Input type="text" label="Name" placeholder="map name"
-                value={this.state.mapName} onChange={this.handleNameChange} />
+            <FormGroup controlId="nameGroup">
+              <ControlLabel>Name</ControlLabel>
+              <FormControl type="text" placeholder="map name"
+                  value={this.state.mapName} onChange={this.handleNameChange} />
+            </FormGroup>
           </form>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.props.onClose}>Cancel</Button>
           <Button onClick={this.saveMap} bsStyle="primary">OK</Button>
+          <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );

@@ -147,7 +147,7 @@ function OpenTileSetModal(props) {
   return (
     <Modal show={props.showModal} onHide={props.onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Tilesets</Modal.Title>
+        <Modal.Title>Open Tileset</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Collapse in={showError}>
@@ -157,6 +157,9 @@ function OpenTileSetModal(props) {
         </Collapse>
         <ul>{items}</ul>
       </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onClose}>Cancel</Button>
+      </Modal.Footer>
     </Modal>
   );
 }
