@@ -192,7 +192,7 @@ const TileImageItem = React.createClass({
               </div>
             </Col>
             <Col className="edit-tiles-item-col" lg={2}>
-              <ButtonToolbar className="tile-buttons">
+              <ButtonToolbar className="tile-controls">
                 <ButtonGroup>
                   <Button id={this.props.buttonId} onClick={this.props.onMoveTop} disabled={disabledFirst}>
                     <Glyphicon glyph="triangle-top" />
@@ -210,7 +210,7 @@ const TileImageItem = React.createClass({
               </ButtonToolbar>
             </Col>
             <Col className="edit-tiles-item-col" lg={1}>
-              <ButtonToolbar className="tile-buttons">
+              <ButtonToolbar className="tile-controls">
                 <Button id={this.props.buttonId} onClick={this.props.onDelete}>
                   <Glyphicon glyph="trash" />
                 </Button>
@@ -302,7 +302,7 @@ const EditMasksModal = React.createClass({
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="tile-masks-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
@@ -310,7 +310,7 @@ const EditMasksModal = React.createClass({
           <Grid>
             <Row>
               <Col className="edit-tiles-col" lg={5}>
-                <Panel className="tile-images-panel" header="Masks">
+                <Panel className="tile-masks-panel" header="Masks">
                   {this.tileListGroup()}
                 </Panel>
               </Col>
@@ -359,7 +359,7 @@ const TileMaskItem = React.createClass({
   },
 
   componentWillMount: function() {
-    console.log("componentWillMount: " + this.props);
+    //console.log("componentWillMount: " + this.props);
     this.setState({
       levelVal: this.props.level,
       verticalVal: this.props.vertical
@@ -367,7 +367,7 @@ const TileMaskItem = React.createClass({
   },
 
   componentWillReceiveProps: function(nextProps) {
-    console.log("componentWillReceiveProps: " + nextProps);
+    //console.log("componentWillReceiveProps: " + nextProps);
     this.setState({
       levelVal: nextProps.level,
       verticalVal: nextProps.vertical
@@ -375,7 +375,6 @@ const TileMaskItem = React.createClass({
   },
 
   render: function() {
-    //return (<ListGroupItem>yo</ListGroupItem>);
     return (
       <ListGroupItem>
         <form>
@@ -388,12 +387,16 @@ const TileMaskItem = React.createClass({
                 </div>
               </Col>
               <Col className="edit-tiles-item-col" lg={2}>
-                <Input type="text" placeholder="level"
-                    value={this.state.levelVal} onChange={this.handleLevelChange} />
+                <div className="tile-controls">
+                  <Input type="text" placeholder="level"
+                      value={this.state.levelVal} onChange={this.handleLevelChange} />
+                </div>
               </Col>
               <Col className="edit-tiles-item-col" lg={1}>
-                <Input type="checkbox" label="Vertical"
-                    checked={this.state.verticalVal} onChange={this.handleVerticalChange} />
+                <div className="tile-checkbox">
+                  <Input type="checkbox" label="Vertical"
+                      checked={this.state.verticalVal} onChange={this.handleVerticalChange} />
+                </div>
               </Col>
             </Row>
           </Grid>
