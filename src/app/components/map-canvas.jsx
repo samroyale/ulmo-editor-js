@@ -366,6 +366,12 @@ const MapCanvas = React.createClass({
             buttons={this.buttonsMetadata()}
             onHide={this.hideOverlay} />
 
+        <MapModal.EditLevelsModal
+            showModal={this.state.showLevelsModal}
+            editableTile={this.state.editableTile}
+            onClose={this.closeModal}
+            onSubmit={this.applyTileEdit} />
+
         <MapModal.EditImagesModal
             showModal={this.state.showImagesModal}
             editableTile={this.state.editableTile}

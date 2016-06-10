@@ -331,9 +331,13 @@ class MapTile {
     this.initImageData();
   }
 
-  /*setLevels(levels) {
+  setLevels(levels) {
     this._levels = levels;
-  }*/
+  }
+  
+  addLevel(level) {
+    this._levels.push(level);
+  }
 
   sendToBack() {
     var topTile = this._maskTiles.pop();

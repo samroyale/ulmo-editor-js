@@ -15,9 +15,162 @@ var Modal = Bootstrap.Modal,
     Button = Bootstrap.Button,
     Glyphicon = Bootstrap.Glyphicon,
     FormGroup = Bootstrap.FormGroup,
+    InputGroup = Bootstrap.InputGroup,
     ControlLabel = Bootstrap.ControlLabel,
     FormControl = Bootstrap.FormControl,
     Checkbox = Bootstrap.Checkbox;
+
+/* =============================================================================
+ * COMPONENT: EDIT LEVELS MODAL
+ * =============================================================================
+ */
+const EditLevelsModal = React.createClass({
+  _regex: /\D/g,
+
+  getInitialState: function() {
+    return {
+      levelVal: '',
+      selectedIndices: [],
+      addDisabled: true,
+    };
+  },
+
+  handleSubmit: function() {
+
+  },
+
+  handleLevelChange: function(event) {
+    this.setLevelVal(event.target.value.replace(this._regex, ''));
+  },
+
+  setLevelVal: function(newLevelVal) {
+    var levelValid = this.isLevelValid(newLevelVal);
+    this.setState({
+      levelVal: newLevelVal,
+      addDisabled: !levelValid
+    });
+  },
+
+  isLevelValid: function(levelVal) {
+    if (levelVal.length === 0) {
+      return false;
+    }
+    return true;
+  },
+
+  handleLevelsChange: function(event) {
+    var indices = [];
+    var selected = event.target.selectedOptions;
+    for (i = 0; i < selected.length; i++) {
+      indices.push(selected.item(i).index);
+    }
+    this.setState({ selectedIndices: indices });
+  },
+
+  addLevel: function() {
+    this.props.editableTile.addLevel(this.state.levelVal);
+    this.setLevelVal("");
+  },
+
+  deleteLevels: function() {
+    var newLevels = this.props.editableTile.getLevels().filter((level, i) => {
+      return !this.state.selectedIndices.includes(i);
+    });
+    this.props.editableTile.setLevels(newLevels);
+    this.forceUpdate();
+  },
+
+  clearLevels: function() {
+    this.props.editableTile.setLevels([]);
+    this.forceUpdate();
+  },
+
+  /*componentWillMount: function() {
+    this.populateStateFromProps(this.props);
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    this.populateStateFromProps(nextProps);
+  },
+
+  populateStateFromProps: function(props) {
+    this.setState({
+      levelVal: nextProps.level,
+      verticalVal: nextProps.vertical
+    });
+  },*/
+
+  levelsControl: function() {
+    if (!this.props.editableTile) {
+      return (<FormControl componentClass="select" multiple />);
+    }
+    var levelOptions = this.props.editableTile.getLevels().map((level, i) => {
+      var selected = i
+      return (<option key={i} value={"level" + i}>{level}</option>);
+    });
+    return (
+      <FormControl componentClass="select" onChange={this.handleLevelsChange} multiple>
+        {levelOptions}
+      </FormControl>
+    );
+  },
+
+  render: function() {
+    return (
+      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Tile</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <form>
+            <Grid>
+              <Row>
+                <Col className="edit-tiles-col" lg={3}>
+                  <FormGroup controlId="levelGroup">
+                    <ControlLabel>New level</ControlLabel>
+                    <FormControl type="text" placeholder="level"
+                        value={this.state.levelVal} onChange={this.handleLevelChange} />
+                  </FormGroup>
+                </Col>
+                <Col className="edit-tiles-col" lg={1}>
+                  <FormGroup controlId="addGroup">
+                    <ControlLabel>&nbsp;</ControlLabel>
+                    <ButtonToolbar>
+                      <Button className="with-bottom-margin" disabled={this.state.addDisabled} onClick={this.addLevel} block>Add</Button>
+                    </ButtonToolbar>
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row>
+                <Col className="edit-tiles-col" lg={3}>
+                  <FormGroup controlId="levelsGroup">
+                    <ControlLabel>Levels</ControlLabel>
+                    {this.levelsControl()}
+                  </FormGroup>
+                </Col>
+                <Col className="edit-tiles-col" lg={1}>
+                  <FormGroup controlId="controlsGroup">
+                    <ControlLabel>&nbsp;</ControlLabel>
+                    <ButtonToolbar>
+                      <Button className="with-bottom-margin" onClick={this.deleteLevels} block>Delete</Button>
+                    </ButtonToolbar>
+                    <ButtonToolbar>
+                      <Button className="with-bottom-margin" onClick={this.clearLevels} block>Clear</Button>
+                    </ButtonToolbar>
+                  </FormGroup>
+                </Col>
+              </Row>
+            </Grid>
+          </form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
+          <Button onClick={this.props.onClose}>Cancel</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+});
 
 /* =============================================================================
  * COMPONENT: EDIT TILES MODAL
@@ -159,8 +312,8 @@ const EditImagesModal = React.createClass({
           </Grid>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.props.onClose}>Cancel</Button>
           <Button onClick={this.props.onSubmit} bsStyle="primary">OK</Button>
+          <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
@@ -322,8 +475,8 @@ const EditMasksModal = React.createClass({
           </Grid>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.props.onClose}>Cancel</Button>
           <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
+          <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
@@ -346,15 +499,11 @@ const TileMaskItem = React.createClass({
   },
 
   handleLevelChange: function(event) {
-    console.log(event.target.value);
     this.setState({ levelVal: event.target.value.replace(this._regex, '') });
-    console.log(this.state);
   },
 
   handleVerticalChange: function(event) {
-    console.log(event.target.checked);
     this.setState({ verticalVal: event.target.checked });
-    console.log(this.state);
   },
 
   drawToCanvas: function(maskTile) {
@@ -363,15 +512,14 @@ const TileMaskItem = React.createClass({
   },
 
   componentWillMount: function() {
-    //console.log("componentWillMount: " + this.props);
-    this.setState({
-      levelVal: this.props.level,
-      verticalVal: this.props.vertical
-    });
+    this.populateStateFromProps(this.props);
   },
 
   componentWillReceiveProps: function(nextProps) {
-    //console.log("componentWillReceiveProps: " + nextProps);
+    this.populateStateFromProps(nextProps);
+  },
+
+  populateStateFromProps: function(props) {
     this.setState({
       levelVal: nextProps.level,
       verticalVal: nextProps.vertical
@@ -414,6 +562,7 @@ const TileMaskItem = React.createClass({
 });
 
 module.exports = {
+  EditLevelsModal,
   EditImagesModal,
   EditMasksModal
 };
