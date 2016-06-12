@@ -1,7 +1,7 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
-    tileSize = require('../config.js').tileSize,
-    getDrawingContext = require('../utils.js').getScalableDrawingContext;
+    utils = require('../utils.js'),
+    tileSize = require('../config.js').tileSize;
 
 var Modal = Bootstrap.Modal,
     Grid = Bootstrap.Grid,
@@ -30,13 +30,15 @@ const EditLevelsModal = React.createClass({
   getInitialState: function() {
     return {
       levelVal: '',
+      levels: [],
       selectedIndices: [],
       addDisabled: true,
+      deleteDisabled: true
     };
   },
 
   handleSubmit: function() {
-
+    this.props.onSubmit(this.state.levels);
   },
 
   handleLevelChange: function(event) {
@@ -64,28 +66,36 @@ const EditLevelsModal = React.createClass({
     for (i = 0; i < selected.length; i++) {
       indices.push(selected.item(i).index);
     }
-    this.setState({ selectedIndices: indices });
+    this.setState({
+      selectedIndices: indices,
+      deleteDisabled: indices.length === 0
+    });
   },
 
   addLevel: function() {
-    this.props.editableTile.addLevel(this.state.levelVal);
-    this.setLevelVal("");
+    if (this.state.levels.includes(this.state.levelVal)) {
+      return;
+    }
+    var newLevels = this.state.levels.slice(0);
+    newLevels.push(this.state.levelVal);
+    this.setState({
+      levelVal: "",
+      levels: newLevels
+    });
   },
 
   deleteLevels: function() {
-    var newLevels = this.props.editableTile.getLevels().filter((level, i) => {
+    var newLevels = this.state.levels.filter((level, i) => {
       return !this.state.selectedIndices.includes(i);
     });
-    this.props.editableTile.setLevels(newLevels);
-    this.forceUpdate();
+    this.setState({ levels: newLevels });
   },
 
   clearLevels: function() {
-    this.props.editableTile.setLevels([]);
-    this.forceUpdate();
+    this.setState({ levels: [] });
   },
 
-  /*componentWillMount: function() {
+  componentWillMount: function() {
     this.populateStateFromProps(this.props);
   },
 
@@ -94,22 +104,31 @@ const EditLevelsModal = React.createClass({
   },
 
   populateStateFromProps: function(props) {
-    this.setState({
-      levelVal: nextProps.level,
-      verticalVal: nextProps.vertical
-    });
-  },*/
+    if (props.showModal) {
+      var initialState = this.getInitialState();
+      initialState.levels = this.getLevels(props);
+      this.setState(initialState);
+    }
+  },
+
+  getLevels: function(props) {
+    if (!props.editableTile) {
+      return [];
+    }
+    // return a copy of the levels array
+    return props.editableTile.getLevels().slice(0);
+  },
 
   levelsControl: function() {
-    if (!this.props.editableTile) {
-      return (<FormControl componentClass="select" multiple />);
-    }
-    var levelOptions = this.props.editableTile.getLevels().map((level, i) => {
-      var selected = i
-      return (<option key={i} value={"level" + i}>{level}</option>);
+    var levelOptions = this.state.levels.map((level, i) => {
+      var selected = this.state.selectedIndices.includes(i);
+      return (<option key={i} value={level}>{level}</option>);
+    });
+    var selectedLevels = this.state.levels.filter((level, i) => {
+      return this.state.selectedIndices.includes(i);
     });
     return (
-      <FormControl componentClass="select" onChange={this.handleLevelsChange} multiple>
+      <FormControl componentClass="select" onChange={this.handleLevelsChange} value={selectedLevels} multiple>
         {levelOptions}
       </FormControl>
     );
@@ -136,7 +155,8 @@ const EditLevelsModal = React.createClass({
                   <FormGroup controlId="addGroup">
                     <ControlLabel>&nbsp;</ControlLabel>
                     <ButtonToolbar>
-                      <Button className="with-bottom-margin" disabled={this.state.addDisabled} onClick={this.addLevel} block>Add</Button>
+                      <Button className="with-bottom-margin" disabled={this.state.addDisabled}
+                          onClick={this.addLevel} block>Add</Button>
                     </ButtonToolbar>
                   </FormGroup>
                 </Col>
@@ -152,7 +172,8 @@ const EditLevelsModal = React.createClass({
                   <FormGroup controlId="controlsGroup">
                     <ControlLabel>&nbsp;</ControlLabel>
                     <ButtonToolbar>
-                      <Button className="with-bottom-margin" onClick={this.deleteLevels} block>Delete</Button>
+                      <Button className="with-bottom-margin" disabled={this.state.deleteDisabled}
+                          onClick={this.deleteLevels} block>Delete</Button>
                     </ButtonToolbar>
                     <ButtonToolbar>
                       <Button className="with-bottom-margin" onClick={this.clearLevels} block>Clear</Button>
@@ -173,19 +194,29 @@ const EditLevelsModal = React.createClass({
 });
 
 /* =============================================================================
- * COMPONENT: EDIT TILES MODAL
+ * COMPONENT: EDIT IMAGES MODAL
  * =============================================================================
  */
 const EditImagesModal = React.createClass({
   _previewCanvas: null,
 
+  getInitialState: function() {
+    return {
+      maskTiles: [],
+    };
+  },
+
+  handleSubmit: function() {
+    this.props.onSubmit(this.state.maskTiles);
+  },
+
   moveTile: function(evt, func) {
     var buttonId = evt.currentTarget.id;
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    var index = maskTiles.length - parseInt(buttonId.slice(3), 10) - 1;
-    var maskTile = maskTiles[index];
-    func(maskTiles, maskTile, index);
-    this.forceUpdate();
+    var newMaskTiles = this.state.maskTiles.slice(0);
+    var index = newMaskTiles.length - parseInt(buttonId.slice(3), 10) - 1;
+    var maskTile = newMaskTiles[index];
+    func(newMaskTiles, maskTile, index);
+    this.setState({ maskTiles: newMaskTiles });
   },
 
   moveTop: function(evt) {
@@ -230,15 +261,30 @@ const EditImagesModal = React.createClass({
     });
   },
 
+  componentWillMount: function() {
+    this.populateStateFromProps(this.props);
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    this.populateStateFromProps(nextProps);
+  },
+
+  populateStateFromProps: function(props) {
+    if (props.showModal) {
+      this.setState({ maskTiles: this.getMaskTiles(props) });
+    }
+  },
+
+  getMaskTiles: function(props) {
+    if (!props.editableTile) {
+      return [];
+    }
+    // return a copy of the mask tiles array
+    return props.editableTile.getMaskTiles().slice(0);
+  },
+
   componentDidUpdate: function(oldProps, oldState) {
-    if (!this.props.editableTile) {
-      return;
-    }
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    if (maskTiles.length === 0) {
-      return;
-    }
-    maskTiles = maskTiles.slice(0).reverse(); // copy + reverse the array
+    var maskTiles = this.state.maskTiles.slice(0).reverse(); // copy + reverse the array
     maskTiles.forEach((maskTile, i) => {
       var item = this.refs["item" + i];
       if (item) {
@@ -246,9 +292,10 @@ const EditImagesModal = React.createClass({
       }
     });
     if (this._previewCanvas) {
-      var ctx = getDrawingContext(this._previewCanvas);
+      var ctx = utils.getScalableDrawingContext(this._previewCanvas);
       ctx.clearRect(0, 0, this._previewCanvas.width, this._previewCanvas.height);
-      ctx.drawImage(this.props.editableTile.getCanvas(), 0, 0, this._previewCanvas.width, this._previewCanvas.height);
+      ctx.drawImage(utils.drawTile(this.state.maskTiles), 0, 0,
+          this._previewCanvas.width, this._previewCanvas.height);
     }
   },
 
@@ -264,15 +311,8 @@ const EditImagesModal = React.createClass({
   },
 
   tileListGroup: function() {
-    if (!this.props.editableTile) {
-      return <ListGroup fill />;
-    }
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    if (maskTiles.length === 0) {
-      return <ListGroup fill />;
-    }
-    var tileItems = maskTiles.map((maskTile, i) => {
-      var tilePosition = this.tilePosition(i, maskTiles.length - 1);
+    var tileItems = this.state.maskTiles.map((maskTile, i) => {
+      var tilePosition = this.tilePosition(i, this.state.maskTiles.length - 1);
       return (
         <TileImageItem key={i}
           ref={"item" + i}
@@ -312,7 +352,7 @@ const EditImagesModal = React.createClass({
           </Grid>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.props.onSubmit} bsStyle="primary">OK</Button>
+          <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
           <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
@@ -328,7 +368,7 @@ const TileImageItem = React.createClass({
   _canvas: null,
 
   drawToCanvas: function(maskTile) {
-    var ctx = getDrawingContext(this._canvas);
+    var ctx = utils.getScalableDrawingContext(this._canvas);
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
   },
 
@@ -382,17 +422,18 @@ const TileImageItem = React.createClass({
  * =============================================================================
  */
 const EditMasksModal = React.createClass({
+  getInitialState: function() {
+    return {
+      maskTiles: []
+    };
+  },
+
   handleSubmit: function() {
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    var maskLevels = [];
-    var i = 0;
-    var item = this.refs["item" + i];
-    while (item) {
-      var maskTile = maskTiles[maskTiles.length - i - 1];
+    this.state.maskTiles.forEach((maskTile, i) => {
+      var item = this.refs["item" + i];
       maskTile.setMaskLevel(this.getMaskLevel(item));
-      var item = this.refs["item" + ++i];
-    }
-    this.props.onSubmit();
+    });
+    this.props.onSubmit(this.state.maskTiles);
   },
 
   getMaskLevel: function(tileMaskItem) {
@@ -406,16 +447,30 @@ const EditMasksModal = React.createClass({
     return maskLevel.toString();
   },
 
+  componentWillMount: function() {
+    this.populateStateFromProps(this.props);
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    this.populateStateFromProps(nextProps);
+  },
+
+  populateStateFromProps: function(props) {
+    if (props.showModal) {
+      this.setState({ maskTiles: this.getMaskTiles(props) });
+    }
+  },
+
+  getMaskTiles: function(props) {
+    if (!props.editableTile) {
+      return [];
+    }
+    // return a reversed copy of the mask tiles array
+    return props.editableTile.getMaskTiles().slice(0).reverse();
+  },
+
   componentDidUpdate: function(oldProps, oldState) {
-    if (!this.props.editableTile) {
-      return;
-    }
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    if (maskTiles.length === 0) {
-      return;
-    }
-    maskTiles = maskTiles.slice(0).reverse(); // copy + reverse the array
-    maskTiles.forEach((maskTile, i) => {
+    this.state.maskTiles.forEach((maskTile, i) => {
       var item = this.refs["item" + i];
       if (item) {
         item.drawToCanvas(maskTile);
@@ -424,15 +479,7 @@ const EditMasksModal = React.createClass({
   },
 
   tileListGroup: function() {
-    if (!this.props.editableTile) {
-      return <ListGroup fill />;
-    }
-    var maskTiles = this.props.editableTile.getMaskTiles();
-    if (maskTiles.length === 0) {
-      return <ListGroup fill />;
-    }
-    maskTiles = maskTiles.slice(0).reverse(); // copy + reverse the array
-    var tileItems = maskTiles.map((maskTile, i) => {
+    var tileItems = this.state.maskTiles.map((maskTile, i) => {
       var maskLevel = maskTile.getMaskLevel();
       var maskVertical = false;
       if (maskLevel) {
@@ -507,7 +554,7 @@ const TileMaskItem = React.createClass({
   },
 
   drawToCanvas: function(maskTile) {
-    var ctx = getDrawingContext(this._canvas);
+    var ctx = utils.getScalableDrawingContext(this._canvas);
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
   },
 
@@ -521,8 +568,8 @@ const TileMaskItem = React.createClass({
 
   populateStateFromProps: function(props) {
     this.setState({
-      levelVal: nextProps.level,
-      verticalVal: nextProps.vertical
+      levelVal: props.level,
+      verticalVal: props.vertical
     });
   },
 

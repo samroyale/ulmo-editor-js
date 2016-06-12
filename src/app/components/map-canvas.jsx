@@ -127,23 +127,6 @@ const MapCanvas = React.createClass({
     });
   },
 
-  /*highlightedTiles() {
-    if (!this.state.showModal) {
-      return [];
-    }
-    var highlightedTiles = [];
-    var toPosition = this.props.tilePosition;
-    var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
-    this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
-      for (var i = x; i < x + cols; i++) {
-        for (var j = y; j < y + rows; j++) {
-          highlightedTiles.push(this._rpgMap.getMapTile(i, j));
-        }
-      }
-    });
-    return highlightedTiles;
-  },*/
-
   applySelectedTile: function(fromPosition, toPosition) {
     this.processHighlightedTiles(mapTile => {
       mapTile.addMaskTile(new RpgMaps.MaskTile(this.props.selectedTile));
@@ -199,15 +182,18 @@ const MapCanvas = React.createClass({
     });
   },
 
-  applyTileEdit: function() {
-    this._rpgMap.putMapTile(
-      this.props.tilePosition.x,
-      this.props.tilePosition.y,
-      this.state.editableTile
-    );
+  applyLevelsEdit: function(newLevels) {
+    // levels edit applies to all selected tiles
     this.processHighlightedTiles(mapTile => {
-      mapTile.initImageData();
+      mapTile.setLevels(newLevels.slice(0));
     });
+    this.closeModal();
+  },
+
+  applyMaskTilesEdit: function(newMaskTiles) {
+    // mask tiles edit applies to only the current tile
+    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
+    mapTile.setMaskTiles(newMaskTiles);
     this.closeModal();
   },
 
@@ -370,19 +356,19 @@ const MapCanvas = React.createClass({
             showModal={this.state.showLevelsModal}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
-            onSubmit={this.applyTileEdit} />
+            onSubmit={this.applyLevelsEdit} />
 
         <MapModal.EditImagesModal
             showModal={this.state.showImagesModal}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
-            onSubmit={this.applyTileEdit} />
+            onSubmit={this.applyMaskTilesEdit} />
 
         <MapModal.EditMasksModal
             showModal={this.state.showMasksModal}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
-            onSubmit={this.applyTileEdit} />
+            onSubmit={this.applyMaskTilesEdit} />
       </div>
     );
   }

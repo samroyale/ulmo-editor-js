@@ -1,5 +1,6 @@
 var TileSets = require('./tile-sets.js'),
-    config = require('../config.js');
+    config = require('../config.js'),
+    drawTile = require('../utils.js').drawTile;
 
 var TileSetService = TileSets.TileSetService;
 
@@ -288,31 +289,10 @@ class MapTile {
   }
 
   initImageData() {
-    var tileCanvas = this.getCanvas(this._baseTileCanvas);
+    var tileCanvas = drawTile(this._maskTiles, this._baseTileCanvas);
     var ctx = tileCanvas.getContext('2d');
     this._imageData = ctx.getImageData(0, 0, tileCanvas.width, tileCanvas.height);
   }
-
-  getCanvas(baseTileCanvas) {
-    var tileCanvas = document.createElement("canvas");
-    tileCanvas.width = tileSize;
-    tileCanvas.height = tileSize;
-    var ctx = tileCanvas.getContext('2d');
-    if (baseTileCanvas) {
-      ctx.drawImage(this._baseTileCanvas, 0, 0);
-    }
-    if (this._maskTiles) {
-      this._maskTiles.forEach(maskTile => {
-        ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0);
-      });
-    }
-    return tileCanvas;
-  }
-
-  /*setMaskTiles(maskTiles) {
-    this._maskTiles = maskTiles;
-    this._imageData = this.initImageData();
-  }*/
 
   getMaskTiles() {
     return this._maskTiles;
@@ -326,6 +306,11 @@ class MapTile {
     return this._imageData;
   }
 
+  setMaskTiles(maskTiles) {
+    this._maskTiles = maskTiles;
+    this.initImageData();
+  }
+
   addMaskTile(maskTile) {
     this._maskTiles.push(maskTile);
     this.initImageData();
@@ -334,7 +319,7 @@ class MapTile {
   setLevels(levels) {
     this._levels = levels;
   }
-  
+
   addLevel(level) {
     this._levels.push(level);
   }
