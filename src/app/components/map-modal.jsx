@@ -136,7 +136,7 @@ const EditLevelsModal = React.createClass({
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="tile-levels-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
@@ -369,6 +369,7 @@ const TileImageItem = React.createClass({
 
   drawToCanvas: function(maskTile) {
     var ctx = utils.getScalableDrawingContext(this._canvas);
+    ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
   },
 
@@ -433,7 +434,7 @@ const EditMasksModal = React.createClass({
       var item = this.refs["item" + i];
       maskTile.setMaskLevel(this.getMaskLevel(item));
     });
-    this.props.onSubmit(this.state.maskTiles);
+    this.props.onSubmit(this.state.maskTiles.slice(0).reverse());
   },
 
   getMaskLevel: function(tileMaskItem) {
@@ -509,17 +510,11 @@ const EditMasksModal = React.createClass({
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Grid>
-            <Row>
-              <Col className="edit-tiles-col" lg={5}>
-                <form>
-                  <Panel className="tile-masks-panel" header="Masks">
-                    {this.tileListGroup()}
-                  </Panel>
-                </form>
-              </Col>
-            </Row>
-          </Grid>
+          <form>
+            <Panel className="tile-masks-panel" header="Masks">
+              {this.tileListGroup()}
+            </Panel>
+          </form>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>

@@ -188,6 +188,7 @@ const MapCanvas = React.createClass({
       mapTile.setLevels(newLevels.slice(0));
     });
     this.closeModal();
+    this.props.onMapUpdated();
   },
 
   applyMaskTilesEdit: function(newMaskTiles) {
@@ -195,6 +196,7 @@ const MapCanvas = React.createClass({
     var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
     mapTile.setMaskTiles(newMaskTiles);
     this.closeModal();
+    this.props.onMapUpdated();
   },
 
   processHighlightedTiles: function(func) {
