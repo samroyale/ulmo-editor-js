@@ -8,7 +8,8 @@ var React = require('react'),
 var Overlay = Bootstrap.Overlay,
     ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
-    DropdownButton = Bootstrap.DropdownButton;
+    DropdownButton = Bootstrap.DropdownButton,
+    MenuItem = Bootstrap.MenuItem;
 
 var RpgMapService = RpgMaps.RpgMapService;
 
@@ -160,7 +161,7 @@ const MapCanvas = React.createClass({
     this.setState({
       showOverlay: false,
       showLevelsModal: true,
-      editableTile: mapTile.copy()
+      editableTile: mapTile
     });
   },
 
@@ -169,7 +170,7 @@ const MapCanvas = React.createClass({
     this.setState({
       showOverlay: false,
       showImagesModal: true,
-      editableTile: mapTile.copy()
+      editableTile: mapTile
     });
   },
 
@@ -178,7 +179,7 @@ const MapCanvas = React.createClass({
     this.setState({
       showOverlay: false,
       showMasksModal: true,
-      editableTile: mapTile.copy()
+      editableTile: mapTile
     });
   },
 
@@ -234,15 +235,23 @@ const MapCanvas = React.createClass({
     if (!this.state.showOverlay) {
       return [];
     }
+    var multipleSelected = this.multipleTilesSelected();
     return [
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
       {label: 'Clear', onClick: this.clear},
-      {label: 'Edit Levels', onClick: this.editLevels},
-      {label: 'Edit Images', onClick: this.editImages},
-      {label: 'Edit Masks', onClick: this.editMasks},
-      {label: 'Sorry', disabled: true, onClick: null}
+      {label: 'Edit', menuItems: [
+        {label: 'Edit Levels', onClick: this.editLevels},
+        {label: 'Edit Images', onClick: this.editImages, disabled: multipleSelected},
+        {label: 'Edit Masks', onClick: this.editMasks, disabled: multipleSelected}
+      ]}
     ];
+  },
+
+  multipleTilesSelected: function() {
+    var toPosition = this.props.tilePosition;
+    var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
+    return (toPosition.x !== fromPosition.x || toPosition.y !== fromPosition.y);
   },
 
   handleMouseMove: function(evt) {
@@ -251,8 +260,8 @@ const MapCanvas = React.createClass({
     }
     var tilePosition = this.getCurrentTilePosition(evt);
     if (this.props.tilePosition &&
-        tilePosition.x == this.props.tilePosition.x &&
-        tilePosition.y == this.props.tilePosition.y) {
+        tilePosition.x === this.props.tilePosition.x &&
+        tilePosition.y === this.props.tilePosition.y) {
       return;
     }
     if (this.state.startPosition && !this._mouseDown) {
@@ -385,22 +394,37 @@ const MapCanvasPopup = React.createClass({
     evt.preventDefault();
   },
 
+  buttonGroup: function() {
+    var buttons = this.props.buttons.map(button => {
+      if (!button.menuItems) {
+        return (<Button key={button.label} disabled={button.disabled}
+            onClick={button.onClick}>{button.label}</Button>);
+      }
+      var menuItems = button.menuItems.map(menuItem =>
+        <MenuItem key={menuItem.label} disabled={menuItem.disabled}
+            onClick={menuItem.onClick}>{menuItem.label}</MenuItem>
+      );
+      return (
+        <DropdownButton id={button.label} key={button.label} title={button.label}>
+          {menuItems}
+        </DropdownButton>
+      );
+    });
+    return (<ButtonGroup vertical>{buttons}</ButtonGroup>);
+  },
+
   render: function() {
     var style = {
       marginLeft: this.props.position.x,
       marginTop: this.props.position.y
     };
-    var buttons = this.props.buttons.map(
-      button => <Button key={button.label} disabled={button.disabled}
-          onClick={button.onClick}>{button.label}</Button>
-    );
     return (
       <Overlay
         show={this.props.showOverlay}
         rootClose={true}
         onHide={this.props.onHide}>
         <div className="map-overlay" style={style} onContextMenu={this.suppress}>
-          <ButtonGroup vertical>{buttons}</ButtonGroup>
+          {this.buttonGroup()}
         </div>
       </Overlay>
     );
