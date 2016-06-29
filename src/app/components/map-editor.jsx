@@ -8,6 +8,8 @@ var Panel = Bootstrap.Panel,
     ButtonToolbar = Bootstrap.ButtonToolbar,
     ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
+    DropdownButton = Bootstrap.DropdownButton,
+    MenuItem = Bootstrap.MenuItem,
     Collapse = Bootstrap.Collapse,
     Alert = Bootstrap.Alert,
     FormGroup = Bootstrap.FormGroup,
@@ -110,12 +112,16 @@ const MapEditor = React.createClass({
     console.log("Something went wrong...");
   },
 
+  showSaveModal: function() {
+    this.setState({ showSaveModal: true });
+  },
+
   saveMap: function() {
     if (this.state.mapId) {
       this._mapCanvas.saveMap(this.mapSaved);
       return;
     }
-    this.setState({ showSaveModal: true });
+    this.showSaveModal();
   },
 
   saveMapAs: function(mapName) {
@@ -157,7 +163,8 @@ const MapEditor = React.createClass({
               mapDirty={this.state.mapDirty}
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
-              onSaveMap={this.saveMap} />
+              onSaveMap={this.saveMap}
+              onShowSaveModal={this.showSaveModal} />
           <MapCanvas
               selectedTile={this.props.selectedTile}
               tilePosition={this.state.currentTilePosition}
@@ -204,9 +211,10 @@ function MapToolbar(props) {
       <Button bsStyle="primary" onClick={props.onNewMap}>
         New Map
       </Button>
-      <Button bsStyle="primary" onClick={props.onSaveMap} disabled={!props.mapDirty}>
-        Save Map
-      </Button>
+      <DropdownButton bsStyle="primary" title="Save" id="Save">
+        <MenuItem onClick={props.onSaveMap} disabled={!props.mapDirty}>Save</MenuItem>
+        <MenuItem onClick={props.onShowSaveModal}>Save as</MenuItem>
+      </DropdownButton>
     </ButtonToolbar>
   );
 }
