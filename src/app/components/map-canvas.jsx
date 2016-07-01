@@ -282,13 +282,14 @@ const MapCanvas = React.createClass({
 
   handleRightClick: function(evt) {
     evt.preventDefault();
-    var showOverlay = !this.state.showOverlay;
-    if (!showOverlay) {
-      this.setState({ showOverlay });
+    if (this.state.showOverlay) {
+      this.setState({ showOverlay: false });
       return;
     }
-    var overlayPosition = this.getOverlayPosition(evt);
-    this.setState({ showOverlay, overlayPosition });
+    this.setState({
+      showOverlay: true,
+      overlayPosition: this.getOverlayPosition(evt)
+    });
   },
 
   handleMouseDown: function(evt) {

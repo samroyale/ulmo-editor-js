@@ -11,6 +11,7 @@ var browserify = require('browserify'),
     watchify = require('watchify'),
     bundleLogger = require('../util/bundleLogger'),
     gulp = require('gulp'),
+    gulpUtil = require('gulp-util'),
     handleErrors = require('../util/handleErrors'),
     buffer = require('vinyl-buffer'),
     source = require('vinyl-source-stream'),
@@ -58,7 +59,8 @@ gulp.task('browserify', function(callback) {
         .pipe(source(bundleConfig.outputName))
         // uglify
         .pipe(buffer())
-        .pipe(uglify())
+        //.pipe(uglify())
+        .pipe(uglify().on('error', gulpUtil.log))
         // Specify the output destination
         .pipe(gulp.dest(bundleConfig.dest))
         .on('end', reportFinished);*/

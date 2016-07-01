@@ -45,7 +45,7 @@ const tilePositionMixin = {
       x = evt.pageX;
       y = evt.pageY;
     }
-    return { x: x + 1, y };
+    return { x: x + 1, y: y };
   },
 
   /* Returns a tile highlight canvas */

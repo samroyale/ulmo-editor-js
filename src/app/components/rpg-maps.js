@@ -122,8 +122,8 @@ class RpgMapService {
 
   newMap(rows, cols, callback) {
     var data = {
-      rows,
-      cols,
+      rows: rows,
+      cols: cols,
       mapTiles: []
     };
     this.initRpgMap(data, callback);
@@ -154,7 +154,7 @@ class RpgMapService {
       var tileSet = data.tileSet;
       console.log("> Tileset loaded: " + tileSet.getName());
       tileSetMappings.set(tileSet.getName(), tileSet);
-      var allTileSetsLoaded = [...tileSetMappings.values()].every(
+      var allTileSetsLoaded = Array.from(tileSetMappings.values()).every(
         val => val != null
       );
       if (allTileSetsLoaded) {
@@ -173,6 +173,7 @@ class RpgMapService {
   }
 
   buildRpgMap(tileSetMappings, rpgMapDef) {
+    console.log("buildRpgMap: " + tileSetMappings.size);
     return new RpgMap(
       rpgMapDef.id,
       rpgMapDef.name,
@@ -270,7 +271,7 @@ class RpgMap {
         }
       }
     }
-    return { name, rows, cols, mapTiles };
+    return { name: name, rows: rows, cols: cols, mapTiles: mapTiles };
   }
 }
 
@@ -397,6 +398,6 @@ class MaskTile {
 }
 
 module.exports = {
-  RpgMapService,
-  MaskTile
+  RpgMapService: RpgMapService,
+  MaskTile: MaskTile
 };

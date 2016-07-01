@@ -184,5 +184,5 @@ class Tile {
 }
 
 module.exports = {
-  TileSetService
+  TileSetService: TileSetService
 };

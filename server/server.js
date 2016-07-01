@@ -13,10 +13,16 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 //app.use(bodyParser.json());
 app.use(bodyParser.json({limit: '1mb'}));
-//app.use(bodyParser.urlencoded({limit: '1mb', extended: true}));
 
-//mongoose.connect('mongodb://node:node@novus.modulusmongo.net:27017/Iganiq8o'); // connect to our database
-mongoose.connect('mongodb://localhost/ulmo');
+var mongoUri = process.env.MONGODB_URI || 'mongodb://localhost/ulmo';
+mongoose.connect(mongoUri, function (err, res) {
+  if (err) {
+    console.log ('ERROR connecting to: ' + mongoUri + '. ' + err);
+  }
+  else {
+    console.log ('Succeeded connected to: ' + mongoUri);
+  }
+});
 
 var schema = require('./app/model/schema');
 var TileSet = schema.TileSet;

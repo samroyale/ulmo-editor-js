@@ -604,7 +604,7 @@ const TileMaskItem = React.createClass({
 });
 
 module.exports = {
-  EditLevelsModal,
-  EditImagesModal,
-  EditMasksModal
+  EditLevelsModal: EditLevelsModal,
+  EditImagesModal: EditImagesModal,
+  EditMasksModal: EditMasksModal
 };
