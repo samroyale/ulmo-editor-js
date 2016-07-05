@@ -18,10 +18,9 @@ var mongoUri = process.env.MONGODB_URI || 'mongodb://localhost/ulmo';
 mongoose.connect(mongoUri, function (err, res) {
   if (err) {
     console.log ('ERROR connecting to: ' + mongoUri + '. ' + err);
+    return;
   }
-  else {
-    console.log ('Succeeded connected to: ' + mongoUri);
-  }
+  console.log ('Succeeded connected to: ' + mongoUri);
 });
 
 var schema = require('./app/model/schema');

@@ -1,6 +1,6 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
-    TileSets = require('./tile-sets.js'),
+    TileSetService = require('./tile-sets.js'),
     tilePositionMixin = require('./tile-position-mixin.js'),
     tileSize = require('../config.js').tileSize;
 
@@ -10,8 +10,6 @@ var Panel = Bootstrap.Panel,
     Button = Bootstrap.Button,
     Collapse = Bootstrap.Collapse,
     Alert = Bootstrap.Alert;
-
-var TileSetService = TileSets.TileSetService;
 
 /* =============================================================================
  * COMPONENT: TILE PALETTE

@@ -32,7 +32,7 @@ class TileSetService {
     $.ajax({
       url: tileSetUrl,
       dataType: 'json',
-      cache: false,
+      cache: true,
       success: data => {
         this.initTileSet(data, callback);
       },
@@ -183,6 +183,4 @@ class Tile {
   }
 }
 
-module.exports = {
-  TileSetService: TileSetService
-};
+module.exports = TileSetService;

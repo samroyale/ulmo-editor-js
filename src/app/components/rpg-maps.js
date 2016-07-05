@@ -1,8 +1,6 @@
-var TileSets = require('./tile-sets.js'),
+var TileSetService = require('./tile-sets.js'),
     config = require('../config.js'),
     drawTile = require('../utils.js').drawTile;
-
-var TileSetService = TileSets.TileSetService;
 
 const rpgMapsApi = config.rpgMapsApi,
       tileSize = config.tileSize;
@@ -47,7 +45,7 @@ class RpgMapService {
     $.ajax({
       url: mapUrl,
       dataType: 'json',
-      cache: false,
+      cache: true,
       success: data => {
         this.initRpgMap(data, callback);
       },
@@ -312,8 +310,8 @@ class MapTile {
     this.initImageData();
   }
 
-  addMaskTile(maskTile) {
-    this._maskTiles.push(maskTile);
+  addAsMaskTile(tile) {
+    this._maskTiles.push(new MaskTile(tile));
     this.initImageData();
   }
 
@@ -397,7 +395,4 @@ class MaskTile {
   }
 }
 
-module.exports = {
-  RpgMapService: RpgMapService,
-  MaskTile: MaskTile
-};
+module.exports = RpgMapService;

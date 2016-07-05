@@ -1,6 +1,6 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
-    RpgMaps = require('./rpg-maps.js'),
+    RpgMapService = require('./rpg-maps.js'),
     MapCanvas = require('./map-canvas.jsx');
 
 var Panel = Bootstrap.Panel,
@@ -15,8 +15,6 @@ var Panel = Bootstrap.Panel,
     FormGroup = Bootstrap.FormGroup,
     ControlLabel = Bootstrap.ControlLabel,
     FormControl = Bootstrap.FormControl;
-
-var RpgMapService = RpgMaps.RpgMapService;
 
 /* =============================================================================
  * COMPONENT: MAP EDITOR

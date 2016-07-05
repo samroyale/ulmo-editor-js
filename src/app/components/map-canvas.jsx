@@ -1,6 +1,6 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
-    RpgMaps = require('./rpg-maps.js'),
+    RpgMapService = require('./rpg-maps.js'),
     MapModal = require('./map-modal.jsx'),
     tilePositionMixin = require('./tile-position-mixin.js'),
     tileSize = require('../config.js').tileSize;
@@ -10,8 +10,6 @@ var Overlay = Bootstrap.Overlay,
     Button = Bootstrap.Button,
     DropdownButton = Bootstrap.DropdownButton,
     MenuItem = Bootstrap.MenuItem;
-
-var RpgMapService = RpgMaps.RpgMapService;
 
 /* =============================================================================
  * COMPONENT: MAP CANVAS
@@ -130,7 +128,7 @@ const MapCanvas = React.createClass({
 
   applySelectedTile: function(fromPosition, toPosition) {
     this.processHighlightedTiles(mapTile => {
-      mapTile.addMaskTile(new RpgMaps.MaskTile(this.props.selectedTile));
+      mapTile.addAsMaskTile(this.props.selectedTile);
     });
     this.forceUpdate();
   },
