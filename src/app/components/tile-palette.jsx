@@ -2,7 +2,9 @@ var React = require('react'),
     Bootstrap = require('react-bootstrap'),
     TileSetService = require('./tile-sets.js'),
     tilePositionMixin = require('./tile-position-mixin.js'),
-    tileSize = require('../config.js').tileSize;
+    tileSize = require('../config.js').tileSize,
+    initTile = require('../utils.js').initTile,
+    initTileHighlight = require('../utils.js').initTileHighlight;
 
 var Panel = Bootstrap.Panel,
     Modal = Bootstrap.Modal,
@@ -10,6 +12,9 @@ var Panel = Bootstrap.Panel,
     Button = Bootstrap.Button,
     Collapse = Bootstrap.Collapse,
     Alert = Bootstrap.Alert;
+
+const emptyTile = initTile("white"),
+    tileHighlight = initTileHighlight();
 
 /* =============================================================================
  * COMPONENT: TILE PALETTE
@@ -182,7 +187,6 @@ const TileSetCanvas = React.createClass({
 
   _tileSet: null,
   _canvas: null,
-  _highlight: null,
 
   getInitialState: function() {
     return {
@@ -206,16 +210,6 @@ const TileSetCanvas = React.createClass({
     callback(data);
   },
 
-  initEmptyTile: function() {
-    var emptyCanvas = document.createElement("canvas");
-    emptyCanvas.width = tileSize;
-    emptyCanvas.height = tileSize;
-    var ctx = emptyCanvas.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, tileSize, tileSize);
-    return emptyCanvas;
-  },
-
   drawTileSet: function() {
     var cols = this._tileSet.getCols();
     var rows = this._tileSet.getRows();
@@ -223,7 +217,6 @@ const TileSetCanvas = React.createClass({
     this._canvas.height = rows * tileSize;
     var ctx = this._canvas.getContext('2d');
     ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-    var emptyTile = this.initEmptyTile();
     for (var x = 0; x < cols; x++) {
       for (var y = 0; y < rows; y++) {
         var tile = this._tileSet.getTile(x, y);
@@ -247,7 +240,7 @@ const TileSetCanvas = React.createClass({
   highlightTile: function(x, y, currentTile) {
     if (currentTile) {
       var ctx = this._canvas.getContext('2d');
-      ctx.drawImage(this._highlight, x * tileSize, y * tileSize)
+      ctx.drawImage(tileHighlight, x * tileSize, y * tileSize)
     }
   },
 
@@ -275,10 +268,6 @@ const TileSetCanvas = React.createClass({
 
   suppress: function(evt) {
     evt.preventDefault();
-  },
-
-  componentDidMount: function() {
-    this._highlight = this.initTileHighlight();
   },
 
   componentDidUpdate: function(oldProps, oldState) {

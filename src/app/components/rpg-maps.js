@@ -1,20 +1,13 @@
 var TileSetService = require('./tile-sets.js'),
     config = require('../config.js'),
-    drawTile = require('../utils.js').drawTile;
+    drawTile = require('../utils.js').drawTile,
+    initTile = require('../utils.js').initTile;
 
 const rpgMapsApi = config.rpgMapsApi,
       tileSize = config.tileSize;
 
 const baseTiles = config.baseTileColours.map(
-  colour => {
-    var tileCanvas = document.createElement("canvas");
-    tileCanvas.width = tileSize;
-    tileCanvas.height = tileSize;
-    var ctx = tileCanvas.getContext('2d');
-    ctx.fillStyle = colour;
-    ctx.fillRect(0, 0, tileSize, tileSize);
-    return tileCanvas;
-  }
+  colour => initTile(colour)
 );
 
 /* =============================================================================

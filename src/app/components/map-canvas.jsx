@@ -3,13 +3,17 @@ var React = require('react'),
     RpgMapService = require('./rpg-maps.js'),
     MapModal = require('./map-modal.jsx'),
     tilePositionMixin = require('./tile-position-mixin.js'),
-    tileSize = require('../config.js').tileSize;
+    tileSize = require('../config.js').tileSize,
+    initHighlight = require('../utils.js').initHighlight;
+    initTileHighlight = require('../utils.js').initTileHighlight;
 
 var Overlay = Bootstrap.Overlay,
     ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
     DropdownButton = Bootstrap.DropdownButton,
     MenuItem = Bootstrap.MenuItem;
+
+const tileHighlight = initTileHighlight();
 
 /* =============================================================================
  * COMPONENT: MAP CANVAS
@@ -20,8 +24,6 @@ const MapCanvas = React.createClass({
 
   _rpgMap: null,
   _canvas: null,
-  _highlight: null,
-
   _mouseDown: null,
 
   getInitialState: function() {
@@ -102,7 +104,7 @@ const MapCanvas = React.createClass({
       return;
     }
     this._canvas.getContext('2d').drawImage(
-      this._highlight,
+      tileHighlight,
       tilePosition.x * tileSize,
       tilePosition.y * tileSize
     );
@@ -110,7 +112,7 @@ const MapCanvas = React.createClass({
 
   highlightRange: function(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
-      var highlight = this.initHighlight(rows, cols);
+      var highlight = initHighlight(rows, cols);
       ctx.drawImage(highlight, x * tileSize, y * tileSize);
     });
   },
@@ -321,10 +323,6 @@ const MapCanvas = React.createClass({
       return;
     }
     this.applySelectedTile(this.state.startPosition, this.props.tilePosition);
-  },
-
-  componentDidMount: function() {
-    this._highlight = this.initTileHighlight();
   },
 
   componentDidUpdate: function(oldProps, oldState) {
