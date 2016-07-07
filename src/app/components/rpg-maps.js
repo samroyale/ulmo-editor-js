@@ -315,6 +315,12 @@ class MapTile {
     this.initImageData();
   }
 
+  insertAsMaskTile(tile) {
+    this._maskTiles = [];
+    this._maskTiles.push(new MaskTile(tile));
+    this.initImageData();
+  }
+
   setLevels(levels) {
     this._levels = levels;
   }

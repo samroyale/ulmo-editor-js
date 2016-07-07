@@ -124,7 +124,7 @@ const TilePalette = React.createClass({
 function TileSetToolbar(props) {
   return (
     <ButtonToolbar>
-      <Button bsStyle="primary" onClick={props.onLoadTileSetsFromServer}>
+      <Button onClick={props.onLoadTileSetsFromServer}>
         Open Tileset
       </Button>
     </ButtonToolbar>

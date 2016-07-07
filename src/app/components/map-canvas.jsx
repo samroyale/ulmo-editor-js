@@ -128,7 +128,15 @@ const MapCanvas = React.createClass({
 
   applySelectedTile: function(fromPosition, toPosition) {
     this.processHighlightedTiles(mapTile => {
-      mapTile.addAsMaskTile(this.props.selectedTile);
+      if (this.props.tileControlMode === "ADD") {
+        mapTile.addAsMaskTile(this.props.selectedTile);
+        return;
+      }
+      if (this.props.tileControlMode === "INSERT") {
+        mapTile.insertAsMaskTile(this.props.selectedTile);
+        return;
+      }
+      // tileControlMode is "SELECT" - do nothing
     });
     this.forceUpdate();
   },

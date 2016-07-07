@@ -1,7 +1,9 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
     RpgMapService = require('./rpg-maps.js'),
-    MapCanvas = require('./map-canvas.jsx');
+    MapCanvas = require('./map-canvas.jsx'),
+    utils = require('../utils.js'),
+    tileSize = require('../config.js').tileSize;
 
 var Panel = Bootstrap.Panel,
     Modal = Bootstrap.Modal,
@@ -9,6 +11,7 @@ var Panel = Bootstrap.Panel,
     ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
     DropdownButton = Bootstrap.DropdownButton,
+    Dropdown = Bootstrap.Dropdown,
     MenuItem = Bootstrap.MenuItem,
     Collapse = Bootstrap.Collapse,
     Alert = Bootstrap.Alert,
@@ -34,7 +37,8 @@ const MapEditor = React.createClass({
       loadError: null,
       saveError: null,
       currentTilePosition: null,
-      currentTile: null
+      currentTile: null,
+      tileControlMode: "SELECT"
     };
   },
 
@@ -153,18 +157,25 @@ const MapEditor = React.createClass({
     this.setState({ currentTilePosition: tilePosition, currentTile: tile});
   },
 
+  setTileControlMode: function(mode) {
+    this.setState({ tileControlMode: mode });
+  },
+
   render: function() {
     return (
       <div>
         <Panel className="component">
           <MapToolbar
+              selectedTile={this.props.selectedTile}
               mapDirty={this.state.mapDirty}
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
               onSaveMap={this.saveMap}
-              onShowSaveModal={this.showSaveModal} />
+              onShowSaveModal={this.showSaveModal}
+              onModeChange={this.setTileControlMode} />
           <MapCanvas
               selectedTile={this.props.selectedTile}
+              tileControlMode={this.state.tileControlMode}
               tilePosition={this.state.currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
               onMapUpdated={this.mapUpdated}
@@ -203,19 +214,87 @@ const MapEditor = React.createClass({
 function MapToolbar(props) {
   return (
     <ButtonToolbar>
-      <Button bsStyle="primary" onClick={props.onLoadMapsFromServer}>
+      <TileControl
+          selectedTile={props.selectedTile}
+          onModeChange={props.onModeChange} />
+      <Button onClick={props.onLoadMapsFromServer}>
         Open Map
       </Button>
-      <Button bsStyle="primary" onClick={props.onNewMap}>
+      <Button onClick={props.onNewMap}>
         New Map
       </Button>
-      <DropdownButton bsStyle="primary" title="Save" id="Save">
+      <DropdownButton title="Save" id="Save">
         <MenuItem onClick={props.onSaveMap} disabled={!props.mapDirty}>Save</MenuItem>
         <MenuItem onClick={props.onShowSaveModal}>Save as</MenuItem>
       </DropdownButton>
     </ButtonToolbar>
   );
 }
+
+/* =============================================================================
+ * COMPONENT: TILE CONTROL
+ * =============================================================================
+ */
+const TileControl = React.createClass({
+  _canvas: null,
+
+  getInitialState: function() {
+    // mode can be ADD, INSERT, SELECT
+    return {
+      disabled: true,
+      mode: 'SELECT'
+    };
+  },
+
+  setMode: function(mode) {
+    console.log(mode);
+    this.setState({ mode: mode });
+    this.props.onModeChange(mode);
+  },
+
+  /*componentWillMount: function() {
+    this.populateStateFromProps(this.props);
+  },*/
+
+  componentWillReceiveProps: function(nextProps) {
+    if (!this.props.selectedTile && nextProps.selectedTile) {
+      this.setState({
+        disabled: false,
+      });
+      this.setMode("ADD");
+    }
+  },
+
+  componentDidUpdate: function(oldProps, oldState) {
+    if (this.props.selectedTile) {
+      var ctx = utils.getScalableDrawingContext(this._canvas);
+      ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+      ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
+    }
+  },
+
+  menuItem: function(mode, label) {
+    var active = mode === this.state.mode;
+    return (<MenuItem eventKey={mode} active={active}>{label}</MenuItem>);
+  },
+
+  render: function() {
+    return (
+      <Dropdown id="tile-painter-dropdown" onSelect={this.setMode} disabled={this.state.disabled}>
+        <Button className="tile-button">
+          <canvas className="tiles" width={tileSize} height={tileSize}
+              ref={cvs => this._canvas = cvs} />
+        </Button>
+        <Dropdown.Toggle className="tile-dropdown" />
+        <Dropdown.Menu>
+          {this.menuItem("ADD", "Add")}
+          {this.menuItem("INSERT", "Insert")}
+          {this.menuItem("SELECT", "Select")}
+        </Dropdown.Menu>
+      </Dropdown>
+    );
+  }
+});
 
 /* =============================================================================
  * COMPONENT: OPEN MAP MODAL
@@ -227,7 +306,6 @@ function OpenMapModal(props) {
     map => <MapItem key={map.id} map={map}
         onMapSelected={props.onMapSelected} />
   );
-
   return (
     <Modal show={props.showModal} onHide={props.onClose}>
       <Modal.Header closeButton>
