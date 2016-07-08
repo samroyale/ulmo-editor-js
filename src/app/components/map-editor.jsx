@@ -3,7 +3,8 @@ var React = require('react'),
     RpgMapService = require('./rpg-maps.js'),
     MapCanvas = require('./map-canvas.jsx'),
     utils = require('../utils.js'),
-    tileSize = require('../config.js').tileSize;
+    tileSize = require('../config.js').tileSize,
+    initAddSuffix = require('../utils.js').initAddSuffix;
 
 var Panel = Bootstrap.Panel,
     Modal = Bootstrap.Modal,
@@ -18,6 +19,8 @@ var Panel = Bootstrap.Panel,
     FormGroup = Bootstrap.FormGroup,
     ControlLabel = Bootstrap.ControlLabel,
     FormControl = Bootstrap.FormControl;
+
+const addSuffix = initAddSuffix();
 
 /* =============================================================================
  * COMPONENT: MAP EDITOR
@@ -242,7 +245,7 @@ const TileControl = React.createClass({
     // mode can be ADD, INSERT, SELECT
     return {
       disabled: true,
-      mode: 'SELECT'
+      mode: "SELECT"
     };
   },
 
@@ -270,6 +273,9 @@ const TileControl = React.createClass({
       var ctx = utils.getScalableDrawingContext(this._canvas);
       ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
       ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
+      if (this.state.mode === "ADD") {
+        ctx.drawImage(addSuffix, this._canvas.width - 10, this._canvas.height - 10, 10, 10);
+      }
     }
   },
 

@@ -60,19 +60,21 @@ class TileSetService {
       });
     };
     tileSetImage.onload = () => {
-      callback({
-        tileSet: new TileSet(
-          tileSetDef.id,
-          tileSetDef.name,
-          this.processTileSet(tileSetDef, tileSetImage)
-        )
-      });
+      callback({ tileSet: this.buildTileSet(tileSetDef, tileSetImage) });
     };
     //tileSetImage.crossOrigin = "Anonymous"; // CORS
     tileSetImage.src = tileSetDef.imageUrl;
   }
 
-  processTileSet(tileSetDef, tileSetImage) {
+  buildTileSet(tileSetDef, tileSetImage) {
+    return new TileSet(
+      tileSetDef.id,
+      tileSetDef.name,
+      this.initTiles(tileSetDef, tileSetImage)
+    )
+  }
+
+  initTiles(tileSetDef, tileSetImage) {
     // parse the tile names
     var tileDefKey = (x, y) => x + "-" + y;
     var tileDefMappings = {};

@@ -100,7 +100,7 @@ class RpgMapService {
     if (data) {
       // known errors go here
       console.log(data.err);
-      if (data.code == 11000) {
+      if (data.code === 11000) {
         return {
           err: "Map name already in use: " + mapDef.name,
           status: xhr.status
@@ -127,7 +127,7 @@ class RpgMapService {
         tileDef => tileSetMappings.set(tileDef.tileSet, null)
       );
     });
-    if (tileSetMappings.size == 0) {
+    if (tileSetMappings.size === 0) {
       // no tilesets to load - either a new or empty map
       callback({ map: this.buildRpgMap(tileSetMappings, rpgMapDef) });
       return;
@@ -164,7 +164,7 @@ class RpgMapService {
   }
 
   buildRpgMap(tileSetMappings, rpgMapDef) {
-    console.log("buildRpgMap: " + tileSetMappings.size);
+    // console.log("buildRpgMap: " + tileSetMappings.size);
     return new RpgMap(
       rpgMapDef.id,
       rpgMapDef.name,
