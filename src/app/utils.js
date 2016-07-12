@@ -90,5 +90,5 @@ module.exports = {
     ctx.fill();
     ctx.closePath();
     return addSuffixCanvas;
-  }
+  },
 }

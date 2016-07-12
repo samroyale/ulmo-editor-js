@@ -41,7 +41,7 @@ const MapEditor = React.createClass({
       saveError: null,
       currentTilePosition: null,
       currentTile: null,
-      tileControlMode: "SELECT"
+      tileMode: null
     };
   },
 
@@ -161,7 +161,14 @@ const MapEditor = React.createClass({
   },
 
   setTileControlMode: function(mode) {
-    this.setState({ tileControlMode: mode });
+    this.setState({ tileMode: mode });
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    // if selecting a tile for the first time, set the tile mode to INSERT
+    if (!this.props.selectedTile && nextProps.selectedTile) {
+      this.setState({ tileMode: "INSERT" });
+    }
   },
 
   render: function() {
@@ -170,6 +177,7 @@ const MapEditor = React.createClass({
         <Panel className="component">
           <MapToolbar
               selectedTile={this.props.selectedTile}
+              tileMode={this.state.tileMode}
               mapDirty={this.state.mapDirty}
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
@@ -178,7 +186,7 @@ const MapEditor = React.createClass({
               onModeChange={this.setTileControlMode} />
           <MapCanvas
               selectedTile={this.props.selectedTile}
-              tileControlMode={this.state.tileControlMode}
+              tileMode={this.state.tileMode}
               tilePosition={this.state.currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
               onMapUpdated={this.mapUpdated}
@@ -219,6 +227,7 @@ function MapToolbar(props) {
     <ButtonToolbar>
       <TileControl
           selectedTile={props.selectedTile}
+          tileMode={props.tileMode}
           onModeChange={props.onModeChange} />
       <Button onClick={props.onLoadMapsFromServer}>
         Open Map
@@ -242,29 +251,23 @@ const TileControl = React.createClass({
   _canvas: null,
 
   getInitialState: function() {
-    // mode can be ADD, INSERT, SELECT
     return {
-      disabled: true,
-      mode: "SELECT"
+      disabled: true
     };
   },
 
-  setMode: function(mode) {
-    console.log(mode);
-    this.setState({ mode: mode });
+  /*setMode: function(mode) {
     this.props.onModeChange(mode);
-  },
+  },*/
 
   /*componentWillMount: function() {
     this.populateStateFromProps(this.props);
   },*/
 
   componentWillReceiveProps: function(nextProps) {
-    if (!this.props.selectedTile && nextProps.selectedTile) {
-      this.setState({
-        disabled: false,
-      });
-      this.setMode("ADD");
+    // if selecting a tile for the first time, set the tile mode to INSERT
+    if (nextProps.tileMode) {
+      this.setState({ disabled: false });
     }
   },
 
@@ -273,28 +276,33 @@ const TileControl = React.createClass({
       var ctx = utils.getScalableDrawingContext(this._canvas);
       ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
       ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
-      if (this.state.mode === "ADD") {
+      if (this.props.tileMode === "ADD") {
         ctx.drawImage(addSuffix, this._canvas.width - 10, this._canvas.height - 10, 10, 10);
+        return;
+      }
+      if (this.props.tileMode === "SELECT") {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
       }
     }
   },
 
   menuItem: function(mode, label) {
-    var active = mode === this.state.mode;
+    var active = (mode === this.props.tileMode);
     return (<MenuItem eventKey={mode} active={active}>{label}</MenuItem>);
   },
 
   render: function() {
     return (
-      <Dropdown id="tile-painter-dropdown" onSelect={this.setMode} disabled={this.state.disabled}>
+      <Dropdown id="tile-control-dropdown" onSelect={this.props.onModeChange} disabled={this.state.disabled}>
         <Button className="tile-button">
           <canvas className="tiles" width={tileSize} height={tileSize}
               ref={cvs => this._canvas = cvs} />
         </Button>
         <Dropdown.Toggle className="tile-dropdown" />
         <Dropdown.Menu>
-          {this.menuItem("ADD", "Add")}
           {this.menuItem("INSERT", "Insert")}
+          {this.menuItem("ADD", "Add")}
           {this.menuItem("SELECT", "Select")}
         </Dropdown.Menu>
       </Dropdown>

@@ -129,18 +129,18 @@ const MapCanvas = React.createClass({
   },
 
   applySelectedTile: function(fromPosition, toPosition) {
-    this.processHighlightedTiles(mapTile => {
-      if (this.props.tileControlMode === "ADD") {
-        mapTile.addAsMaskTile(this.props.selectedTile);
-        return;
-      }
-      if (this.props.tileControlMode === "INSERT") {
-        mapTile.insertAsMaskTile(this.props.selectedTile);
-        return;
-      }
-      // tileControlMode is "SELECT" - do nothing
-    });
-    this.forceUpdate();
+    if (this.props.tileMode === "ADD") {
+      this.processHighlightedTiles(mapTile =>
+        mapTile.addAsMaskTile(this.props.selectedTile)
+      );
+      return;
+    }
+    if (this.props.tileMode === "INSERT") {
+      this.processHighlightedTiles(mapTile =>
+        mapTile.insertAsMaskTile(this.props.selectedTile)
+      );
+    }
+    // tileMode is either null or SELECT - do nothing
   },
 
   sendToBack: function() {
