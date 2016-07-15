@@ -247,6 +247,87 @@ class RpgMap {
     return this._mapTiles[0].length;
   }
 
+  cut(topLeft, rows, cols) {
+    var tiles = this.copy(topLeft, rows, cols);
+    this.clear(topLeft, rows, cols);
+    return tiles;
+  }
+
+  copy(topLeft, rows, cols) {
+    var tiles = new Array(cols);
+    var x = topLeft.x, y = topLeft.y;
+    for (var i = 0; i < cols; i++) {
+      tiles[i] = new Array(rows);
+      for (var j = 0; j < rows; j++) {
+        tiles[i][j] = this._mapTiles[x + i][y + j].copy();
+      }
+    }
+    return tiles;
+  }
+
+  paste(x, y, tiles) {
+    var xBound = Math.min(x + tiles.length, this.getCols());
+    var yBound = Math.min(y + tiles[0].length, this.getRows());
+    for (var i = x; i < xBound; i++) {
+      for (var j = y; j < yBound; j++) {
+        var tile = tiles[i - x][j - y].copy();
+        var mapTile = this._mapTiles[i][j];
+        mapTile.setLevels(tile.getLevels());
+        mapTile.setMaskTiles(tile.getMaskTiles());
+      }
+    }
+    return {x: xBound - 1, y: yBound - 1};
+  }
+
+  sendToBack(topLeft, rows, cols) {
+    this.doStuff(topLeft, rows, cols, mapTile =>
+      mapTile.sendToBack()
+    );
+  }
+
+  keepTop(topLeft, rows, cols) {
+    this.doStuff(topLeft, rows, cols, mapTile =>
+      mapTile.keepTop()
+    );
+  }
+
+  clear(topLeft, rows, cols) {
+    this.doStuff(topLeft, rows, cols, mapTile =>
+      mapTile.clear()
+    );
+  }
+
+  addAsMaskTile(topLeft, rows, cols, tile) {
+    this.doStuff(topLeft, rows, cols, mapTile =>
+      mapTile.addAsMaskTile(tile)
+    );
+  }
+
+  insertAsMaskTile(topLeft, rows, cols, tile) {
+    this.doStuff(topLeft, rows, cols, mapTile =>
+      mapTile.insertAsMaskTile(tile)
+    );
+  }
+
+  setLevels(topLeft, rows, cols, levels) {
+    this.doStuff(topLeft, rows, cols, mapTile =>
+      mapTile.setLevels(levels)
+    );
+  }
+
+  setMaskTiles(x, y, maskTiles) {
+    this._mapTiles[x][y].setMaskTiles(maskTiles);
+  }
+
+  doStuff(topLeft, rows, cols, func) {
+    for (var i = topLeft.x; i < topLeft.x + cols; i++) {
+      for (var j = topLeft.y; j < topLeft.y + rows; j++) {
+        func(this._mapTiles[i][j]);
+        //ctx.putImageData(mapTile.getImage(), i * tileSize, j * tileSize);
+      }
+    }
+  }
+
   getDto() {
     return this.getDtoWithName(this._name);
   }
@@ -277,7 +358,9 @@ class MapTile {
     this._baseTileCanvas = baseTileCanvas;
     this._maskTiles = maskTiles ? maskTiles : [];
     this._levels = levels ? levels : [];
-    this.initImageData();
+    if (baseTileCanvas) {
+      this.initImageData();
+    }
   }
 
   initImageData() {
@@ -323,26 +406,37 @@ class MapTile {
   }
 
   sendToBack() {
+    if (this._maskTiles.length < 2) {
+      return;
+    }
     var topTile = this._maskTiles.pop();
     this._maskTiles.unshift(topTile);
     this.initImageData();
   }
 
   keepTop() {
+    if (this._maskTiles.length < 2) {
+      return;
+    }
     var topTile = this._maskTiles.pop();
     this._maskTiles = [topTile];
     this.initImageData();
   }
 
   clear() {
+    if (this._maskTiles.length === 0) {
+      return;
+    }
     this._maskTiles = [];
     this.initImageData();
   }
 
   copy() {
     return new MapTile(
-      this._baseTileCanvas,
-      this._maskTiles.slice(0),
+      null,
+      this._maskTiles.map(maskTile =>
+        maskTile.copy()
+      ),
       this._levels.slice(0)
     );
   }
@@ -383,6 +477,10 @@ class MaskTile {
 
   setMaskLevel(maskLevel) {
     this._maskLevel = maskLevel;
+  }
+
+  copy() {
+    return new MaskTile(this._tile, this._maskLevel);
   }
 
   getDto() {

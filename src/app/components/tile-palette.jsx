@@ -230,17 +230,17 @@ const TileSetCanvas = React.createClass({
     }
   },
 
-  unhighlightTile: function(x, y, previousTile) {
-    if (previousTile) {
-      var ctx = this._canvas.getContext('2d');
-      ctx.putImageData(previousTile.getImage(), x * tileSize, y * tileSize);
-    }
-  },
-
   highlightTile: function(x, y, currentTile) {
     if (currentTile) {
       var ctx = this._canvas.getContext('2d');
       ctx.drawImage(tileHighlight, x * tileSize, y * tileSize)
+    }
+  },
+
+  resetTile: function(x, y, previousTile) {
+    if (previousTile) {
+      var ctx = this._canvas.getContext('2d');
+      ctx.putImageData(previousTile.getImage(), x * tileSize, y * tileSize);
     }
   },
 
@@ -272,7 +272,7 @@ const TileSetCanvas = React.createClass({
 
   componentDidUpdate: function(oldProps, oldState) {
     if (oldProps.tilePosition) {
-      this.unhighlightTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.tile);
+      this.resetTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.tile);
     }
     if (this.props.tilePosition) {
       this.highlightTile(this.props.tilePosition.x, this.props.tilePosition.y, this.props.tile);

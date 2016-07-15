@@ -25,6 +25,7 @@ const MapCanvas = React.createClass({
   _rpgMap: null,
   _canvas: null,
   _mouseDown: null,
+  _clipboard: null,
 
   getInitialState: function() {
     return {
@@ -111,16 +112,16 @@ const MapCanvas = React.createClass({
   },
 
   highlightRange: function(fromPosition, toPosition) {
-    this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
+    this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
       var highlight = initHighlight(rows, cols);
-      ctx.drawImage(highlight, x * tileSize, y * tileSize);
+      ctx.drawImage(highlight, topLeft.x * tileSize, topLeft.y * tileSize);
     });
   },
 
   unhighlightRange: function(fromPosition, toPosition) {
-    this.processRange(fromPosition, toPosition, (x, y, cols, rows, ctx) => {
-      for (var i = x; i < x + cols; i++) {
-        for (var j = y; j < y + rows; j++) {
+    this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
+      for (var i = topLeft.x; i < topLeft.x + cols; i++) {
+        for (var j = topLeft.y; j < topLeft.y + rows; j++) {
           var mapTile = this._rpgMap.getMapTile(i, j);
           ctx.putImageData(mapTile.getImage(), i * tileSize, j * tileSize);
         }
@@ -130,37 +131,37 @@ const MapCanvas = React.createClass({
 
   applySelectedTile: function(fromPosition, toPosition) {
     if (this.props.tileMode === "ADD") {
-      this.processHighlightedTiles(mapTile =>
-        mapTile.addAsMaskTile(this.props.selectedTile)
+      this.processHighlightedTiles((topLeft, rows, cols) =>
+        this._rpgMap.addAsMaskTile(topLeft, rows, cols, this.props.selectedTile)
       );
       return;
     }
     if (this.props.tileMode === "INSERT") {
-      this.processHighlightedTiles(mapTile =>
-        mapTile.insertAsMaskTile(this.props.selectedTile)
+      this.processHighlightedTiles((topLeft, rows, cols) =>
+        this._rpgMap.insertAsMaskTile(topLeft, rows, cols, this.props.selectedTile)
       );
     }
     // tileMode is either null or SELECT - do nothing
   },
 
   sendToBack: function() {
-    this.processHighlightedTiles(mapTile => {
-      mapTile.sendToBack();
-    });
+    this.processHighlightedTiles((topLeft, rows, cols) =>
+      this._rpgMap.sendToBack(topLeft, rows, cols)
+    );
     this.hideOverlay();
   },
 
   keepTop: function() {
-    this.processHighlightedTiles(mapTile => {
-      mapTile.keepTop();
-    });
+    this.processHighlightedTiles((topLeft, rows, cols) =>
+      this._rpgMap.keepTop(topLeft, rows, cols)
+    );
     this.hideOverlay();
   },
 
   clear: function() {
-    this.processHighlightedTiles(mapTile => {
-      mapTile.clear();
-    });
+    this.processHighlightedTiles((topLeft, rows, cols) =>
+      this._rpgMap.clear(topLeft, rows, cols)
+    );
     this.hideOverlay();
   },
 
@@ -193,37 +194,27 @@ const MapCanvas = React.createClass({
 
   applyLevelsEdit: function(newLevels) {
     // levels edit applies to all selected tiles
-    this.processHighlightedTiles(mapTile => {
-      mapTile.setLevels(newLevels.slice(0));
-    });
+    this.processHighlightedTiles((topLeft, rows, cols) =>
+      this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice(0))
+    );
     this.closeModal();
-    this.props.onMapUpdated();
   },
 
   applyMaskTilesEdit: function(newMaskTiles) {
     // mask tiles edit applies to only the current tile
-    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
-    mapTile.setMaskTiles(newMaskTiles);
+    var mapTile = this._rpgMap.setMaskTiles(this.props.tilePosition.x, this.props.tilePosition.y, newMaskTiles);
     this.closeModal();
     this.props.onMapUpdated();
   },
 
   processHighlightedTiles: function(func) {
+    if (!this.props.tilePosition) {
+      return;
+    }
     var toPosition = this.props.tilePosition;
     var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
-    this.processRange(
-      fromPosition,
-      toPosition,
-      (x, y, cols, rows, ctx) => {
-        for (var i = x; i < x + cols; i++) {
-          for (var j = y; j < y + rows; j++) {
-            var mapTile = this._rpgMap.getMapTile(i, j);
-            func(mapTile);
-            ctx.putImageData(mapTile.getImage(), i * tileSize, j * tileSize);
-          }
-        }
-      }
-    );
+    var tr = this.getTileRange(fromPosition, toPosition);
+    func(tr.topLeft, tr.rows, tr.cols);
     this.props.onMapUpdated();
   },
 
@@ -231,12 +222,37 @@ const MapCanvas = React.createClass({
     if (!toPosition) {
       return;
     }
+    var ctx = this._canvas.getContext('2d');
+    var tr = this.getTileRange(fromPosition, toPosition);
+    func(tr.topLeft, tr.rows, tr.cols, ctx);
+  },
+
+  getTileRange: function(fromPosition, toPosition) {
     var x = Math.min(fromPosition.x, toPosition.x);
     var y = Math.min(fromPosition.y, toPosition.y);
-    var cols = Math.abs(fromPosition.x - toPosition.x) + 1;
     var rows = Math.abs(fromPosition.y - toPosition.y) + 1;
-    var ctx = this._canvas.getContext('2d');
-    func(x, y, cols, rows, ctx);
+    var cols = Math.abs(fromPosition.x - toPosition.x) + 1;
+    return {topLeft: {x: x, y: y}, rows: rows, cols: cols};
+  },
+
+  copyTiles: function() {
+    this.processHighlightedTiles((topLeft, rows, cols) =>
+      this._clipboard = this._rpgMap.copy(topLeft, rows, cols)
+    );
+    this.hideOverlay();
+  },
+
+  cutTiles: function() {
+    this.processHighlightedTiles((topLeft, rows, cols) =>
+      this._clipboard = this._rpgMap.cut(topLeft, rows, cols)
+    );
+    this.hideOverlay();
+  },
+
+  pasteTiles: function() {
+    var toPosition = this._rpgMap.paste(this.props.tilePosition.x, this.props.tilePosition.y, this._clipboard);
+    this.unhighlightRange(this.props.tilePosition, toPosition);
+    this.hideOverlay();
   },
 
   buttonsMetadata: function() {
@@ -248,10 +264,15 @@ const MapCanvas = React.createClass({
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
       {label: 'Clear', onClick: this.clear},
-      {label: 'Edit', menuItems: [
+      {label: 'Edit tile', menuItems: [
         {label: 'Edit Levels', onClick: this.editLevels},
         {label: 'Edit Images', onClick: this.editImages, disabled: multipleSelected},
         {label: 'Edit Masks', onClick: this.editMasks, disabled: multipleSelected}
+      ]},
+      {label: 'Edit', menuItems: [
+        {label: 'Cut', onClick: this.cutTiles},
+        {label: 'Copy', onClick: this.copyTiles},
+        {label: 'Paste', onClick: this.pasteTiles, disabled: multipleSelected}
       ]}
     ];
   },
