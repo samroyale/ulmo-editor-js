@@ -120,6 +120,16 @@ class RpgMapService {
     this.initRpgMap(data, callback);
   }
 
+  resizeMap(rpgMap, left, right, top, bottom, callback) {
+    var newRows = rpgMap.getRows() + top + bottom;
+    var newCols = rpgMap.getCols() + left + right;
+    this.newMap(newRows, newCols, data => {
+      var newRpgMap = data.map;
+      newRpgMap.resize(rpgMap, left, right, top, bottom);
+      callback({ map: newRpgMap })
+    });
+  }
+
   initRpgMap(rpgMapDef, callback) {
     var tileSetMappings = new Map();
     rpgMapDef.mapTiles.forEach(mapTileDef => {
@@ -279,6 +289,17 @@ class RpgMap {
     return {x: xBound - 1, y: yBound - 1};
   }
 
+  resize(rpgMap, left, right, top, bottom) {
+    var topLeft = {
+      x: 0 - Math.min(0, left),
+      y: 0 - Math.min(0, top)
+    }
+    var rows = rpgMap.getRows() - topLeft.y;
+    var cols = rpgMap.getCols() - topLeft.x;
+    var tiles = rpgMap.copy(topLeft, rows, cols);
+    this.paste(Math.max(0, left), Math.max(0, top), tiles);
+  }
+
   sendToBack(topLeft, rows, cols) {
     this.doStuff(topLeft, rows, cols, mapTile =>
       mapTile.sendToBack()
@@ -323,7 +344,6 @@ class RpgMap {
     for (var i = topLeft.x; i < topLeft.x + cols; i++) {
       for (var j = topLeft.y; j < topLeft.y + rows; j++) {
         func(this._mapTiles[i][j]);
-        //ctx.putImageData(mapTile.getImage(), i * tileSize, j * tileSize);
       }
     }
   }
@@ -445,9 +465,9 @@ class MapTile {
     if (this._maskTiles) {
       return {
         xy: [x, y],
-        tiles: this._maskTiles.map(maskTile => {
-          return maskTile.getDto();
-        }),
+        tiles: this._maskTiles.map(maskTile =>
+          maskTile.getDto()
+        ),
         levels: this._levels
       }
     }

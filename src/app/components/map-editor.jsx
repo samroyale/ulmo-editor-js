@@ -275,9 +275,9 @@ const TileControl = React.createClass({
     if (this.props.selectedTile) {
       var ctx = utils.getScalableDrawingContext(this._canvas);
       ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-      ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
+      ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0);
       if (this.props.tileMode === "ADD") {
-        ctx.drawImage(addSuffix, this._canvas.width - 10, this._canvas.height - 10, 10, 10);
+        ctx.drawImage(addSuffix, this._canvas.width - 10, this._canvas.height - 10);
         return;
       }
       if (this.props.tileMode === "SELECT") {
