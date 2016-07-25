@@ -53,6 +53,13 @@ const MapCanvas = React.createClass({
     });
   },
 
+  resizeMap: function(left, right, top, bottom, callback) {
+    var rpgMapService = new RpgMapService();
+    rpgMapService.resizeMap(this._rpgMap, left, right, top, bottom, data => {
+      this.mapLoaded(data, callback);
+    });
+  },
+
   mapLoaded: function(data, callback) {
     if (data.map) {
       this._rpgMap = data.map;

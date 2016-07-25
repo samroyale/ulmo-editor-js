@@ -31,9 +31,7 @@ const MapEditor = React.createClass({
 
   getInitialState: function() {
     return {
-      showLoadModal: false,
-      showNewModal: false,
-      showSaveModal: false,
+      showModal: false,
       mapDirty: false,
       maps: [],
       mapId: null,
@@ -46,32 +44,37 @@ const MapEditor = React.createClass({
   },
 
   closeModal: function() {
-    this.setState({
-      showLoadModal: false,
-      showNewModal: false,
-      showSaveModal: false
-    });
+    this.setState({ showModal: null });
   },
 
   mapSelected: function(mid) {
     this._mapCanvas.loadMap(mid, data => {
-      this.mapLoaded(mid, data)
+      this.mapLoaded(mid, data, false)
     });
   },
 
   newMap: function(event) {
-    this.setState({ showNewModal: true });
+    this.setState({ showModal: "NEW" });
   },
 
   newMapOfSize: function(rows, cols) {
     this._mapCanvas.newMap(rows, cols, data => {
-      this.mapLoaded(null, data)
+      this.mapLoaded(null, data, true)
     });
   },
 
-  mapLoaded: function(mid, data) {
+  resizeMap: function(event) {
+    this.setState({ showModal: "RESIZE" });
+  },
+
+  resizeMapToSize: function(left, right, top, bottom) {
+    this._mapCanvas.resizeMap(left, right, top, bottom, data => {
+      this.mapLoaded(null, data, true)
+    });
+  },
+
+  mapLoaded: function(mid, data, dirty) {
     if (data.map) {
-      var dirty = mid ? false : true; // true for new maps
       this.closeModal();
       this.setState({
         mapId: data.map.getId(),
@@ -101,7 +104,7 @@ const MapEditor = React.createClass({
       this.setState({
         maps: data.maps,
         loadError: null,
-        showLoadModal: true
+        showModal: "OPEN"
       });
       return;
     }
@@ -110,7 +113,7 @@ const MapEditor = React.createClass({
       this.setState({
         maps: [],
         loadError: "Could not load maps [" + data.status + ": " + data.err + "]",
-        showLoadModal: true
+        showModal: "OPEN"
       });
       return;
     }
@@ -118,7 +121,7 @@ const MapEditor = React.createClass({
   },
 
   showSaveModal: function() {
-    this.setState({ showSaveModal: true });
+    this.setState({ showModal: "SAVE" });
   },
 
   saveMap: function() {
@@ -181,6 +184,7 @@ const MapEditor = React.createClass({
               mapDirty={this.state.mapDirty}
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
+              onResizeMap={this.resizeMap}
               onSaveMap={this.saveMap}
               onShowSaveModal={this.showSaveModal}
               onModeChange={this.setTileControlMode} />
@@ -197,19 +201,24 @@ const MapEditor = React.createClass({
         </Panel>
 
         <OpenMapModal
-            showModal={this.state.showLoadModal}
+            showModal={this.state.showModal === "OPEN"}
             maps={this.state.maps}
             onMapSelected={this.mapSelected}
             onClose={this.closeModal}
             error={this.state.loadError} />
 
         <NewMapModal
-            showModal={this.state.showNewModal}
+            showModal={this.state.showModal === "NEW"}
             onNewMap={this.newMapOfSize}
             onClose={this.closeModal} />
 
+        <ResizeMapModal
+            showModal={this.state.showModal === "RESIZE"}
+            onResizeMap={this.resizeMapToSize}
+            onClose={this.closeModal} />
+
         <SaveAsModal
-            showModal={this.state.showSaveModal}
+            showModal={this.state.showModal === "SAVE"}
             onSaveAs={this.saveMapAs}
             onClose={this.closeModal}
             error={this.state.saveError} />
@@ -234,6 +243,9 @@ function MapToolbar(props) {
       </Button>
       <Button onClick={props.onNewMap}>
         New Map
+      </Button>
+      <Button onClick={props.onResizeMap}>
+        Resize Map
       </Button>
       <DropdownButton title="Save" id="Save">
         <MenuItem onClick={props.onSaveMap} disabled={!props.mapDirty}>Save</MenuItem>
@@ -374,7 +386,6 @@ const NewMapModal = React.createClass({
   },
 
   handleSubmit: function(e) {
-    console.log("submitted");
     e.preventDefault();
     this.newMap();
   },
@@ -409,6 +420,95 @@ const NewMapModal = React.createClass({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.newMap} bsStyle="primary">OK</Button>
+          <Button onClick={this.props.onClose}>Cancel</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+});
+
+/* =============================================================================
+ * COMPONENT: RESIZE MAP MODAL
+ * =============================================================================
+ */
+const ResizeMapModal = React.createClass({
+  // allows negative numbers
+  _regex: /[^0-9\-]/g,
+
+  getInitialState: function() {
+    return {
+      leftVal: '',
+      rightVal: '',
+      topVal: '',
+      bottomVal: ''
+    };
+  },
+
+  handleLeftChange: function(event) {
+    this.setState({ leftVal: event.target.value.replace(this._regex, '') });
+  },
+
+  handleRightChange: function(event) {
+    this.setState({ rightVal: event.target.value.replace(this._regex, '') });
+  },
+
+  handleTopChange: function(event) {
+    this.setState({ topVal: event.target.value.replace(this._regex, '') });
+  },
+
+  handleBottomChange: function(event) {
+    this.setState({ bottomVal: event.target.value.replace(this._regex, '') });
+  },
+
+  handleSubmit: function(e) {
+    e.preventDefault();
+    this.newMap();
+  },
+
+  resizeMap: function() {
+    var vals = [this.state.leftVal, this.state.rightVal, this.state.topVal, this.state.bottomVal]
+        .map(val => {
+          var n = parseInt(val);
+          return isNaN(n) ? 0 : n;
+        }
+    );
+    if (vals.some(val => val !== 0)) {
+      this.props.onResizeMap(vals[0], vals[1], vals[2], vals[3]);
+    }
+  },
+
+  render: function() {
+    return (
+      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Resize Map</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <form onSubmit={this.handleSubmit}>
+            <FormGroup controlId="leftGroup">
+              <ControlLabel>Left</ControlLabel>
+              <FormControl type="text" placeholder="0-32"
+                  value={this.state.leftVal} onChange={this.handleLeftChange} />
+            </FormGroup>
+            <FormGroup controlId="rightGroup">
+              <ControlLabel>Right</ControlLabel>
+              <FormControl type="text" placeholder="0-32"
+                  value={this.state.rightVal} onChange={this.handleRightChange} />
+            </FormGroup>
+            <FormGroup controlId="topGroup">
+              <ControlLabel>Top</ControlLabel>
+              <FormControl type="text" placeholder="0-32"
+                  value={this.state.topVal} onChange={this.handleTopChange} />
+            </FormGroup>
+            <FormGroup controlId="bottomGroup">
+              <ControlLabel>Bottom</ControlLabel>
+              <FormControl type="text" placeholder="0-32"
+                  value={this.state.bottomVal} onChange={this.handleBottomChange} />
+            </FormGroup>
+          </form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={this.resizeMap} bsStyle="primary">OK</Button>
           <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>

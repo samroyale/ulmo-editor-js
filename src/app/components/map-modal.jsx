@@ -25,7 +25,8 @@ var Modal = Bootstrap.Modal,
  * =============================================================================
  */
 const EditLevelsModal = React.createClass({
-  _regex: /\D/g,
+  // allows 'specials' eg. S1.5, S2 and 'drops' eg. D3-2
+  _regex: /[^0-9SD\.\-]/g,
 
   getInitialState: function() {
     return {
