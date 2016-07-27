@@ -8,6 +8,9 @@ var React = require('react'),
 
 var Panel = Bootstrap.Panel,
     Modal = Bootstrap.Modal,
+    Grid = Bootstrap.Grid,
+    Row = Bootstrap.Row,
+    Col = Bootstrap.Col,
     ButtonToolbar = Bootstrap.ButtonToolbar,
     ButtonGroup = Bootstrap.ButtonGroup,
     Button = Bootstrap.Button,
@@ -16,11 +19,14 @@ var Panel = Bootstrap.Panel,
     MenuItem = Bootstrap.MenuItem,
     Collapse = Bootstrap.Collapse,
     Alert = Bootstrap.Alert,
+    Form = Bootstrap.Form,
     FormGroup = Bootstrap.FormGroup,
     ControlLabel = Bootstrap.ControlLabel,
     FormControl = Bootstrap.FormControl;
 
 const addSuffix = initAddSuffix();
+
+const rpgMapService = new RpgMapService();
 
 /* =============================================================================
  * COMPONENT: MAP EDITOR
@@ -95,7 +101,6 @@ const MapEditor = React.createClass({
   },
 
   loadMapsFromServer: function(event) {
-    var rpgMapService = new RpgMapService();
     rpgMapService.loadMaps(this.mapsLoaded);
   },
 
@@ -479,33 +484,49 @@ const ResizeMapModal = React.createClass({
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="resize-map-modal">
         <Modal.Header closeButton>
           <Modal.Title>Resize Map</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <form onSubmit={this.handleSubmit}>
-            <FormGroup controlId="leftGroup">
-              <ControlLabel>Left</ControlLabel>
-              <FormControl type="text" placeholder="0-32"
-                  value={this.state.leftVal} onChange={this.handleLeftChange} />
-            </FormGroup>
-            <FormGroup controlId="rightGroup">
-              <ControlLabel>Right</ControlLabel>
-              <FormControl type="text" placeholder="0-32"
-                  value={this.state.rightVal} onChange={this.handleRightChange} />
-            </FormGroup>
-            <FormGroup controlId="topGroup">
-              <ControlLabel>Top</ControlLabel>
-              <FormControl type="text" placeholder="0-32"
-                  value={this.state.topVal} onChange={this.handleTopChange} />
-            </FormGroup>
-            <FormGroup controlId="bottomGroup">
-              <ControlLabel>Bottom</ControlLabel>
-              <FormControl type="text" placeholder="0-32"
-                  value={this.state.bottomVal} onChange={this.handleBottomChange} />
-            </FormGroup>
-          </form>
+          <Form onSubmit={this.handleSubmit}>
+            <Grid>
+              <Row>
+                <Col lgOffset={1} lg={2}>
+                  <FormGroup controlId="topGroup">
+                    <ControlLabel>Top</ControlLabel>
+                    <FormControl type="text" placeholder="number"
+                        value={this.state.topVal} onChange={this.handleTopChange} />
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row>
+                <Col lg={2}>
+                  <FormGroup controlId="leftGroup">
+                    <ControlLabel>Left</ControlLabel>
+                    <FormControl type="text" placeholder="0-32"
+                        value={this.state.leftVal} onChange={this.handleLeftChange} />
+                  </FormGroup>
+                </Col>
+                <Col lg={2}>
+                  <FormGroup controlId="rightGroup">
+                    <ControlLabel>Right</ControlLabel>
+                    <FormControl type="text" placeholder="0-32"
+                        value={this.state.rightVal} onChange={this.handleRightChange} />
+                  </FormGroup>
+                </Col>
+              </Row>
+              <Row>
+                <Col lgOffset={1} lg={2}>
+                  <FormGroup controlId="bottomGroup">
+                    <ControlLabel>Bottom</ControlLabel>
+                    <FormControl type="text" placeholder="0-32"
+                        value={this.state.bottomVal} onChange={this.handleBottomChange} />
+                  </FormGroup>
+                </Col>
+              </Row>
+            </Grid>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.resizeMap} bsStyle="primary">OK</Button>

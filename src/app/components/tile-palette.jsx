@@ -14,7 +14,9 @@ var Panel = Bootstrap.Panel,
     Alert = Bootstrap.Alert;
 
 const emptyTile = initTile("white"),
-    tileHighlight = initTileHighlight();
+      tileHighlight = initTileHighlight();
+
+const tileSetService = new TileSetService();
 
 /* =============================================================================
  * COMPONENT: TILE PALETTE
@@ -65,7 +67,6 @@ const TilePalette = React.createClass({
   },
 
   loadTileSetsFromServer: function(event) {
-    var tileSetService = new TileSetService();
     tileSetService.loadTileSets(this.tileSetsLoaded);
   },
 
@@ -195,7 +196,6 @@ const TileSetCanvas = React.createClass({
   },
 
   loadTileSet: function(tilesetId, callback) {
-    var tileSetService = new TileSetService();
     tileSetService.loadTileSet(tilesetId, data => {
       this.tileSetLoaded(data, callback);
     });

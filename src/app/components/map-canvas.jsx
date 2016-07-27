@@ -15,6 +15,8 @@ var Overlay = Bootstrap.Overlay,
 
 const tileHighlight = initTileHighlight();
 
+const rpgMapService = new RpgMapService();
+
 /* =============================================================================
  * COMPONENT: MAP CANVAS
  * =============================================================================
@@ -40,21 +42,18 @@ const MapCanvas = React.createClass({
   },
 
   loadMap: function(mapId, callback) {
-    var rpgMapService = new RpgMapService();
     rpgMapService.loadMap(mapId, data => {
       this.mapLoaded(data, callback);
     });
   },
 
   newMap: function(rows, cols, callback) {
-    var rpgMapService = new RpgMapService();
     rpgMapService.newMap(rows, cols, data => {
       this.mapLoaded(data, callback);
     });
   },
 
   resizeMap: function(left, right, top, bottom, callback) {
-    var rpgMapService = new RpgMapService();
     rpgMapService.resizeMap(this._rpgMap, left, right, top, bottom, data => {
       this.mapLoaded(data, callback);
     });
@@ -71,14 +70,12 @@ const MapCanvas = React.createClass({
 
   saveMap: function(callback) {
     if (this._rpgMap) {
-      var mapService = new RpgMapService();
       mapService.saveMap(this._rpgMap, callback);
     }
   },
 
   saveMapAs: function(mapName, callback) {
     if (this._rpgMap) {
-      var rpgMapService = new RpgMapService();
       rpgMapService.saveMapAs(this._rpgMap, mapName, callback);
     }
   },
