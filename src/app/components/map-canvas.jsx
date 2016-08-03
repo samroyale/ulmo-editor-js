@@ -70,7 +70,7 @@ const MapCanvas = React.createClass({
 
   saveMap: function(callback) {
     if (this._rpgMap) {
-      mapService.saveMap(this._rpgMap, callback);
+      rpgMapService.saveMap(this._rpgMap, callback);
     }
   },
 

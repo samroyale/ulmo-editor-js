@@ -1,6 +1,7 @@
 var TileSets = require('./tile-sets.js'),
     config = require('../config.js'),
-    getDrawingContext = require('../utils.js').getScalableDrawingContext;
+    getDrawingContext = require('../utils.js').getScalableDrawingContext,
+    loadImage = require('../utils.js').loadImage;
 
 const tileSetsApi = config.tileSetsApi,
       tileSize = config.tileSize;
@@ -12,34 +13,34 @@ const tileSetsApi = config.tileSetsApi,
  * =============================================================================
  */
 class TileSetService {
+  constructor() {
+    this.cache = {};
+  }
+
   loadTileSets(callback) {
-    $.ajax({
-      url: tileSetsApi,
-      dataType: 'json',
-      cache: false,
-      success: data => {
-        callback({ tileSets: data });
-      },
-      error: (xhr, status, err) => {
-        // console.error(tileSetsApi, status, err.toString());
-        callback(this.handleError(xhr));
-      }
+    var tileSets = $.get(tileSetsApi).promise();
+    tileSets.done(data => {
+      callback({ tileSets: data });
+    }).fail((xhr, status, err) => {
+      // console.error(tileSetsApi, status, err.toString());
+      callback(this.handleError(xhr));
     });
   }
 
+  loadTileSetByName(name, callback) {
+    this.loadTileSet("tileset?name=" + name, callback);
+  }
+
   loadTileSet(tileSetId, callback) {
-    var tileSetUrl = tileSetsApi + "/" + tileSetId;
-    $.ajax({
-      url: tileSetUrl,
-      dataType: 'json',
-      cache: true,
-      success: data => {
-        this.initTileSet(data, callback);
-      },
-      error: (xhr, status, err) => {
-        // console.error(tileSetsApi, status, err.toString());
-        callback(this.handleError(xhr));
-      }
+    if(!this.cache[tileSetId]) {
+      var tileSetUrl = tileSetsApi + "/" + tileSetId;
+      this.cache[tileSetId] = $.get(tileSetUrl).promise();
+    }
+    this.cache[tileSetId].done(data => {
+      this.initTileSet(data, callback);
+    }).fail((xhr, status, err) => {
+      // console.error(tileSetsApi, status, err.toString());
+      callback(this.handleError(xhr));
     });
   }
 
@@ -53,17 +54,13 @@ class TileSetService {
   }
 
   initTileSet(tileSetDef, callback) {
-    var tileSetImage = new Image();
-    tileSetImage.onerror = () => {
-      callback({
-        err: tileSetDef.imageUrl + " failed to load"
-      });
-    };
-    tileSetImage.onload = () => {
-      callback({ tileSet: this.buildTileSet(tileSetDef, tileSetImage) });
-    };
-    //tileSetImage.crossOrigin = "Anonymous"; // CORS
-    tileSetImage.src = tileSetDef.imageUrl;
+    loadImage(tileSetDef.imageUrl, data => {
+      if (data.err) {
+        callback(data);
+        return;
+      }
+      callback({ tileSet: this.buildTileSet(tileSetDef, data.img) });
+    });
   }
 
   buildTileSet(tileSetDef, tileSetImage) {

@@ -4,7 +4,8 @@ var React = require('react'),
     MapCanvas = require('./map-canvas.jsx'),
     utils = require('../utils.js'),
     tileSize = require('../config.js').tileSize,
-    initAddSuffix = require('../utils.js').initAddSuffix;
+    initAddSuffix = require('../utils.js').initAddSuffix,
+    loadImage = require('../utils.js').loadImage;
 
 var Panel = Bootstrap.Panel,
     Modal = Bootstrap.Modal,
@@ -24,9 +25,16 @@ var Panel = Bootstrap.Panel,
     ControlLabel = Bootstrap.ControlLabel,
     FormControl = Bootstrap.FormControl;
 
-const addSuffix = initAddSuffix();
+// const addSuffix = initAddSuffix();
 
 const rpgMapService = new RpgMapService();
+
+var insertSuffix = null;
+loadImage("/img/insert-suffix.png", data => insertSuffix = data.img);
+var addSuffix = null;
+loadImage("/img/add-suffix.png", data => addSuffix = data.img);
+var selectSuffix = null;
+loadImage("/img/select-suffix.png", data => selectSuffix = data.img);
 
 /* =============================================================================
  * COMPONENT: MAP EDITOR
@@ -292,14 +300,21 @@ const TileControl = React.createClass({
     if (this.props.selectedTile) {
       var ctx = utils.getScalableDrawingContext(this._canvas);
       ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+      ctx.fillStyle = 'rgba(0, 255, 0, 1)';
+      ctx.fillRect(0, 0, tileSize, tileSize);
       ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0);
+      if (this.props.tileMode === "INSERT") {
+        ctx.drawImage(insertSuffix, this._canvas.width - 12, this._canvas.height - 12);
+        return;
+      }
       if (this.props.tileMode === "ADD") {
-        ctx.drawImage(addSuffix, this._canvas.width - 10, this._canvas.height - 10);
+        ctx.drawImage(addSuffix, this._canvas.width - 12, this._canvas.height - 12);
         return;
       }
       if (this.props.tileMode === "SELECT") {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+        ctx.drawImage(selectSuffix, this._canvas.width - 12, this._canvas.height - 12);
       }
     }
   },
@@ -313,7 +328,7 @@ const TileControl = React.createClass({
     return (
       <Dropdown id="tile-control-dropdown" onSelect={this.props.onModeChange} disabled={this.state.disabled}>
         <Button className="tile-button">
-          <canvas className="tiles" width={tileSize} height={tileSize}
+          <canvas className="tile-button-cvs" width={tileSize + 2} height={tileSize + 2}
               ref={cvs => this._canvas = cvs} />
         </Button>
         <Dropdown.Toggle className="tile-dropdown" />

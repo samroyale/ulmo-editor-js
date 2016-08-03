@@ -10,6 +10,8 @@ const baseTiles = config.baseTileColours.map(
   colour => initTile(colour)
 );
 
+const tileSetService = new TileSetService();
+
 /* =============================================================================
  * CLASS: RPG MAP SERVICE
  * =============================================================================
@@ -18,34 +20,32 @@ const baseTiles = config.baseTileColours.map(
  */
 class RpgMapService {
   loadMaps(callback) {
-    $.ajax({
+    var rpgMaps = $.ajax({
       url: rpgMapsApi,
       dataType: 'json',
-      cache: false,
-      success: data => {
-        callback({ maps: data });
-      },
-      error: (xhr, status, err) => {
-        // console.error(rpgMapsApi, status, err.toString());
-        callback(this.handleLoadError(xhr));
-      }
+      cache: false
+    }).promise();
+    rpgMaps.done(data => {
+      callback({ maps: data });
+    }).fail((xhr, status, err) => {
+      // console.error(tileSetsApi, status, err.toString());
+      callback(this.handleLoadError(xhr));
     });
   }
 
   loadMap(mapId, callback) {
     console.log("Loading map [" + mapId + "]");
     var mapUrl = rpgMapsApi + "/" + mapId;
-    $.ajax({
+    var rpgMap = $.ajax({
       url: mapUrl,
       dataType: 'json',
-      cache: true,
-      success: data => {
-        this.initRpgMap(data, callback);
-      },
-      error: (xhr, status, err) => {
-        // console.error(mapUrl, status, err.toString());
-        callback(this.handleLoadError(xhr));
-      }
+      cache: false
+    }).promise();
+    rpgMap.done(data => {
+      this.initRpgMap(data, callback);
+    }).fail((xhr, status, err) => {
+      // console.error(tileSetsApi, status, err.toString());
+      callback(this.handleLoadError(xhr));
     });
   }
 
@@ -143,8 +143,7 @@ class RpgMapService {
       return;
     }
     tileSetMappings.forEach((value, key) => {
-      var tileSetService = new TileSetService();
-      tileSetService.loadTileSet("tileset?name=" + key, data => {
+      tileSetService.loadTileSetByName(key, data => {
         this.tileSetLoaded(key, data, tileSetMappings, rpgMapDef, callback);
       });
     });

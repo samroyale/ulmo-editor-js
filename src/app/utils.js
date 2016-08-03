@@ -91,4 +91,18 @@ module.exports = {
     ctx.closePath();
     return addSuffixCanvas;
   },
+
+  loadImage: function(imageUrl, callback) {
+    var image = new Image();
+    image.onerror = () => {
+      callback({
+        err: imageUrl + " failed to load"
+      });
+    };
+    image.onload = () => {
+      callback({ img: image });
+    };
+    //tileSetImage.crossOrigin = "Anonymous"; // CORS
+    image.src = imageUrl;
+  }
 }
