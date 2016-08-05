@@ -1,10 +1,9 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
-    RpgMapService = require('./rpg-maps.js'),
     MapCanvas = require('./map-canvas.jsx'),
+    RpgMapService = require('./rpg-maps.js'),
     utils = require('../utils.js'),
     tileSize = require('../config.js').tileSize,
-    initAddSuffix = require('../utils.js').initAddSuffix,
     loadImage = require('../utils.js').loadImage;
 
 var Panel = Bootstrap.Panel,
@@ -24,8 +23,6 @@ var Panel = Bootstrap.Panel,
     FormGroup = Bootstrap.FormGroup,
     ControlLabel = Bootstrap.ControlLabel,
     FormControl = Bootstrap.FormControl;
-
-// const addSuffix = initAddSuffix();
 
 const rpgMapService = new RpgMapService();
 

@@ -1,10 +1,11 @@
-var TileSets = require('./tile-sets.js'),
-    config = require('../config.js'),
+var config = require('../config.js'),
     getDrawingContext = require('../utils.js').getScalableDrawingContext,
     loadImage = require('../utils.js').loadImage;
 
 const tileSetsApi = config.tileSetsApi,
       tileSize = config.tileSize;
+
+let instance = null;
 
 /* =============================================================================
  * CLASS: TILE SET SERVICE
@@ -14,21 +15,39 @@ const tileSetsApi = config.tileSetsApi,
  */
 class TileSetService {
   constructor() {
+    if (!instance) {
+      instance = this;
+    }
     this.cache = {};
+    this.nameToIdMappings = {};
+    return instance;
   }
 
   loadTileSets(callback) {
     var tileSets = $.get(tileSetsApi).promise();
-    tileSets.done(data => {
-      callback({ tileSets: data });
-    }).fail((xhr, status, err) => {
+    tileSets.done(data =>
+      callback({ tileSets: data })
+    ).fail((xhr, status, err) => {
       // console.error(tileSetsApi, status, err.toString());
       callback(this.handleError(xhr));
     });
   }
 
   loadTileSetByName(name, callback) {
-    this.loadTileSet("tileset?name=" + name, callback);
+    if (this.nameToIdMappings[name]) {
+      this.loadTileSet(this.nameToIdMappings[name], callback);
+      return;
+    }
+    var tileSetUrl = tileSetsApi + "/tileset?name=" + name;
+    var tileSet = $.get(tileSetUrl).promise();
+    tileSet.done(data => {
+      this.cache[data.id] = tileSet;
+      this.nameToIdMappings[name] = data.id;
+      this.initTileSet(data, callback);
+    }).fail((xhr, status, err) => {
+      // console.error(tileSetsApi, status, err.toString());
+      callback(this.handleError(xhr));
+    });
   }
 
   loadTileSet(tileSetId, callback) {
@@ -37,6 +56,7 @@ class TileSetService {
       this.cache[tileSetId] = $.get(tileSetUrl).promise();
     }
     this.cache[tileSetId].done(data => {
+      this.nameToIdMappings[data.name] = tileSetId;
       this.initTileSet(data, callback);
     }).fail((xhr, status, err) => {
       // console.error(tileSetsApi, status, err.toString());

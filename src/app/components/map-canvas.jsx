@@ -1,7 +1,7 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
-    RpgMapService = require('./rpg-maps.js'),
     MapModal = require('./map-modal.jsx'),
+    RpgMapService = require('./rpg-maps.js'),
     tilePositionMixin = require('./tile-position-mixin.js'),
     tileSize = require('../config.js').tileSize,
     initHighlight = require('../utils.js').initHighlight;

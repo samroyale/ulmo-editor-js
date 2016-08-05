@@ -63,35 +63,6 @@ module.exports = {
     return highlightCanvas;
   },
 
-  initAddSuffix: function() {
-    // console.log(rows + ", " + cols);
-    var addSuffixCanvas = document.createElement("canvas");
-    addSuffixCanvas.width = 10;
-    addSuffixCanvas.height = 10;
-    var ctx = addSuffixCanvas.getContext('2d');
-    // transparent rect
-    ctx.beginPath();
-    ctx.rect(0, 0, addSuffixCanvas.width, addSuffixCanvas.height);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
-    ctx.fill();
-    ctx.closePath();
-    // white outline
-    ctx.beginPath();
-    ctx.rect(3, 0, 4, 10);
-    ctx.rect(0, 3, 10, 4);
-    ctx.fillStyle = 'white';
-    ctx.fill();
-    ctx.closePath();
-    // black inner
-    ctx.beginPath();
-    ctx.rect(4, 1, 2, 8);
-    ctx.rect(1, 4, 8, 2);
-    ctx.fillStyle = 'black';
-    ctx.fill();
-    ctx.closePath();
-    return addSuffixCanvas;
-  },
-
   loadImage: function(imageUrl, callback) {
     var image = new Image();
     image.onerror = () => {

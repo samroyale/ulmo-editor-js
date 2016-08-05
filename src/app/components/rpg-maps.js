@@ -12,6 +12,8 @@ const baseTiles = config.baseTileColours.map(
 
 const tileSetService = new TileSetService();
 
+let instance = null;
+
 /* =============================================================================
  * CLASS: RPG MAP SERVICE
  * =============================================================================
@@ -19,15 +21,22 @@ const tileSetService = new TileSetService();
  * =============================================================================
  */
 class RpgMapService {
+  constructor() {
+    if (!instance) {
+      instance = this;
+    }
+    return instance;
+  }
+
   loadMaps(callback) {
     var rpgMaps = $.ajax({
       url: rpgMapsApi,
       dataType: 'json',
       cache: false
     }).promise();
-    rpgMaps.done(data => {
-      callback({ maps: data });
-    }).fail((xhr, status, err) => {
+    rpgMaps.done(data =>
+      callback({ maps: data })
+    ).fail((xhr, status, err) => {
       // console.error(tileSetsApi, status, err.toString());
       callback(this.handleLoadError(xhr));
     });
@@ -41,9 +50,9 @@ class RpgMapService {
       dataType: 'json',
       cache: false
     }).promise();
-    rpgMap.done(data => {
-      this.initRpgMap(data, callback);
-    }).fail((xhr, status, err) => {
+    rpgMap.done(data =>
+      this.initRpgMap(data, callback)
+    ).fail((xhr, status, err) => {
       // console.error(tileSetsApi, status, err.toString());
       callback(this.handleLoadError(xhr));
     });
