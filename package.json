@@ -36,6 +36,7 @@
   "dependencies": {
     "react": "0.14.8",
     "react-dom": "0.14.8",
-    "react-bootstrap": "0.29.4"
+    "react-bootstrap": "0.29.4",
+    "q": "1.4.1"
   }
 }

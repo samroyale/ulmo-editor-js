@@ -1,4 +1,5 @@
-var TileSetService = require('./tile-sets.js'),
+var Q = require("q"),
+    TileSetService = require('./tile-sets.js'),
     config = require('../config.js'),
     drawTile = require('../utils.js').drawTile,
     initTile = require('../utils.js').initTile;
@@ -140,40 +141,47 @@ class RpgMapService {
   }
 
   initRpgMap(rpgMapDef, callback) {
-    var tileSetMappings = new Map();
-    rpgMapDef.mapTiles.forEach(mapTileDef => {
-      mapTileDef.tiles.forEach(
-        tileDef => tileSetMappings.set(tileDef.tileSet, null)
-      );
-    });
-    if (tileSetMappings.size === 0) {
+    var tileSetPromises = this.tileSetPromises(rpgMapDef);
+    if (tileSetPromises.size === 0) {
       // no tilesets to load - either a new or empty map
-      callback({ map: this.buildRpgMap(tileSetMappings, rpgMapDef) });
+      callback({ map: this.buildRpgMap({}, rpgMapDef) });
       return;
     }
-    tileSetMappings.forEach((value, key) => {
-      tileSetService.loadTileSetByName(key, data => {
-        this.tileSetLoaded(key, data, tileSetMappings, rpgMapDef, callback);
+    var tileSets = {};
+    Q.all(tileSetPromises).then(values => {
+      if (values.length === 1 && values[0].err) {
+        this.tileSetLoadErr(values[0], callback);
+        return;
+      }
+      console.log(values);
+      values.forEach(value => {
+        tileSets[value.tileSet.getName()] = value.tileSet;
       });
+      console.log(tileSets);
+      callback({ map: this.buildRpgMap(tileSets, rpgMapDef) });
     });
   }
 
-  tileSetLoaded(key, data, tileSetMappings, rpgMapDef, callback) {
-    if (data.tileSet) {
-      var tileSet = data.tileSet;
-      console.log("> Tileset loaded: " + tileSet.getName());
-      tileSetMappings.set(tileSet.getName(), tileSet);
-      var allTileSetsLoaded = Array.from(tileSetMappings.values()).every(
-        val => val != null
-      );
-      if (allTileSetsLoaded) {
-        callback({ map: this.buildRpgMap(tileSetMappings, rpgMapDef) });
-      }
-      return;
-    }
+  /*
+   * Returns an array of TileSet promises representing the TileSets used in the given map definition.
+   */
+  tileSetPromises(rpgMapDef) {
+    var tileSets = new Map();
+    rpgMapDef.mapTiles.forEach(mapTileDef => {
+      mapTileDef.tiles.forEach(tileDef => {
+        var tsName = tileDef.tileSet;
+        if (!tileSets.has(tsName)) {
+          tileSets.set(tsName, tileSetService.loadTileSetByName(tsName));
+        }
+      });
+    });
+    return Array.from(tileSets.values());
+  }
+
+  tileSetLoadErr(data, callback) {
     if (data.err) {
       callback({
-        err: "Could not load tileset '" + key + "' : " + data.err,
+        err: "Could not load tileset '" + data.id + "' : " + data.err,
         status: data.status
       });
       return;
@@ -181,16 +189,16 @@ class RpgMapService {
     console.log("Something went wrong...");
   }
 
-  buildRpgMap(tileSetMappings, rpgMapDef) {
+  buildRpgMap(tileSets, rpgMapDef) {
     // console.log("buildRpgMap: " + tileSetMappings.size);
     return new RpgMap(
       rpgMapDef.id,
       rpgMapDef.name,
-      this.initMapTiles(tileSetMappings, rpgMapDef)
+      this.initMapTiles(tileSets, rpgMapDef)
     );
   }
 
-  initMapTiles(tileSetMappings, rpgMapDef) {
+  initMapTiles(tileSets, rpgMapDef) {
     var tileDefKey = (x, y) => x + "-" + y;
     var tileDefMappings = {};
     rpgMapDef.mapTiles.forEach(mapTileDef => {
@@ -206,7 +214,7 @@ class RpgMapService {
         var baseCanvas = baseTiles[(x + y) % baseTiles.length];
         if (mapTileDef) {
           var maskTiles = mapTileDef.tiles.map(tileDef => {
-            var tile = tileSetMappings.get(tileDef.tileSet).getTileByName(tileDef.tile);
+            var tile = tileSets[tileDef.tileSet].getTileByName(tileDef.tile);
             return new MaskTile(tile, tileDef.maskLevel);
           });
           tiles[x][y] = new MapTile(baseCanvas, maskTiles, mapTileDef.levels);

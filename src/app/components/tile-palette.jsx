@@ -41,20 +41,21 @@ const TilePalette = React.createClass({
   },
 
   tileSetSelected: function(tsid) {
-    this._tileSetCanvas.loadTileSet(tsid, data => {
-      this.tileSetLoaded(tsid, data)
+    var p = this._tileSetCanvas.loadTileSet(tsid);
+    p.then(data => {
+      if (data.tileSet) {
+        this.closeModal();
+        this.setState({
+          tileSetId: data.tileSet.getId(),
+          loadError: null
+        });
+      }
+    }, data => {
+      this.tileSetLoadErr(tsid, data)
     });
   },
 
-  tileSetLoaded: function(tsid, data) {
-    if (data.tileSet) {
-      this.closeModal();
-      this.setState({
-        tileSetId: data.tileSet.getId(),
-        loadError: null
-      });
-      return;
-    }
+  tileSetLoadErr: function(tsid, data) {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       var info = data.status ? data.status + ": " + data.err : data.err;
@@ -67,18 +68,19 @@ const TilePalette = React.createClass({
   },
 
   loadTileSetsFromServer: function(event) {
-    tileSetService.loadTileSets(this.tileSetsLoaded);
+    var p = tileSetService.loadTileSets();
+    p.then(data => {
+      if (data.tileSets) {
+        this.setState({
+          tileSets: data.tileSets,
+          loadError: null,
+          showModal: true
+        });
+      }
+    }, this.tileSetsLoadErr);
   },
 
-  tileSetsLoaded: function(data) {
-    if (data.tileSets) {
-      this.setState({
-        tileSets: data.tileSets,
-        loadError: null,
-        showModal: true
-      });
-      return;
-    }
+  tileSetsLoadErr: function(data) {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({
@@ -195,19 +197,16 @@ const TileSetCanvas = React.createClass({
     };
   },
 
-  loadTileSet: function(tilesetId, callback) {
-    tileSetService.loadTileSet(tilesetId, data => {
-      this.tileSetLoaded(data, callback);
+  loadTileSet: function(tilesetId) {
+    var p = tileSetService.loadTileSet(tilesetId);
+    return p.then(data => {
+      if (data.tileSet) {
+        this._tileSet = data.tileSet;
+        this.drawTileSet();
+        this.setState({ showTileset: true });
+      }
+      return data;
     });
-  },
-
-  tileSetLoaded: function(data, callback) {
-    if (data.tileSet) {
-      this._tileSet = data.tileSet;
-      this.drawTileSet();
-      this.setState({ showTileset: true });
-    }
-    callback(data);
   },
 
   drawTileSet: function() {
