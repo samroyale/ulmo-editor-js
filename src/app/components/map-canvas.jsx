@@ -41,31 +41,29 @@ const MapCanvas = React.createClass({
     };
   },
 
-  loadMap: function(mapId, callback) {
-    rpgMapService.loadMap(mapId, data => {
-      this.mapLoaded(data, callback);
-    });
+  loadMap: function(mapId) {
+    return this.mapLoaded(rpgMapService.loadMap(mapId));
   },
 
-  newMap: function(rows, cols, callback) {
-    rpgMapService.newMap(rows, cols, data => {
-      this.mapLoaded(data, callback);
-    });
+  newMap: function(rows, cols) {
+    return this.mapLoaded(rpgMapService.newMap(rows, cols));
   },
 
-  resizeMap: function(left, right, top, bottom, callback) {
-    rpgMapService.resizeMap(this._rpgMap, left, right, top, bottom, data => {
-      this.mapLoaded(data, callback);
-    });
-  },
-
-  mapLoaded: function(data, callback) {
-    if (data.map) {
-      this._rpgMap = data.map;
-      this.drawMap();
-      this.setState({ showMap: true });
+  resizeMap: function(left, right, top, bottom) {
+    if (this._rpgMap) {
+      return this.mapLoaded(rpgMapService.resizeMap(this._rpgMap, left, right, top, bottom));
     }
-    callback(data);
+  },
+
+  mapLoaded: function(rpgMap) {
+    return rpgMap.then(data => {
+      if (data.map) {
+        this._rpgMap = data.map;
+        this.drawMap();
+        this.setState({ showMap: true });
+      }
+      return data;
+    });
   },
 
   saveMap: function(callback) {

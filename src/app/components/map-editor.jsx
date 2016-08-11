@@ -59,9 +59,11 @@ const MapEditor = React.createClass({
   },
 
   mapSelected: function(mid) {
-    this._mapCanvas.loadMap(mid, data => {
-      this.mapLoaded(mid, data, false)
-    });
+    var p = this._mapCanvas.loadMap(mid);
+    p.then(
+      data => this.mapLoaded(mid, data, false),
+      data => this.mapLoadErr(mid, data)
+    );
   },
 
   newMap: function(event) {
@@ -69,9 +71,10 @@ const MapEditor = React.createClass({
   },
 
   newMapOfSize: function(rows, cols) {
-    this._mapCanvas.newMap(rows, cols, data => {
-      this.mapLoaded(null, data, true)
-    });
+    var p = this._mapCanvas.newMap(rows, cols);
+    p.then(
+      data => this.mapLoaded(null, data, true)
+    );
   },
 
   resizeMap: function(event) {
@@ -79,9 +82,10 @@ const MapEditor = React.createClass({
   },
 
   resizeMapToSize: function(left, right, top, bottom) {
-    this._mapCanvas.resizeMap(left, right, top, bottom, data => {
-      this.mapLoaded(null, data, true)
-    });
+    var p = this._mapCanvas.resizeMap(left, right, top, bottom);
+    p.then(
+      data => this.mapLoaded(null, data, true)
+    );
   },
 
   mapLoaded: function(mid, data, dirty) {
@@ -92,8 +96,10 @@ const MapEditor = React.createClass({
         mapDirty: dirty,
         loadError: null
       });
-      return;
     }
+  },
+
+  mapLoadErr: function(mid, data) {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       var info = data.status ? data.status + ": " + data.err : data.err;

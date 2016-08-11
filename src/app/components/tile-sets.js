@@ -45,7 +45,7 @@ class TileSetService {
     tileSet.then(data => {
       this.cache[data.id] = tileSet;
       this.nameToIdMappings[name] = data.id;
-      this.initTileSet(data, deferred.resolve);
+      this.initTileSet(data, deferred);
     }, xhr => {
       deferred.reject(this.handleError(xhr, name));
     });
@@ -61,7 +61,7 @@ class TileSetService {
     }
     this.cache[tileSetId].then(data => {
       this.nameToIdMappings[data.name] = tileSetId;
-      this.initTileSet(data, deferred.resolve);
+      this.initTileSet(data, deferred);
     }, xhr => {
       deferred.reject(this.handleError(xhr, tileSetId));
     });
@@ -77,13 +77,13 @@ class TileSetService {
     return { err: xhr.statusText, status: xhr.status, id: id };
   }
 
-  initTileSet(tileSetDef, callback) {
+  initTileSet(tileSetDef, deferred) {
     loadImage(tileSetDef.imageUrl, data => {
       if (data.err) {
-        callback({ err: data.err, id: tileSetDef.name });
+        deferred.reject({ err: data.err, id: tileSetDef.name });
         return;
       }
-      callback({ tileSet: this.buildTileSet(tileSetDef, data.img) });
+      deferred.resolve({ tileSet: this.buildTileSet(tileSetDef, data.img) });
     });
   }
 

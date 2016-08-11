@@ -43,20 +43,20 @@ class RpgMapService {
     });
   }
 
-  loadMap(mapId, callback) {
+  loadMap(mapId) {
     console.log("Loading map [" + mapId + "]");
+    var deferred = Q.defer();
     var mapUrl = rpgMapsApi + "/" + mapId;
-    var rpgMap = $.ajax({
+    var rpgMap = Q($.ajax({
       url: mapUrl,
       dataType: 'json',
       cache: false
-    }).promise();
-    rpgMap.done(data =>
-      this.initRpgMap(data, callback)
-    ).fail((xhr, status, err) => {
-      // console.error(tileSetsApi, status, err.toString());
-      callback(this.handleLoadError(xhr));
-    });
+    }).promise());
+    rpgMap.then(
+      data => this.initRpgMap(data, deferred),
+      xhr => deferred.reject(this.handleLoadError(xhr))
+    );
+    return deferred.promise;
   }
 
   handleLoadError(xhr) {
@@ -121,49 +121,51 @@ class RpgMapService {
     return { err: xhr.statusText, status: xhr.status };
   }
 
-  newMap(rows, cols, callback) {
+  newMap(rows, cols) {
     var data = {
       rows: rows,
       cols: cols,
       mapTiles: []
     };
-    this.initRpgMap(data, callback);
+    var deferred = Q.defer();
+    this.initRpgMap(data, deferred);
+    return deferred.promise;
   }
 
-  resizeMap(rpgMap, left, right, top, bottom, callback) {
+  resizeMap(rpgMap, left, right, top, bottom) {
     var newRows = rpgMap.getRows() + top + bottom;
     var newCols = rpgMap.getCols() + left + right;
-    this.newMap(newRows, newCols, data => {
+    var newMap = this.newMap(newRows, newCols);
+    return newMap.then(data => {
       var newRpgMap = data.map;
       newRpgMap.resize(rpgMap, left, right, top, bottom);
-      callback({ map: newRpgMap })
+      return { map: newRpgMap };
     });
   }
 
-  initRpgMap(rpgMapDef, callback) {
+  initRpgMap(rpgMapDef, deferred) {
     var tileSetPromises = this.tileSetPromises(rpgMapDef);
     if (tileSetPromises.size === 0) {
       // no tilesets to load - either a new or empty map
-      callback({ map: this.buildRpgMap({}, rpgMapDef) });
+      deferred.resolve({ map: this.buildRpgMap({}, rpgMapDef) });
       return;
     }
+    // wait for all tilesets to load and then continue
     var tileSets = {};
     Q.all(tileSetPromises).then(values => {
-      if (values.length === 1 && values[0].err) {
-        this.tileSetLoadErr(values[0], callback);
-        return;
-      }
-      console.log(values);
+      //console.log(values);
       values.forEach(value => {
         tileSets[value.tileSet.getName()] = value.tileSet;
       });
-      console.log(tileSets);
-      callback({ map: this.buildRpgMap(tileSets, rpgMapDef) });
+      //console.log(tileSets);
+      deferred.resolve({ map: this.buildRpgMap(tileSets, rpgMapDef) });
+    }, value => {
+      this.tileSetLoadErr(value, deferred.reject);
     });
   }
 
   /*
-   * Returns an array of TileSet promises representing the TileSets used in the given map definition.
+   * Returns an array of tileset promises representing the tilesets used in the given map definition.
    */
   tileSetPromises(rpgMapDef) {
     var tileSets = new Map();
