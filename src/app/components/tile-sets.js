@@ -19,9 +19,9 @@ class TileSetService {
   constructor() {
     if (!instance) {
       instance = this;
+      this.cache = {};
+      this.nameToIdMappings = {};
     }
-    this.cache = {};
-    this.nameToIdMappings = {};
     return instance;
   }
 
@@ -43,7 +43,7 @@ class TileSetService {
     var tileSetUrl = tileSetsApi + "/tileset?name=" + name;
     var tileSet = Q($.get(tileSetUrl).promise());
     tileSet.then(data => {
-      this.cache[data.id] = tileSet;
+      this.cache[data.id] = deferred;
       this.nameToIdMappings[name] = data.id;
       this.initTileSet(data, deferred);
     }, xhr => {
@@ -53,13 +53,14 @@ class TileSetService {
   }
 
   loadTileSet(tileSetId) {
-    var deferred = Q.defer();
-    if(!this.cache[tileSetId]) {
-      var tileSetUrl = tileSetsApi + "/" + tileSetId;
-      //this.cache[tileSetId] = $.get(tileSetUrl).promise();
-      this.cache[tileSetId] = Q($.get(tileSetUrl).promise());
+    if (this.cache[tileSetId]) {
+      return this.cache[tileSetId].promise;
     }
-    this.cache[tileSetId].then(data => {
+    var deferred = Q.defer();
+    var tileSetUrl = tileSetsApi + "/" + tileSetId;
+    var tileSet = Q($.get(tileSetUrl).promise());
+    tileSet.then(data => {
+      this.cache[tileSetId] = deferred;
       this.nameToIdMappings[data.name] = tileSetId;
       this.initTileSet(data, deferred);
     }, xhr => {

@@ -29,18 +29,18 @@ class RpgMapService {
     return instance;
   }
 
-  loadMaps(callback) {
-    var rpgMaps = $.ajax({
+  loadMaps() {
+    var deferred = Q.defer();
+    var rpgMaps = Q($.ajax({
       url: rpgMapsApi,
       dataType: 'json',
       cache: false
-    }).promise();
-    rpgMaps.done(data =>
-      callback({ maps: data })
-    ).fail((xhr, status, err) => {
-      // console.error(tileSetsApi, status, err.toString());
-      callback(this.handleLoadError(xhr));
-    });
+    }).promise());
+    rpgMaps.then(
+      data => deferred.resolve({ maps: data }),
+      xhr => deferred.reject(this.handleLoadError(xhr))
+    );
+    return deferred.promise;
   }
 
   loadMap(mapId) {
@@ -68,34 +68,33 @@ class RpgMapService {
     return { err: xhr.statusText, status: xhr.status };
   }
 
-  saveMap(rpgMap, callback) {
+  saveMap(rpgMap) {
     var mapUrl = rpgMapsApi + "/" + rpgMap.getId();
-    this.doSave(mapUrl, "PUT", rpgMap, rpgMap.getDto(), callback);
+    return this.doSave(mapUrl, "PUT", rpgMap, rpgMap.getDto());
   }
 
-  saveMapAs(rpgMap, mapName, callback) {
-    this.doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName), callback);
+  saveMapAs(rpgMap, mapName) {
+    return this.doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName));
   }
 
-  doSave(mapUrl, reqType, rpgMap, mapDef, callback) {
+  doSave(mapUrl, reqType, rpgMap, mapDef) {
     console.log("Saving map [" + reqType + " " + mapUrl + "]");
-    $.ajax({
+    var deferred = Q.defer();
+    var rpgMap = Q($.ajax({
       type: reqType,
       url: mapUrl,
       dataType: 'json',
       data: mapDef,
-      success: data => {
-        callback(this.mapSaved(rpgMap, mapDef, data));
-      },
-      error: (xhr, status, err) => {
-        // console.error(mapUrl, status, err.toString());
-        callback(this.handleSaveError(mapDef, xhr));
-      }
-    });
+    }).promise());
+    rpgMap.then(
+      data => deferred.resolve(this.mapSaved(rpgMap, mapDef, data)),
+      xhr => deferred.reject(this.handleSaveError(mapDef, xhr))
+    );
+    return deferred.promise;
   }
 
   mapSaved(rpgMap, mapDef, data) {
-    console.log(data.message);
+    // console.log(data.message);
     rpgMap.setId(data.mapId);
     rpgMap.setName(mapDef.name);
     return {
@@ -160,7 +159,7 @@ class RpgMapService {
       //console.log(tileSets);
       deferred.resolve({ map: this.buildRpgMap(tileSets, rpgMapDef) });
     }, value => {
-      this.tileSetLoadErr(value, deferred.reject);
+      deferred.reject(this.tileSetLoadErr(value));
     });
   }
 
@@ -180,13 +179,12 @@ class RpgMapService {
     return Array.from(tileSets.values());
   }
 
-  tileSetLoadErr(data, callback) {
+  tileSetLoadErr(data) {
     if (data.err) {
-      callback({
+      return {
         err: "Could not load tileset '" + data.id + "' : " + data.err,
         status: data.status
-      });
-      return;
+      };
     }
     console.log("Something went wrong...");
   }

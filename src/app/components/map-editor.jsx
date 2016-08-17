@@ -61,7 +61,7 @@ const MapEditor = React.createClass({
   mapSelected: function(mid) {
     var p = this._mapCanvas.loadMap(mid);
     p.then(
-      data => this.mapLoaded(mid, data, false),
+      data => this.mapLoaded(data, false),
       data => this.mapLoadErr(mid, data)
     );
   },
@@ -73,22 +73,24 @@ const MapEditor = React.createClass({
   newMapOfSize: function(rows, cols) {
     var p = this._mapCanvas.newMap(rows, cols);
     p.then(
-      data => this.mapLoaded(null, data, true)
+      data => this.mapLoaded(data, true)
     );
   },
 
   resizeMap: function(event) {
-    this.setState({ showModal: "RESIZE" });
+    if (this.isMapPresent()) {
+      this.setState({ showModal: "RESIZE" });
+    }
   },
 
   resizeMapToSize: function(left, right, top, bottom) {
     var p = this._mapCanvas.resizeMap(left, right, top, bottom);
     p.then(
-      data => this.mapLoaded(null, data, true)
+      data => this.mapLoaded(data, true)
     );
   },
 
-  mapLoaded: function(mid, data, dirty) {
+  mapLoaded: function(data, dirty) {
     if (data.map) {
       this.closeModal();
       this.setState({
@@ -97,6 +99,7 @@ const MapEditor = React.createClass({
         loadError: null
       });
     }
+    console.log(this.state.mapId);
   },
 
   mapLoadErr: function(mid, data) {
@@ -112,18 +115,19 @@ const MapEditor = React.createClass({
   },
 
   loadMapsFromServer: function(event) {
-    rpgMapService.loadMaps(this.mapsLoaded);
+    var p = rpgMapService.loadMaps();
+    p.then(data => {
+      if (data.maps) {
+        this.setState({
+          maps: data.maps,
+          loadError: null,
+          showModal: "OPEN"
+        });
+      }
+    }, this.mapsLoadErr);
   },
 
-  mapsLoaded: function(data) {
-    if (data.maps) {
-      this.setState({
-        maps: data.maps,
-        loadError: null,
-        showModal: "OPEN"
-      });
-      return;
-    }
+  mapsLoadErr: function(data) {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({
@@ -137,19 +141,35 @@ const MapEditor = React.createClass({
   },
 
   showSaveModal: function() {
-    this.setState({ showModal: "SAVE" });
+    if (this.isMapPresent()) {
+      this.setState({ showModal: "SAVE" });
+    }
+  },
+
+  isMapPresent: function() {
+    // a mapId of undefined or something indicates that we have a map, whereas
+    // null indicates that we don't
+    return this.state.mapId !== null;
   },
 
   saveMap: function() {
-    if (this.state.mapId) {
-      this._mapCanvas.saveMap(this.mapSaved);
+    if (!this.state.mapId) {
+      this.showSaveModal();
       return;
     }
-    this.showSaveModal();
+    var p = this._mapCanvas.saveMap();
+    p.then(
+      data => this.mapSaved(data),
+      data => this.mapSaveErr(data)
+    );
   },
 
   saveMapAs: function(mapName) {
-    this._mapCanvas.saveMapAs(mapName, this.mapSaved);
+    var p = this._mapCanvas.saveMapAs(mapName);
+    p.then(
+      data => this.mapSaved(data),
+      data => this.mapSaveErr(data)
+    );
   },
 
   mapSaved: function(data) {
@@ -161,8 +181,10 @@ const MapEditor = React.createClass({
         mapDirty: false,
         saveError: null,
       });
-      return;
     }
+  },
+
+  mapSaveErr: function(data) {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({ saveError: data.err });

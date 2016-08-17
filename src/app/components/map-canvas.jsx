@@ -66,15 +66,15 @@ const MapCanvas = React.createClass({
     });
   },
 
-  saveMap: function(callback) {
+  saveMap: function() {
     if (this._rpgMap) {
-      rpgMapService.saveMap(this._rpgMap, callback);
+      return rpgMapService.saveMap(this._rpgMap);
     }
   },
 
-  saveMapAs: function(mapName, callback) {
+  saveMapAs: function(mapName) {
     if (this._rpgMap) {
-      rpgMapService.saveMapAs(this._rpgMap, mapName, callback);
+      return rpgMapService.saveMapAs(this._rpgMap, mapName);
     }
   },
 
