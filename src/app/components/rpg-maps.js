@@ -13,7 +13,7 @@ const baseTiles = config.baseTileColours.map(
 
 const tileSetService = new TileSetService();
 
-let instance = null;
+var instance = null;
 
 /* =============================================================================
  * CLASS: RPG MAP SERVICE

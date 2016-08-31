@@ -62,7 +62,7 @@ router.route('/tilesets/tileset')
       res.json({
         id: tileSet._id,
         name: tileSet.name,
-        imageUrl: tileSet.imageUrl,
+        image: tileSet.image,
         tiles: tileSet.tiles
       });
     });
@@ -75,7 +75,7 @@ router.route('/tilesets')
   .post(function(req, res) {
     var tileSet = new TileSet();
     tileSet.name = req.body.name;
-    tileSet.imageUrl = req.body.imageUrl;
+    tileSet.image = req.body.image;
     tileSet.tiles = req.body.tiles;
 
     // save the TileSet and check for errors
@@ -126,7 +126,7 @@ router.route('/tilesets/:tileset_id')
       res.json({
         id: tileSet._id,
         name: tileSet.name,
-        imageUrl: tileSet.imageUrl,
+        image: tileSet.image,
         tiles: tileSet.tiles
       });
     });
@@ -145,7 +145,7 @@ router.route('/tilesets/:tileset_id')
         return;
       }
       tileSet.name = req.body.name;
-      tileSet.imageUrl = req.body.imageUrl;
+      tileSet.image = req.body.image;
       tileSet.tiles = req.body.tiles;
 
       // save the TileSet

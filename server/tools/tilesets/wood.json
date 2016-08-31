@@ -1,6 +1,6 @@
 {
   "name": "wood",
-  "imageUrl": "/img/wood.png",
+  "image": "wood.png",
   "tiles": [
     {"xy": [0, 0], "name": "st1"},
     {"xy": [1, 0], "name": "hbr1"},

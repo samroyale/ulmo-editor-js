@@ -1,6 +1,6 @@
 {
   "name": "objects",
-  "imageUrl": "/img/objects.png",
+  "image": "objects.png",
   "tiles": [
     {"xy": [0, 0], "name": "tree_tl1"},
     {"xy": [1, 0], "name": "tree_tr1"},

@@ -14,7 +14,7 @@ var tileSchema = new mongoose.Schema({
 
 var tileSetSchema = new mongoose.Schema({
   name: {type: String, required: true, trim: true, unique: true, dropDups: true},
-  imageUrl: {type: String, required: true},
+  image: {type: String, required: true},
   tiles: [tileSchema]
 });
 

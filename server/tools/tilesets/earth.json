@@ -1,6 +1,6 @@
 {
   "name": "earth",
-  "imageUrl": "/img/earth.png",
+  "image": "earth.png",
   "tiles": [
     {"xy": [0, 0], "name": "tl"},
     {"xy": [1, 0], "name": "t1"},

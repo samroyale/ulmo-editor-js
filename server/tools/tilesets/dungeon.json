@@ -1,6 +1,6 @@
 {
   "name": "dungeon",
-  "imageUrl": "/img/dungeon.png",
+  "image": "dungeon.png",
   "tiles": [
     {"xy": [0, 0], "name": "wbl"},
     {"xy": [1, 0], "name": "wb1"},

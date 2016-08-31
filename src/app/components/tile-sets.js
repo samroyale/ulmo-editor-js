@@ -5,9 +5,10 @@ var Q = require("q"),
 
 
 const tileSetsApi = config.tileSetsApi,
+      tilesImgPath = config.tilesImgPath,
       tileSize = config.tileSize;
 
-let instance = null;
+var instance = null;
 
 /* =============================================================================
  * CLASS: TILE SET SERVICE
@@ -79,7 +80,8 @@ class TileSetService {
   }
 
   initTileSet(tileSetDef, deferred) {
-    loadImage(tileSetDef.imageUrl, data => {
+    var tilesImageUrl = tilesImgPath + "/" + tileSetDef.image;
+    loadImage(tilesImageUrl, data => {
       if (data.err) {
         deferred.reject({ err: data.err, id: tileSetDef.name });
         return;

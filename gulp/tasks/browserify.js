@@ -38,7 +38,7 @@ gulp.task('browserify', function(callback) {
       // Log when bundling starts
       bundleLogger.start(bundleConfig.outputName);
 
-      return bundler
+      /*return bundler
         .bundle()
         // Report compile errors
         .on('error', handleErrors)
@@ -48,8 +48,8 @@ gulp.task('browserify', function(callback) {
         .pipe(source(bundleConfig.outputName))
         // Specify the output destination
         .pipe(gulp.dest(bundleConfig.dest))
-        .on('end', reportFinished);
-      /*return bundler
+        .on('end', reportFinished);*/
+      return bundler
         .bundle()
         // Report compile errors
         .on('error', handleErrors)
@@ -63,7 +63,7 @@ gulp.task('browserify', function(callback) {
         .pipe(uglify().on('error', gulpUtil.log))
         // Specify the output destination
         .pipe(gulp.dest(bundleConfig.dest))
-        .on('end', reportFinished);*/
+        .on('end', reportFinished);
     };
 
     if(global.isWatching) {
