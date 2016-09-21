@@ -28,8 +28,8 @@ class TileSetService {
 
   loadTileSets() {
     var deferred = Q.defer();
-    var tileSets = Q($.get(tileSetsApi).promise());
-    tileSets.then(
+    var p = Q($.get(tileSetsApi).promise());
+    p.then(
       data => deferred.resolve({ tileSets: data }),
       xhr => deferred.reject(this.handleError(xhr))
     );
@@ -42,8 +42,8 @@ class TileSetService {
     }
     var deferred = Q.defer();
     var tileSetUrl = tileSetsApi + "/tileset?name=" + name;
-    var tileSet = Q($.get(tileSetUrl).promise());
-    tileSet.then(data => {
+    var p = Q($.get(tileSetUrl).promise());
+    p.then(data => {
       this.cache[data.id] = deferred;
       this.nameToIdMappings[name] = data.id;
       this.initTileSet(data, deferred);
@@ -59,8 +59,8 @@ class TileSetService {
     }
     var deferred = Q.defer();
     var tileSetUrl = tileSetsApi + "/" + tileSetId;
-    var tileSet = Q($.get(tileSetUrl).promise());
-    tileSet.then(data => {
+    var p = Q($.get(tileSetUrl).promise());
+    p.then(data => {
       this.cache[tileSetId] = deferred;
       this.nameToIdMappings[data.name] = tileSetId;
       this.initTileSet(data, deferred);

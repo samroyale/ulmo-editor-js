@@ -31,12 +31,12 @@ class RpgMapService {
 
   loadMaps() {
     var deferred = Q.defer();
-    var rpgMaps = Q($.ajax({
+    var p = Q($.ajax({
       url: rpgMapsApi,
       dataType: 'json',
       cache: false
     }).promise());
-    rpgMaps.then(
+    p.then(
       data => deferred.resolve({ maps: data }),
       xhr => deferred.reject(this.handleLoadError(xhr))
     );
@@ -47,12 +47,12 @@ class RpgMapService {
     console.log("Loading map [" + mapId + "]");
     var deferred = Q.defer();
     var mapUrl = rpgMapsApi + "/" + mapId;
-    var rpgMap = Q($.ajax({
+    var p = Q($.ajax({
       url: mapUrl,
       dataType: 'json',
       cache: false
     }).promise());
-    rpgMap.then(
+    p.then(
       data => this.initRpgMap(data, deferred),
       xhr => deferred.reject(this.handleLoadError(xhr))
     );
@@ -80,13 +80,13 @@ class RpgMapService {
   doSave(mapUrl, reqType, rpgMap, mapDef) {
     console.log("Saving map [" + reqType + " " + mapUrl + "]");
     var deferred = Q.defer();
-    var rpgMap = Q($.ajax({
+    var p = Q($.ajax({
       type: reqType,
       url: mapUrl,
       dataType: 'json',
       data: mapDef,
     }).promise());
-    rpgMap.then(
+    p.then(
       data => deferred.resolve(this.mapSaved(rpgMap, mapDef, data)),
       xhr => deferred.reject(this.handleSaveError(mapDef, xhr))
     );
