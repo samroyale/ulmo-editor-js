@@ -75,6 +75,7 @@ const MapEditor = React.createClass({
   },
 
   updateProgress: function(percent) {
+    // console.log(percent);
     this.setState({ progressPercent: percent });
   },
 

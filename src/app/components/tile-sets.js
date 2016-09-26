@@ -36,9 +36,9 @@ class TileSetService {
     return deferred.promise;
   }
 
-  loadTileSetByName(name) {
+  loadTileSetByName(name, progressCallback) {
     if (this.nameToIdMappings[name]) {
-      return this.loadTileSet(this.nameToIdMappings[name]);
+      return this.loadTileSet(this.nameToIdMappings[name], progressCallback);
     }
     var deferred = Q.defer();
     var tileSetUrl = tileSetsApi + "/tileset?name=" + name;
@@ -46,14 +46,14 @@ class TileSetService {
     p.then(data => {
       this.cache[data.id] = deferred;
       this.nameToIdMappings[name] = data.id;
-      this.initTileSet(data, deferred);
+      this.initTileSet(data, deferred, progressCallback);
     }, xhr => {
       deferred.reject(this.handleError(xhr, name));
     });
     return deferred.promise;
   }
 
-  loadTileSet(tileSetId) {
+  loadTileSet(tileSetId, progressCallback) {
     if (this.cache[tileSetId]) {
       return this.cache[tileSetId].promise;
     }
@@ -63,7 +63,7 @@ class TileSetService {
     p.then(data => {
       this.cache[tileSetId] = deferred;
       this.nameToIdMappings[data.name] = tileSetId;
-      this.initTileSet(data, deferred);
+      this.initTileSet(data, deferred, progressCallback);
     }, xhr => {
       deferred.reject(this.handleError(xhr, tileSetId));
     });
@@ -79,23 +79,21 @@ class TileSetService {
     return { err: xhr.statusText, status: xhr.status, id: id };
   }
 
-  initTileSet(tileSetDef, deferred) {
+  initTileSet(tileSetDef, deferred, progressCallback) {
     var tilesImageUrl = tilesImgPath + "/" + tileSetDef.image;
     loadImage(tilesImageUrl, data => {
       if (data.err) {
         deferred.reject({ err: data.err, id: tileSetDef.name });
         return;
       }
-      deferred.resolve({ tileSet: this.buildTileSet(tileSetDef, data.img) });
+      deferred.resolve({ tileSet: this.buildTileSet(tileSetDef, data.img, progressCallback) });
     });
   }
 
-  buildTileSet(tileSetDef, tileSetImage) {
-    return new TileSet(
-      tileSetDef.id,
-      tileSetDef.name,
-      this.initTiles(tileSetDef, tileSetImage)
-    )
+  buildTileSet(tileSetDef, tileSetImage, progressCallback) {
+    var tiles = this.initTiles(tileSetDef, tileSetImage);
+    progressCallback(100);
+    return new TileSet(tileSetDef.id, tileSetDef.name, tiles);
   }
 
   initTiles(tileSetDef, tileSetImage) {

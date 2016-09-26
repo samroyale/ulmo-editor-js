@@ -143,25 +143,26 @@ class RpgMapService {
   }
 
   initRpgMap(rpgMapDef, deferred, progressCallback) {
-    progressCallback(20);
-    var tileSetPromises = this.tileSetPromises(rpgMapDef);
-    progressCallback(80);
+    var progress = 0;
+    progressCallback(progress += 20);
+    var tileSetPromises = this.tileSetPromises(rpgMapDef, (percent) => {
+      var increment = progress < 80 ? percent / 10 : 0;
+      progressCallback(progress += increment);
+    });
     if (tileSetPromises.size === 0) {
       // no tilesets to load - either a new or empty map
-      deferred.resolve({ map: this.buildRpgMap({}, rpgMapDef) });
-      progressCallback(100);
+      progressCallback(80);
+      deferred.resolve({ map: this.buildRpgMap({}, rpgMapDef, progressCallback) });
       return;
     }
     // wait for all tilesets to load and then continue
     var tileSets = {};
     Q.all(tileSetPromises).then(values => {
-      //console.log(values);
+      progressCallback(80);
       values.forEach(value => {
         tileSets[value.tileSet.getName()] = value.tileSet;
       });
-      //console.log(tileSets);
-      progressCallback(100);
-      deferred.resolve({ map: this.buildRpgMap(tileSets, rpgMapDef) });
+      deferred.resolve({ map: this.buildRpgMap(tileSets, rpgMapDef, progressCallback) });
     }, value => {
       deferred.reject(this.tileSetLoadErr(value));
     });
@@ -170,13 +171,13 @@ class RpgMapService {
   /*
    * Returns an array of tileset promises representing the tilesets used in the given map definition.
    */
-  tileSetPromises(rpgMapDef) {
+  tileSetPromises(rpgMapDef, progressCallback) {
     var tileSets = new Map();
     rpgMapDef.mapTiles.forEach(mapTileDef => {
       mapTileDef.tiles.forEach(tileDef => {
         var tsName = tileDef.tileSet;
         if (!tileSets.has(tsName)) {
-          tileSets.set(tsName, tileSetService.loadTileSetByName(tsName));
+          tileSets.set(tsName, tileSetService.loadTileSetByName(tsName, progressCallback));
         }
       });
     });
@@ -193,13 +194,11 @@ class RpgMapService {
     console.log("Something went wrong...");
   }
 
-  buildRpgMap(tileSets, rpgMapDef) {
+  buildRpgMap(tileSets, rpgMapDef, progressCallback) {
     // console.log("buildRpgMap: " + tileSetMappings.size);
-    return new RpgMap(
-      rpgMapDef.id,
-      rpgMapDef.name,
-      this.initMapTiles(tileSets, rpgMapDef)
-    );
+    var mapTiles = this.initMapTiles(tileSets, rpgMapDef);
+    progressCallback(100);
+    return new RpgMap(rpgMapDef.id, rpgMapDef.name, mapTiles);
   }
 
   initMapTiles(tileSets, rpgMapDef) {
