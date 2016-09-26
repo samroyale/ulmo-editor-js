@@ -42,7 +42,7 @@ const MapCanvas = React.createClass({
   },
 
   loadMap: function(mapId) {
-    return this.mapLoaded(rpgMapService.loadMap(mapId));
+    return this.mapLoaded(rpgMapService.loadMap(mapId, this.props.onProgress));
   },
 
   newMap: function(rows, cols) {

@@ -22,7 +22,8 @@ var Panel = Bootstrap.Panel,
     Form = Bootstrap.Form,
     FormGroup = Bootstrap.FormGroup,
     ControlLabel = Bootstrap.ControlLabel,
-    FormControl = Bootstrap.FormControl;
+    FormControl = Bootstrap.FormControl,
+    ProgressBar = Bootstrap.ProgressBar;
 
 const rpgMapService = new RpgMapService();
 
@@ -42,7 +43,10 @@ const MapEditor = React.createClass({
 
   getInitialState: function() {
     return {
-      showModal: false,
+      showModal: null,
+      showProgressModal: false,
+      progressTitle: null,
+      progressPercent: 0,
       mapDirty: false,
       maps: [],
       mapId: null,
@@ -55,10 +59,27 @@ const MapEditor = React.createClass({
   },
 
   closeModal: function() {
-    this.setState({ showModal: null });
+    this.setState({ showModal: null, showProgressModal: false });
+  },
+
+  closeProgressModal: function() {
+    this.setState({ showProgressModal: false });
+  },
+
+  showProgressModal: function(title) {
+    this.setState({
+      showProgressModal: true,
+      progressTitle: title,
+      progressPercent: 0
+    });
+  },
+
+  updateProgress: function(percent) {
+    this.setState({ progressPercent: percent });
   },
 
   mapSelected: function(mid) {
+    this.showProgressModal("Loading map...");
     var p = this._mapCanvas.loadMap(mid);
     p.then(
       data => this.mapLoaded(data, false),
@@ -103,6 +124,7 @@ const MapEditor = React.createClass({
   },
 
   mapLoadErr: function(mid, data) {
+    this.closeProgressModal();
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       var info = data.status ? data.status + ": " + data.err : data.err;
@@ -232,6 +254,7 @@ const MapEditor = React.createClass({
               tilePosition={this.state.currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
               onMapUpdated={this.mapUpdated}
+              onProgress={this.updateProgress}
               ref={comp => this._mapCanvas = comp} />
           <MapTileInfo
               tilePosition={this.state.currentTilePosition}
@@ -260,6 +283,11 @@ const MapEditor = React.createClass({
             onSaveAs={this.saveMapAs}
             onClose={this.closeModal}
             error={this.state.saveError} />
+
+        <ProgressModal
+            showModal={this.state.showProgressModal}
+            title={this.state.progressTitle}
+            percent={this.state.progressPercent} />
       </div>
     );
   }
@@ -635,6 +663,23 @@ const SaveAsModal = React.createClass({
     );
   }
 });
+
+/* =============================================================================
+ * COMPONENT: PROGRESS MODAL
+ * =============================================================================
+ */
+function ProgressModal(props) {
+  return (
+    <Modal show={props.showModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>{props.title}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <ProgressBar now={props.percent} />
+      </Modal.Body>
+    </Modal>
+  );
+}
 
 /* =============================================================================
  * COMPONENT: MAP TILE INFO

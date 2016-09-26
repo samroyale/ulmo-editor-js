@@ -43,7 +43,7 @@ class RpgMapService {
     return deferred.promise;
   }
 
-  loadMap(mapId) {
+  loadMap(mapId, progressCallback) {
     console.log("Loading map [" + mapId + "]");
     var deferred = Q.defer();
     var mapUrl = rpgMapsApi + "/" + mapId;
@@ -53,7 +53,7 @@ class RpgMapService {
       cache: false
     }).promise());
     p.then(
-      data => this.initRpgMap(data, deferred),
+      data => this.initRpgMap(data, deferred, progressCallback),
       xhr => deferred.reject(this.handleLoadError(xhr))
     );
     return deferred.promise;
@@ -127,7 +127,7 @@ class RpgMapService {
       mapTiles: []
     };
     var deferred = Q.defer();
-    this.initRpgMap(data, deferred);
+    this.initRpgMap(data, deferred, function() {});
     return deferred.promise;
   }
 
@@ -142,11 +142,14 @@ class RpgMapService {
     });
   }
 
-  initRpgMap(rpgMapDef, deferred) {
+  initRpgMap(rpgMapDef, deferred, progressCallback) {
+    progressCallback(20);
     var tileSetPromises = this.tileSetPromises(rpgMapDef);
+    progressCallback(80);
     if (tileSetPromises.size === 0) {
       // no tilesets to load - either a new or empty map
       deferred.resolve({ map: this.buildRpgMap({}, rpgMapDef) });
+      progressCallback(100);
       return;
     }
     // wait for all tilesets to load and then continue
@@ -157,6 +160,7 @@ class RpgMapService {
         tileSets[value.tileSet.getName()] = value.tileSet;
       });
       //console.log(tileSets);
+      progressCallback(100);
       deferred.resolve({ map: this.buildRpgMap(tileSets, rpgMapDef) });
     }, value => {
       deferred.reject(this.tileSetLoadErr(value));
