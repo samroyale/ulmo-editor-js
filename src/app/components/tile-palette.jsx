@@ -198,7 +198,7 @@ const TileSetCanvas = React.createClass({
   },
 
   loadTileSet: function(tilesetId) {
-    var p = tileSetService.loadTileSet(tilesetId);
+    var p = tileSetService.loadTileSet(tilesetId, function() {});
     return p.then(data => {
       if (data.tileSet) {
         this._tileSet = data.tileSet;
@@ -299,9 +299,13 @@ const TileSetCanvas = React.createClass({
  */
 function TileInfo(props) {
   if (props.tilePosition && props.tile) {
-    return (<p className="no-margin">{props.tilePosition.x}, {props.tilePosition.y} :: {props.tile.getTileSetName()}:{props.tile.getTileName()}</p>);
+    return (
+      <p className="top-margin">
+        {props.tilePosition.x},{props.tilePosition.y} :: {props.tile.getTileSetName()}:{props.tile.getTileName()}
+      </p>
+    );
   }
-  return (<p className="no-margin">-</p>);
+  return (<p className="top-margin">-</p>);
 }
 
 module.exports = TilePalette;

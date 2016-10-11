@@ -696,12 +696,12 @@ function MapTileInfo(props) {
     });
     var masksInfo = "[" + masks.toString() + "]";
     return (
-      <p className="no-margin">
-        {props.tilePosition.x}, {props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo} {masksInfo}
+      <p className="top-margin">
+        {props.tilePosition.x},{props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo} {masksInfo}
       </p>
     );
   }
-  return (<p className="no-margin">-</p>);
+  return (<p className="top-margin">-</p>);
 }
 
 module.exports = MapEditor;

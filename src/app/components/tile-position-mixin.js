@@ -18,8 +18,9 @@ const tilePositionMixin = {
       y = evt.pageY;
     }
     var cvsElement = evt.target;
-    var cvsOffsetLeft = cvsElement.offsetLeft + cvsElement.offsetParent.offsetLeft;
-    var cvsOffsetTop = cvsElement.offsetTop + cvsElement.offsetParent.offsetTop;
+    var containerElement = cvsElement.parentElement;
+    var cvsOffsetLeft = cvsElement.offsetLeft + cvsElement.offsetParent.offsetLeft - containerElement.scrollLeft;
+    var cvsOffsetTop = cvsElement.offsetTop + cvsElement.offsetParent.offsetTop - containerElement.scrollTop;
     // console.log(x + "," + y + " :: " + canvasElement.offsetLeft + "," +
     //    canvasElement.offsetTop + " :: " + canvasElement.offsetParent );
     x = Math.max(Math.min(x - cvsOffsetLeft, cvsElement.width), 0);
