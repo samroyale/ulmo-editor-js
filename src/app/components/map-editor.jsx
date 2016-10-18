@@ -45,8 +45,10 @@ const MapEditor = React.createClass({
     return {
       showModal: null,
       showProgressModal: false,
+      showWarningModal: false,
       progressTitle: null,
       progressPercent: 0,
+      continue: null,
       mapDirty: false,
       maps: [],
       mapId: null,
@@ -59,7 +61,11 @@ const MapEditor = React.createClass({
   },
 
   closeModal: function() {
-    this.setState({ showModal: null, showProgressModal: false });
+    this.setState({
+      showModal: null,
+      showProgressModal: false,
+      showWarningModal: false
+    });
   },
 
   closeProgressModal: function() {
@@ -74,12 +80,33 @@ const MapEditor = React.createClass({
     });
   },
 
+  closeWarningModal: function() {
+    this.setState({ showWarningModal: false });
+  },
+
+  showWarningModal: function(callback) {
+    this.setState({
+      showWarningModal: true,
+      continue: callback
+    });
+  },
+
   updateProgress: function(percent) {
     // console.log(percent);
     this.setState({ progressPercent: percent });
   },
 
   mapSelected: function(mid) {
+    if (this.state.mapDirty) {
+      this.showWarningModal(() =>
+        this.continueMapSelected(mid)
+      );
+      return;
+    }
+    this.continueMapSelected(mid);
+  },
+
+  continueMapSelected: function(mid) {
     this.showProgressModal("Loading map...");
     var p = this._mapCanvas.loadMap(mid);
     p.then(
@@ -93,6 +120,16 @@ const MapEditor = React.createClass({
   },
 
   newMapOfSize: function(rows, cols) {
+    if (this.state.mapDirty) {
+      this.showWarningModal(() =>
+        this.continueNewMapOfSize(rows, cols)
+      );
+      return;
+    }
+    this.continueNewMapOfSize(rows, cols);    
+  },
+
+  continueNewMapOfSize: function(rows, cols) {
     var p = this._mapCanvas.newMap(rows, cols);
     p.then(
       data => this.mapLoaded(data, true)
@@ -238,7 +275,7 @@ const MapEditor = React.createClass({
   render: function() {
     return (
       <div>
-        <Panel className="component">
+        <Panel className="component" bsClass="component-panel">
           <MapToolbar
               selectedTile={this.props.selectedTile}
               tileMode={this.state.tileMode}
@@ -289,6 +326,11 @@ const MapEditor = React.createClass({
             showModal={this.state.showProgressModal}
             title={this.state.progressTitle}
             percent={this.state.progressPercent} />
+
+        <WarningModal
+            showModal={this.state.showWarningModal}
+            onContinue={this.state.continue}
+            onClose={this.closeWarningModal} />
       </div>
     );
   }
@@ -300,7 +342,7 @@ const MapEditor = React.createClass({
  */
 function MapToolbar(props) {
   return (
-    <ButtonToolbar>
+    <ButtonToolbar className="component-buttons">
       <TileControl
           selectedTile={props.selectedTile}
           tileMode={props.tileMode}
@@ -672,12 +714,33 @@ const SaveAsModal = React.createClass({
 function ProgressModal(props) {
   return (
     <Modal show={props.showModal}>
-      <Modal.Header closeButton>
+      <Modal.Header>
         <Modal.Title>{props.title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <ProgressBar now={props.percent} />
       </Modal.Body>
+    </Modal>
+  );
+}
+
+/* =============================================================================
+ * COMPONENT: WARNING MODAL
+ * =============================================================================
+ */
+function WarningModal(props) {
+  return (
+    <Modal show={props.showModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>Warning</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Alert bsStyle="warning">This will lose all unsaved changes. Continue?</Alert>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onContinue} bsStyle="primary">OK</Button>
+        <Button onClick={props.onClose}>Cancel</Button>
+      </Modal.Footer>
     </Modal>
   );
 }
@@ -696,12 +759,12 @@ function MapTileInfo(props) {
     });
     var masksInfo = "[" + masks.toString() + "]";
     return (
-      <p className="top-margin">
+      <p className="with-top-margin">
         {props.tilePosition.x},{props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo} {masksInfo}
       </p>
     );
   }
-  return (<p className="top-margin">-</p>);
+  return (<p className="with-top-margin">-</p>);
 }
 
 module.exports = MapEditor;

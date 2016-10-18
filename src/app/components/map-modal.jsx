@@ -331,7 +331,7 @@ const EditImagesModal = React.createClass({
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="tile-images-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>

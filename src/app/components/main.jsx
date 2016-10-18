@@ -28,13 +28,13 @@ const Main = React.createClass({
       <Grid>
         <Row className="show-grid">
           <Col lg={12}>
-            <PageHeader className="my-page-header">
+            <PageHeader className="custom-header">
               Ulmo Editor <small>v0.1.0</small>
             </PageHeader>
           </Col>
         </Row>
         <Row className="show-grid">
-          <Col lg={4}>
+          <Col className="tile-palette-col" lg={4}>
             <TilePalette onTileSelected={this.tileSelected} />
           </Col>
           <Col className="map-canvas-col" lg={8}>

@@ -100,7 +100,7 @@ const TilePalette = React.createClass({
   render: function() {
     return (
       <div>
-        <Panel className="component">
+        <Panel className="component" bsClass="component-panel">
           <TileSetToolbar
               onLoadTileSetsFromServer={this.loadTileSetsFromServer} />
           <TileSetCanvas
@@ -131,7 +131,7 @@ const TilePalette = React.createClass({
  */
 function TileSetToolbar(props) {
   return (
-    <ButtonToolbar>
+    <ButtonToolbar className="component-buttons">
       <Button onClick={props.onLoadTileSetsFromServer}>
         Open Tileset
       </Button>
@@ -300,12 +300,12 @@ const TileSetCanvas = React.createClass({
 function TileInfo(props) {
   if (props.tilePosition && props.tile) {
     return (
-      <p className="top-margin">
+      <p className="with-top-margin">
         {props.tilePosition.x},{props.tilePosition.y} :: {props.tile.getTileSetName()}:{props.tile.getTileName()}
       </p>
     );
   }
-  return (<p className="top-margin">-</p>);
+  return (<p className="with-top-margin">-</p>);
 }
 
 module.exports = TilePalette;
