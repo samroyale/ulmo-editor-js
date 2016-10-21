@@ -102,7 +102,8 @@ const TilePalette = React.createClass({
       <div>
         <Panel className="component" bsClass="component-panel">
           <TileSetToolbar
-              onLoadTileSetsFromServer={this.loadTileSetsFromServer} />
+              onLoadTileSetsFromServer={this.loadTileSetsFromServer}
+              onAdmin={this.props.onAdmin} />
           <TileSetCanvas
               onTileSelected={this.props.onTileSelected}
               onTilePositionUpdated={this.updateCurrentTile}
@@ -132,9 +133,8 @@ const TilePalette = React.createClass({
 function TileSetToolbar(props) {
   return (
     <ButtonToolbar className="component-buttons">
-      <Button onClick={props.onLoadTileSetsFromServer}>
-        Open Tileset
-      </Button>
+      <Button onClick={props.onLoadTileSetsFromServer}>Open Tileset</Button>
+      <Button bsStyle="link" onClick={props.onAdmin}>Admin</Button>
     </ButtonToolbar>
   );
 }

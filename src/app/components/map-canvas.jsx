@@ -34,9 +34,7 @@ const MapCanvas = React.createClass({
       showMap: false,
       showOverlay: false,
       overlayPosition: {x: 0, y: 0},
-      showLevelsModal: false,
-      showImagesModal: false,
-      showMasksModal: false,
+      showModal: null,
       editableTile: null
     };
   },
@@ -168,30 +166,15 @@ const MapCanvas = React.createClass({
   },
 
   editLevels: function() {
-    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
-    this.setState({
-      showOverlay: false,
-      showLevelsModal: true,
-      editableTile: mapTile
-    });
+    this.showModal("LEVELS");
   },
 
   editImages: function() {
-    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
-    this.setState({
-      showOverlay: false,
-      showImagesModal: true,
-      editableTile: mapTile
-    });
+    this.showModal("IMAGES");
   },
 
   editMasks: function() {
-    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
-    this.setState({
-      showOverlay: false,
-      showMasksModal: true,
-      editableTile: mapTile
-    });
+    this.showModal("MASKS");
   },
 
   applyLevelsEdit: function(newLevels) {
@@ -364,11 +347,18 @@ const MapCanvas = React.createClass({
     this.setState({ showOverlay: false });
   },
 
+  showModal: function(name) {
+    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
+    this.setState({
+      showModal: name,
+      showOverlay: false,
+      editableTile: mapTile
+    });
+  },
+
   closeModal: function() {
     this.setState({
-      showLevelsModal: false,
-      showImagesModal: false,
-      showMasksModal: false,
+      showModal: null,
       editableTile: null
     });
   },
@@ -392,19 +382,19 @@ const MapCanvas = React.createClass({
             onHide={this.hideOverlay} />
 
         <MapModal.EditLevelsModal
-            showModal={this.state.showLevelsModal}
+            showModal={this.state.showModal === "LEVELS"}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
             onSubmit={this.applyLevelsEdit} />
 
         <MapModal.EditImagesModal
-            showModal={this.state.showImagesModal}
+            showModal={this.state.showModal === "IMAGES"}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
             onSubmit={this.applyMaskTilesEdit} />
 
         <MapModal.EditMasksModal
-            showModal={this.state.showMasksModal}
+            showModal={this.state.showModal === "MASKS"}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
             onSubmit={this.applyMaskTilesEdit} />

@@ -126,7 +126,7 @@ const MapEditor = React.createClass({
       );
       return;
     }
-    this.continueNewMapOfSize(rows, cols);    
+    this.continueNewMapOfSize(rows, cols);
   },
 
   continueNewMapOfSize: function(rows, cols) {
@@ -158,7 +158,6 @@ const MapEditor = React.createClass({
         loadError: null
       });
     }
-    console.log(this.state.mapId);
   },
 
   mapLoadErr: function(mid, data) {
@@ -280,12 +279,14 @@ const MapEditor = React.createClass({
               selectedTile={this.props.selectedTile}
               tileMode={this.state.tileMode}
               mapDirty={this.state.mapDirty}
+              mapPresent={this.state.mapId !== null}
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
               onResizeMap={this.resizeMap}
               onSaveMap={this.saveMap}
               onShowSaveModal={this.showSaveModal}
-              onModeChange={this.setTileControlMode} />
+              onModeChange={this.setTileControlMode}
+              onAdmin={this.props.onAdmin} />
           <MapCanvas
               selectedTile={this.props.selectedTile}
               tileMode={this.state.tileMode}
@@ -347,19 +348,15 @@ function MapToolbar(props) {
           selectedTile={props.selectedTile}
           tileMode={props.tileMode}
           onModeChange={props.onModeChange} />
-      <Button onClick={props.onLoadMapsFromServer}>
-        Open Map
-      </Button>
-      <Button onClick={props.onNewMap}>
-        New Map
-      </Button>
-      <Button onClick={props.onResizeMap}>
-        Resize Map
-      </Button>
-      <DropdownButton title="Save" id="Save">
+      <Button onClick={props.onLoadMapsFromServer}>Open Map</Button>
+      <Button onClick={props.onNewMap}>New Map</Button>
+      <Button onClick={props.onResizeMap} disabled={!props.mapPresent}>Resize Map</Button>
+      <DropdownButton title="File" id="file" disabled={!props.mapPresent}>
         <MenuItem onClick={props.onSaveMap} disabled={!props.mapDirty}>Save</MenuItem>
         <MenuItem onClick={props.onShowSaveModal}>Save as</MenuItem>
+        <MenuItem onClick={props.onExport}>Export</MenuItem>
       </DropdownButton>
+      <Button bsStyle="link" onClick={props.onAdmin}>Admin</Button>
     </ButtonToolbar>
   );
 }
@@ -376,14 +373,6 @@ const TileControl = React.createClass({
       disabled: true
     };
   },
-
-  /*setMode: function(mode) {
-    this.props.onModeChange(mode);
-  },*/
-
-  /*componentWillMount: function() {
-    this.populateStateFromProps(this.props);
-  },*/
 
   componentWillReceiveProps: function(nextProps) {
     // if selecting a tile for the first time, set the tile mode to INSERT
@@ -416,18 +405,21 @@ const TileControl = React.createClass({
   },
 
   menuItem: function(mode, label) {
-    var active = (mode === this.props.tileMode);
-    return (<MenuItem eventKey={mode} active={active}>{label}</MenuItem>);
+    return (
+      <MenuItem eventKey={mode} active={mode === this.props.tileMode}>
+        {label}
+      </MenuItem>
+    );
   },
 
   render: function() {
     return (
-      <Dropdown id="tile-control-dropdown" onSelect={this.props.onModeChange} disabled={this.state.disabled}>
-        <Button className="tile-button">
+      <Dropdown id="tile-control-dropdown" onSelect={this.props.onModeChange}>
+        <Button className="tile-button" disabled={this.state.disabled}>
           <canvas className="tile-button-cvs" width={tileSize + 2} height={tileSize + 2}
               ref={cvs => this._canvas = cvs} />
         </Button>
-        <Dropdown.Toggle className="tile-dropdown" />
+        <Dropdown.Toggle className="tile-dropdown" disabled={this.state.disabled} />
         <Dropdown.Menu>
           {this.menuItem("INSERT", "Insert")}
           {this.menuItem("ADD", "Add")}
