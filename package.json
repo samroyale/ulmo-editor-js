@@ -8,8 +8,12 @@
     "url": "https://github.com/samroyale/ulmo-editor-js.git"
   },
   "browserify": {
-    "transform": [[
-        "reactify", { "es6": true }
+    "transform": [
+      [
+        "reactify",
+        {
+          "es6": true
+        }
       ]
     ]
   },
@@ -31,12 +35,14 @@
     "vinyl-buffer": "1.0.0",
     "watchify": "^2.2.1",
     "url": "0.11.0",
-    "proxy-middleware": "0.15.0"
+    "proxy-middleware": "0.15.0",
+    "connect-history-api-fallback": "1.3.0"
   },
   "dependencies": {
+    "q": "1.4.1",
     "react": "0.14.8",
-    "react-dom": "0.14.8",
     "react-bootstrap": "0.29.4",
-    "q": "1.4.1"
+    "react-dom": "0.14.8",
+    "react-router": "^2.8.1"
   }
 }

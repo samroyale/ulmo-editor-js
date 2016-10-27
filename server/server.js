@@ -4,6 +4,7 @@
 // =============================================================================
 
 var express = require('express');
+var fallback = require('express-history-api-fallback');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 
@@ -301,6 +302,9 @@ router.route('/maps/:map_id')
 app.use('/api', router);
 
 // static content
+const root = __dirname + '/static';
+app.use(express.static(root))
+app.use(fallback('index.html', { root }))
 //app.use(express.static(__dirname + '/static'));
 
 // START THE SERVER

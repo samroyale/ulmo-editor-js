@@ -1,5 +1,6 @@
 var url = require('url'),
-    proxy = require('proxy-middleware');
+    proxy = require('proxy-middleware')
+    historyApiFallback = require('connect-history-api-fallback');
 
 var proxyOptions = url.parse('http://localhost:8081/api');
 proxyOptions.route = '/api';
@@ -10,7 +11,7 @@ module.exports = {
     browserSync: {
         server: {
             baseDir: [dest, src],
-            middleware: [proxy(proxyOptions)]
+            middleware: [proxy(proxyOptions), historyApiFallback()]
         },
         files: [
             dest + '/**'

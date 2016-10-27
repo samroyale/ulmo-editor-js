@@ -1,4 +1,5 @@
 var React = require('react'),
+    ReactRouter = require('react-router'),
     Bootstrap = require('react-bootstrap'),
     TilePalette = require('./tile-palette.jsx'),
     MapEditor = require('./map-editor.jsx');
@@ -7,52 +8,66 @@ var Grid = Bootstrap.Grid,
     Row = Bootstrap.Row,
     Col = Bootstrap.Col,
     PageHeader = Bootstrap.PageHeader,
-    Button = Bootstrap.Button;
+    Button = Bootstrap.Button,
+    Router = ReactRouter.Router,
+    Route = ReactRouter.Route
+    IndexRoute = ReactRouter.IndexRoute,
+    Link = ReactRouter.Link,
+    browserHistory = ReactRouter.browserHistory;
 
 /* =============================================================================
  * COMPONENT: APP
  * =============================================================================
  */
-const Main = React.createClass({
-  getInitialState: function() {
-    return { view: "EDITOR" };
-  },
+ const App = React.createClass({
+   showEditorView() {
+     browserHistory.push("/");
+   },
 
-  showEditorView: function() {
-    this.setState({ view: "EDITOR" });
-  },
+   showTileSetAdminView: function() {
+     browserHistory.push("/tiles-admin");
+   },
 
-  showTileSetAdminView: function() {
-    console.log("ts admin")
-    this.setState({ view: "TILESETS" });
-  },
+   showMapAdminView: function() {
+     browserHistory.push("/maps-admin");
+   },
 
-  showMapAdminView: function() {
-    this.setState({ view: "MAPS" });
-  },
+   render() {
+     return (
+       <Router history={browserHistory}>
+         <Route path="/" component={Main}>
+           <IndexRoute
+             component={EditorView}
+             onTileSetAdmin={this.showTileSetAdminView}
+             onMapAdmin={this.showMapAdminView} />
+           <Route path="/tiles-admin"
+             component={TileSetAdminView}
+             onBack={this.showEditorView} />
+           <Route path="/maps-admin"
+             component={MapAdminView}
+             onBack={this.showEditorView} />
+         </Route>
+       </Router>
+     )
+   }
+ });
 
-  render: function() {
-    return (
-      <Grid>
-        <Row>
-          <Col lg={12}>
-            <PageHeader className="custom-header">Ulmo Editor <small>v0.1.0</small></PageHeader>
-          </Col>
-        </Row>
-        <EditorView
-          view={this.state.view}
-          onTileSetAdmin={this.showTileSetAdminView}
-          onMapAdmin={this.showMapAdminView} />
-        <TileSetAdminView
-          view={this.state.view}
-          onBack={this.showEditorView} />
-        <MapAdminView
-          view={this.state.view}
-          onBack={this.showEditorView} />
-      </Grid>
-    );
-  }
-});
+ /* =============================================================================
+  * COMPONENT: MAIN
+  * =============================================================================
+  */
+function Main(props) {
+  return (
+    <Grid>
+      <Row>
+        <Col lg={12}>
+          <PageHeader className="custom-header">Ulmo Editor <small>v0.1.0</small></PageHeader>
+        </Col>
+      </Row>
+      {props.children}
+    </Grid>
+  );
+};
 
 /* =============================================================================
  * COMPONENT: EDITOR VIEW
@@ -68,18 +83,17 @@ const EditorView = React.createClass({
   },
 
   render: function() {
-    var bsClass = this.props.view === "EDITOR" ? "show" : "hidden";
     return (
-      <Row className={bsClass}>
+      <Row>
         <Col className="tile-palette-col" lg={4}>
           <TilePalette
             onTileSelected={this.tileSelected}
-            onAdmin={this.props.onTileSetAdmin} />
+            onAdmin={this.props.route.onTileSetAdmin} />
         </Col>
         <Col className="map-canvas-col" lg={8}>
           <MapEditor
             selectedTile={this.state.selectedTile}
-            onAdmin={this.props.onMapAdmin} />
+            onAdmin={this.props.route.onMapAdmin} />
         </Col>
       </Row>
     );
@@ -96,12 +110,11 @@ const TileSetAdminView = React.createClass({
   },
 
   render: function() {
-    var bsClass = this.props.view === "TILESETS" ? "show" : "hidden";
     return (
-      <Row className={bsClass}>
+      <Row>
         <Col lg={12}>
           <h3>Tileset Admin goes here</h3>
-          <Button onClick={this.props.onBack}>Back</Button>
+          <Button onClick={this.props.route.onBack}>Back</Button>
         </Col>
       </Row>
     );
@@ -118,16 +131,15 @@ const MapAdminView = React.createClass({
   },
 
   render: function() {
-    var bsClass = this.props.view === "MAPS" ? "show" : "hidden";
     return (
-      <Row className={bsClass}>
+      <Row>
         <Col lg={12}>
           <h3>Map Admin goes here</h3>
-          <Button onClick={this.props.onBack}>Back</Button>
+          <Button onClick={this.props.route.onBack}>Back</Button>
         </Col>
       </Row>
     );
   }
 });
 
-module.exports = Main;
+module.exports = App;
