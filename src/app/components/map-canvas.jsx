@@ -35,7 +35,8 @@ const MapCanvas = React.createClass({
       showOverlay: false,
       overlayPosition: {x: 0, y: 0},
       showModal: null,
-      editableTile: null
+      editableTile: null,
+      startPosition: null
     };
   },
 
@@ -54,6 +55,7 @@ const MapCanvas = React.createClass({
   },
 
   mapLoaded: function(rpgMap) {
+    this.removeHighlight(); // resets tile positions
     return rpgMap.then(data => {
       if (data.map) {
         this._rpgMap = data.map;
@@ -131,37 +133,42 @@ const MapCanvas = React.createClass({
 
   applySelectedTile: function(fromPosition, toPosition) {
     if (this.props.tileMode === "ADD") {
-      this.processHighlightedTiles((topLeft, rows, cols) =>
-        this._rpgMap.addAsMaskTile(topLeft, rows, cols, this.props.selectedTile)
-      );
+      this.processHighlightedTiles((topLeft, rows, cols) => {
+        this._rpgMap.addAsMaskTile(topLeft, rows, cols, this.props.selectedTile);
+        return true;
+      });
       return;
     }
     if (this.props.tileMode === "INSERT") {
-      this.processHighlightedTiles((topLeft, rows, cols) =>
-        this._rpgMap.insertAsMaskTile(topLeft, rows, cols, this.props.selectedTile)
-      );
+      this.processHighlightedTiles((topLeft, rows, cols) => {
+        this._rpgMap.insertAsMaskTile(topLeft, rows, cols, this.props.selectedTile);
+        return true;
+      });
     }
     // tileMode is either null or SELECT - do nothing
   },
 
   sendToBack: function() {
-    this.processHighlightedTiles((topLeft, rows, cols) =>
-      this._rpgMap.sendToBack(topLeft, rows, cols)
-    );
+    this.processHighlightedTiles((topLeft, rows, cols) => {
+      this._rpgMap.sendToBack(topLeft, rows, cols);
+      return true;
+    });
     this.hideOverlay();
   },
 
   keepTop: function() {
-    this.processHighlightedTiles((topLeft, rows, cols) =>
-      this._rpgMap.keepTop(topLeft, rows, cols)
-    );
+    this.processHighlightedTiles((topLeft, rows, cols) => {
+      this._rpgMap.keepTop(topLeft, rows, cols);
+      return true;
+    });
     this.hideOverlay();
   },
 
   clear: function() {
-    this.processHighlightedTiles((topLeft, rows, cols) =>
-      this._rpgMap.clear(topLeft, rows, cols)
-    );
+    this.processHighlightedTiles((topLeft, rows, cols) => {
+      this._rpgMap.clear(topLeft, rows, cols);
+      return true;
+    });
     this.hideOverlay();
   },
 
@@ -179,9 +186,10 @@ const MapCanvas = React.createClass({
 
   applyLevelsEdit: function(newLevels) {
     // levels edit applies to all selected tiles
-    this.processHighlightedTiles((topLeft, rows, cols) =>
-      this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice(0))
-    );
+    this.processHighlightedTiles((topLeft, rows, cols) => {
+      this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice(0));
+      return true;
+    });
     this.closeModal();
   },
 
@@ -199,8 +207,10 @@ const MapCanvas = React.createClass({
     var toPosition = this.props.tilePosition;
     var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
     var tr = this.getTileRange(fromPosition, toPosition);
-    func(tr.topLeft, tr.rows, tr.cols);
-    this.props.onMapUpdated();
+    var updated = func(tr.topLeft, tr.rows, tr.cols);
+    if (updated) {
+      this.props.onMapUpdated();
+    }
   },
 
   processRange: function(fromPosition, toPosition, func) {
@@ -221,23 +231,26 @@ const MapCanvas = React.createClass({
   },
 
   copyTiles: function() {
-    this.processHighlightedTiles((topLeft, rows, cols) =>
-      this._clipboard = this._rpgMap.copy(topLeft, rows, cols)
-    );
+    this.processHighlightedTiles((topLeft, rows, cols) => {
+      this._clipboard = this._rpgMap.copyTiles(topLeft, rows, cols);
+      return false;
+    });
     this.hideOverlay();
   },
 
   cutTiles: function() {
-    this.processHighlightedTiles((topLeft, rows, cols) =>
-      this._clipboard = this._rpgMap.cut(topLeft, rows, cols)
-    );
+    this.processHighlightedTiles((topLeft, rows, cols) => {
+      this._clipboard = this._rpgMap.cutTiles(topLeft, rows, cols);
+      return true;
+    });
     this.hideOverlay();
   },
 
   pasteTiles: function() {
-    var toPosition = this._rpgMap.paste(this.props.tilePosition.x, this.props.tilePosition.y, this._clipboard);
+    var toPosition = this._rpgMap.pasteTiles(this.props.tilePosition.x, this.props.tilePosition.y, this._clipboard);
     this.unhighlightRange(this.props.tilePosition, toPosition);
     this.hideOverlay();
+    this.props.onMapUpdated();
   },
 
   buttonsMetadata: function() {
@@ -245,6 +258,7 @@ const MapCanvas = React.createClass({
       return [];
     }
     var multipleSelected = this.multipleTilesSelected();
+    var pasteUnavailable = this._clipboard === null || multipleSelected;
     return [
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
@@ -257,7 +271,7 @@ const MapCanvas = React.createClass({
       {label: 'Edit', menuItems: [
         {label: 'Cut', onClick: this.cutTiles},
         {label: 'Copy', onClick: this.copyTiles},
-        {label: 'Paste', onClick: this.pasteTiles, disabled: multipleSelected}
+        {label: 'Paste', onClick: this.pasteTiles, disabled: pasteUnavailable}
       ]}
     ];
   },
@@ -285,7 +299,7 @@ const MapCanvas = React.createClass({
     this.props.onTilePositionUpdated(tilePosition, tile);
   },
 
-  handleMouseOut: function() {
+  removeHighlight: function() {
     if (this.state.showOverlay) {
       return;
     }
@@ -371,7 +385,7 @@ const MapCanvas = React.createClass({
             onMouseMove={this.handleMouseMove}
             onMouseDown={this.handleMouseDown}
             onMouseUp={this.handleMouseUp}
-            onMouseOut={this.handleMouseOut}
+            onMouseOut={this.removeHighlight}
             onContextMenu={this.handleRightClick}
             ref={cvs => this._canvas = cvs} />
 

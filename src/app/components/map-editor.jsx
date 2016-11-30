@@ -63,13 +63,15 @@ const MapEditor = React.createClass({
   closeModal: function() {
     this.setState({
       showModal: null,
-      showProgressModal: false,
-      showWarningModal: false
+      showProgressModal: false
+//      showWarningModal: false
     });
   },
 
   closeProgressModal: function() {
+    console.log("1. closeProgressModal");
     this.setState({ showProgressModal: false });
+    console.log("2. closeProgressModal");
   },
 
   showProgressModal: function(title) {
@@ -150,6 +152,7 @@ const MapEditor = React.createClass({
   },
 
   mapLoaded: function(data, dirty) {
+    console.log("map loaded: " + data.map.getId());
     if (data.map) {
       this.closeModal();
       this.setState({
@@ -161,9 +164,11 @@ const MapEditor = React.createClass({
   },
 
   mapLoadErr: function(mid, data) {
+    console.log("1. map err: " + data.err);
     this.closeProgressModal();
+    console.log("2. map err: " + data.err);
     if (data.err) {
-      // console.log("Error [" + data.err + "]");
+      console.log("3. Error [" + data.err + "]");
       var info = data.status ? data.status + ": " + data.err : data.err;
       this.setState({
         loadError: "Could not load map " + mid + " [" + info + "]",
@@ -721,6 +726,11 @@ function ProgressModal(props) {
  * =============================================================================
  */
 function WarningModal(props) {
+  const onContinue = () => {
+    console.log("continue...");
+    props.onClose();
+    props.onContinue();
+  };
   return (
     <Modal show={props.showModal}>
       <Modal.Header closeButton>
@@ -730,7 +740,7 @@ function WarningModal(props) {
         <Alert bsStyle="warning">This will lose all unsaved changes. Continue?</Alert>
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={props.onContinue} bsStyle="primary">OK</Button>
+        <Button onClick={onContinue} bsStyle="primary">OK</Button>
         <Button onClick={props.onClose}>Cancel</Button>
       </Modal.Footer>
     </Modal>

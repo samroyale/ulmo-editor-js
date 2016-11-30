@@ -276,13 +276,13 @@ class RpgMap {
     return this._mapTiles[0].length;
   }
 
-  cut(topLeft, rows, cols) {
-    var tiles = this.copy(topLeft, rows, cols);
+  cutTiles(topLeft, rows, cols) {
+    var tiles = this.copyTiles(topLeft, rows, cols);
     this.clear(topLeft, rows, cols);
     return tiles;
   }
 
-  copy(topLeft, rows, cols) {
+  copyTiles(topLeft, rows, cols) {
     var tiles = new Array(cols);
     var x = topLeft.x, y = topLeft.y;
     for (var i = 0; i < cols; i++) {
@@ -294,7 +294,7 @@ class RpgMap {
     return tiles;
   }
 
-  paste(x, y, tiles) {
+  pasteTiles(x, y, tiles) {
     var xBound = Math.min(x + tiles.length, this.getCols());
     var yBound = Math.min(y + tiles[0].length, this.getRows());
     for (var i = x; i < xBound; i++) {
@@ -365,6 +365,14 @@ class RpgMap {
         func(this._mapTiles[i][j]);
       }
     }
+  }
+
+  copy() {
+    return new RpgMap(
+      this._id,
+      this._name,
+      this.copyTiles((0, 0), this.getRows(), this.getCols())
+    );
   }
 
   getDto() {
