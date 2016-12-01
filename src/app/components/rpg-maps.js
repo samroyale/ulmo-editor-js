@@ -294,18 +294,39 @@ class RpgMap {
     return tiles;
   }
 
-  pasteTiles(x, y, tiles) {
-    var xBound = Math.min(x + tiles.length, this.getCols());
-    var yBound = Math.min(y + tiles[0].length, this.getRows());
-    for (var i = x; i < xBound; i++) {
-      for (var j = y; j < yBound; j++) {
-        var tile = tiles[i - x][j - y].copy();
-        var mapTile = this._mapTiles[i][j];
-        mapTile.setLevels(tile.getLevels());
-        mapTile.setMaskTiles(tile.getMaskTiles());
+  pasteTiles(topLeft, tiles) {
+    var x = topLeft.x, y = topLeft.y;
+    var xBound = Math.min(tiles.length, this.getCols() - x);
+    var yBound = Math.min(tiles[0].length, this.getRows() - y);
+    var oldTiles = this.copyTiles(topLeft, yBound, xBound);
+    for (var i = 0; i < xBound; i++) {
+      for (var j = 0; j < yBound; j++) {
+        this.applyTile(
+          this._mapTiles[i + x][j + y],
+          tiles[i][j].copy()
+        );
       }
     }
-    return {x: xBound - 1, y: yBound - 1};
+    return oldTiles;
+  }
+
+  applyTiles(topLeft, tiles) {
+    var x = topLeft.x, y = topLeft.y;
+    var xBound = tiles.length, yBound = tiles[0].length;
+    for (var i = 0; i < xBound; i++) {
+      for (var j = 0; j < yBound; j++) {
+        this.applyTile(
+          this._mapTiles[i + x][j + y],
+          tiles[i][j]
+        );
+      }
+    }
+    return {x: xBound + x - 1, y: yBound + y - 1};
+  }
+
+  applyTile(mapTile, tile) {
+    mapTile.setLevels(tile.getLevels());
+    mapTile.setMaskTiles(tile.getMaskTiles());
   }
 
   resize(rpgMap, left, right, top, bottom) {
@@ -356,7 +377,9 @@ class RpgMap {
   }
 
   setMaskTiles(x, y, maskTiles) {
+    var oldTile = this._mapTiles[x][y].copy();
     this._mapTiles[x][y].setMaskTiles(maskTiles);
+    return oldTile;
   }
 
   doStuff(topLeft, rows, cols, func) {

@@ -193,11 +193,15 @@ const MapCanvas = React.createClass({
     this.closeModal();
   },
 
-  applyMaskTilesEdit: function(newMaskTiles) {
-    // mask tiles edit applies to only the current tile
-    var mapTile = this._rpgMap.setMaskTiles(this.props.tilePosition.x, this.props.tilePosition.y, newMaskTiles);
+  applyTilesEdit: function(newMaskTiles) {
+    // tiles edit applies to only the current tile
+    var oldTile = this._rpgMap.setMaskTiles(this.props.tilePosition.x, this.props.tilePosition.y, newMaskTiles);
+    var topLeft = {
+      x: this.props.tilePosition.x,
+      y: this.props.tilePosition.y
+    }
+    this.props.onMapUpdated(topLeft, [[oldTile]]);
     this.closeModal();
-    this.props.onMapUpdated();
   },
 
   processHighlightedTiles: function(func) {
@@ -207,9 +211,10 @@ const MapCanvas = React.createClass({
     var toPosition = this.props.tilePosition;
     var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
     var tr = this.getTileRange(fromPosition, toPosition);
+    var oldTiles = this._rpgMap.copyTiles(tr.topLeft, tr.rows, tr.cols);
     var updated = func(tr.topLeft, tr.rows, tr.cols);
     if (updated) {
-      this.props.onMapUpdated();
+      this.props.onMapUpdated(tr.topLeft, oldTiles);
     }
   },
 
@@ -247,9 +252,19 @@ const MapCanvas = React.createClass({
   },
 
   pasteTiles: function() {
-    var toPosition = this._rpgMap.pasteTiles(this.props.tilePosition.x, this.props.tilePosition.y, this._clipboard);
+    var oldTiles = this._rpgMap.pasteTiles(this.props.tilePosition, this._clipboard);
+    var toPosition = {
+      x: this.props.tilePosition.x + oldTiles.length - 1,
+      y: this.props.tilePosition.y + oldTiles[0].length - 1
+    }
     this.unhighlightRange(this.props.tilePosition, toPosition);
+    this.props.onMapUpdated(this.props.tilePosition, oldTiles);
     this.hideOverlay();
+  },
+
+  applyTiles: function(topLeft, tiles) {
+    var toPosition = this._rpgMap.applyTiles(topLeft, tiles);
+    this.unhighlightRange(topLeft, toPosition);
     this.props.onMapUpdated();
   },
 
@@ -366,7 +381,7 @@ const MapCanvas = React.createClass({
     this.setState({
       showModal: name,
       showOverlay: false,
-      editableTile: mapTile
+      editableTile: mapTile.copy()
     });
   },
 
@@ -405,13 +420,13 @@ const MapCanvas = React.createClass({
             showModal={this.state.showModal === "IMAGES"}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
-            onSubmit={this.applyMaskTilesEdit} />
+            onSubmit={this.applyTilesEdit} />
 
         <MapModal.EditMasksModal
             showModal={this.state.showModal === "MASKS"}
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
-            onSubmit={this.applyMaskTilesEdit} />
+            onSubmit={this.applyTilesEdit} />
       </div>
     );
   }

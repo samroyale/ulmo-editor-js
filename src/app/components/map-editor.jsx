@@ -56,7 +56,8 @@ const MapEditor = React.createClass({
       saveError: null,
       currentTilePosition: null,
       currentTile: null,
-      tileMode: null
+      tileMode: null,
+      changeHistory: []
     };
   },
 
@@ -257,8 +258,33 @@ const MapEditor = React.createClass({
     console.log("Something went wrong...");
   },
 
-  mapUpdated: function() {
+  /*getHistory: function() {
+    var history = sessionStorage.getItem("history");
+    if (!history) {
+      history = [];
+      sessionStorage.setItem("history", history);
+    }
+    return history;
+  },*/
+
+  mapUpdated: function(topLeft, oldTiles) {
     this.setState({ mapDirty: true });
+    if (!topLeft || !oldTiles) {
+      return;
+    }
+    var history = this.state.changeHistory;
+    history.push({
+      topLeft: topLeft,
+      tiles: oldTiles
+    });
+    this.setState( { changeHistory: history });
+  },
+
+  undo: function() {
+    var history = this.state.changeHistory;
+    var lastChange = history.pop();
+    this.setState( { changeHistory: history });
+    this._mapCanvas.applyTiles(lastChange.topLeft, lastChange.tiles);
   },
 
   updateCurrentTile: function(tilePosition, tile) {
@@ -291,6 +317,8 @@ const MapEditor = React.createClass({
               onSaveMap={this.saveMap}
               onShowSaveModal={this.showSaveModal}
               onModeChange={this.setTileControlMode}
+              onUndo={this.undo}
+              noHistory={this.state.changeHistory.length === 0}
               onAdmin={this.props.onAdmin} />
           <MapCanvas
               selectedTile={this.props.selectedTile}
@@ -353,14 +381,15 @@ function MapToolbar(props) {
           selectedTile={props.selectedTile}
           tileMode={props.tileMode}
           onModeChange={props.onModeChange} />
-      <Button onClick={props.onLoadMapsFromServer}>Open Map</Button>
-      <Button onClick={props.onNewMap}>New Map</Button>
-      <Button onClick={props.onResizeMap} disabled={!props.mapPresent}>Resize Map</Button>
+      <Button onClick={props.onLoadMapsFromServer}>Open</Button>
+      <Button onClick={props.onNewMap}>New</Button>
+      <Button onClick={props.onResizeMap} disabled={!props.mapPresent}>Resize</Button>
       <DropdownButton title="File" id="file" disabled={!props.mapPresent}>
         <MenuItem onClick={props.onSaveMap} disabled={!props.mapDirty}>Save</MenuItem>
         <MenuItem onClick={props.onShowSaveModal}>Save as</MenuItem>
         <MenuItem onClick={props.onExport}>Export</MenuItem>
       </DropdownButton>
+      <Button onClick={props.onUndo} disabled={props.noHistory}>Undo</Button>
       <Button bsStyle="link" onClick={props.onAdmin}>Admin</Button>
     </ButtonToolbar>
   );

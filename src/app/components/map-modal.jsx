@@ -281,7 +281,7 @@ const EditImagesModal = React.createClass({
       return [];
     }
     // return a copy of the mask tiles array
-    return props.editableTile.getMaskTiles().slice(0);
+    return props.editableTile.getMaskTiles();
   },
 
   componentDidUpdate: function(oldProps, oldState) {
@@ -435,7 +435,7 @@ const EditMasksModal = React.createClass({
       var item = this.refs["item" + i];
       maskTile.setMaskLevel(this.getMaskLevel(item));
     });
-    this.props.onSubmit(this.state.maskTiles.slice(0).reverse());
+    this.props.onSubmit(this.state.maskTiles.reverse());
   },
 
   getMaskLevel: function(tileMaskItem) {
@@ -468,7 +468,7 @@ const EditMasksModal = React.createClass({
       return [];
     }
     // return a reversed copy of the mask tiles array
-    return props.editableTile.getMaskTiles().slice(0).reverse();
+    return props.editableTile.getMaskTiles().reverse();
   },
 
   componentDidUpdate: function(oldProps, oldState) {
