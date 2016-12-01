@@ -66,14 +66,11 @@ const MapEditor = React.createClass({
     this.setState({
       showModal: null,
       showProgressModal: false
-//      showWarningModal: false
     });
   },
 
   closeProgressModal: function() {
-    console.log("1. closeProgressModal");
     this.setState({ showProgressModal: false });
-    console.log("2. closeProgressModal");
   },
 
   showProgressModal: function(title) {
@@ -163,14 +160,18 @@ const MapEditor = React.createClass({
         loadError: null
       });
     }
+    // oldMap is present only on resize
+    if (data.oldMap) {
+      this.addToChangeHistory({ map: data.oldMap });
+      return;
+    }
+    this.setState({ changeHistory: [] });
   },
 
   mapLoadErr: function(mid, data) {
-    console.log("1. map err: " + data.err);
     this.closeProgressModal();
-    console.log("2. map err: " + data.err);
     if (data.err) {
-      console.log("3. Error [" + data.err + "]");
+      // console.log("Error [" + data.err + "]");
       var info = data.status ? data.status + ": " + data.err : data.err;
       this.setState({
         loadError: "Could not load map " + mid + " [" + info + "]",
@@ -264,11 +265,15 @@ const MapEditor = React.createClass({
     if (!topLeft || !oldTiles) {
       return;
     }
-    var history = this.state.changeHistory;
-    history.push({
+    this.addToChangeHistory({
       topLeft: topLeft,
       tiles: oldTiles
     });
+  },
+
+  addToChangeHistory: function(item) {
+    var history = this.state.changeHistory;
+    history.push(item);
     this.setState( { changeHistory: history });
   },
 
@@ -276,7 +281,15 @@ const MapEditor = React.createClass({
     var history = this.state.changeHistory;
     var lastChange = history.pop();
     this.setState( { changeHistory: history });
-    this._mapCanvas.applyTiles(lastChange.topLeft, lastChange.tiles);
+    if (lastChange.topLeft) {
+      this._mapCanvas.applyTiles(lastChange.topLeft, lastChange.tiles);
+      return;
+    }
+    if (lastChange.map) {
+      this._mapCanvas.applyMap(lastChange.map);
+      return;
+    }
+    console.log("Could not undo (unknown change)");
   },
 
   updateCurrentTile: function(tilePosition, tile) {
@@ -384,7 +397,7 @@ function MapToolbar(props) {
       <Button onClick={props.onUndo} disabled={props.noHistory}>
         <div className="reverse"><Glyphicon glyph="repeat" /></div>
       </Button>
-      <Button bsStyle="link" onClick={props.onAdmin}>Admin</Button>
+      { /*<Button bsStyle="link" onClick={props.onAdmin}>Admin</Button>*/ }
     </ButtonToolbar>
   );
 }
@@ -750,7 +763,6 @@ function ProgressModal(props) {
  */
 function WarningModal(props) {
   const onContinue = () => {
-    console.log("continue...");
     props.onClose();
     props.onContinue();
   };

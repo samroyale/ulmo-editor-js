@@ -58,12 +58,16 @@ const MapCanvas = React.createClass({
     this.removeHighlight(); // resets tile positions
     return rpgMap.then(data => {
       if (data.map) {
-        this._rpgMap = data.map;
-        this.drawMap();
-        this.setState({ showMap: true });
+        this.applyMap(data.map);
       }
       return data;
     });
+  },
+
+  applyMap: function(rpgMap) {
+    this._rpgMap = rpgMap;
+    this.drawMap();
+    this.setState({ showMap: true });
   },
 
   saveMap: function() {

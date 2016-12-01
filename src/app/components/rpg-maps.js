@@ -138,7 +138,7 @@ class RpgMapService {
     return newMap.then(data => {
       var newRpgMap = data.map;
       newRpgMap.resize(rpgMap, left, right, top, bottom);
-      return { map: newRpgMap };
+      return { map: newRpgMap, oldMap: rpgMap };
     });
   }
 
@@ -336,8 +336,8 @@ class RpgMap {
     }
     var rows = rpgMap.getRows() - topLeft.y;
     var cols = rpgMap.getCols() - topLeft.x;
-    var tiles = rpgMap.copy(topLeft, rows, cols);
-    this.paste(Math.max(0, left), Math.max(0, top), tiles);
+    var tiles = rpgMap.copyTiles(topLeft, rows, cols);
+    this.pasteTiles({ x: Math.max(0, left), y: Math.max(0, top) }, tiles);
   }
 
   sendToBack(topLeft, rows, cols) {
