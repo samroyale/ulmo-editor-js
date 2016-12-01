@@ -23,7 +23,8 @@ var Panel = Bootstrap.Panel,
     FormGroup = Bootstrap.FormGroup,
     ControlLabel = Bootstrap.ControlLabel,
     FormControl = Bootstrap.FormControl,
-    ProgressBar = Bootstrap.ProgressBar;
+    ProgressBar = Bootstrap.ProgressBar,
+    Glyphicon = Bootstrap.Glyphicon;
 
 const rpgMapService = new RpgMapService();
 
@@ -258,15 +259,6 @@ const MapEditor = React.createClass({
     console.log("Something went wrong...");
   },
 
-  /*getHistory: function() {
-    var history = sessionStorage.getItem("history");
-    if (!history) {
-      history = [];
-      sessionStorage.setItem("history", history);
-    }
-    return history;
-  },*/
-
   mapUpdated: function(topLeft, oldTiles) {
     this.setState({ mapDirty: true });
     if (!topLeft || !oldTiles) {
@@ -389,7 +381,9 @@ function MapToolbar(props) {
         <MenuItem onClick={props.onShowSaveModal}>Save as</MenuItem>
         <MenuItem onClick={props.onExport}>Export</MenuItem>
       </DropdownButton>
-      <Button onClick={props.onUndo} disabled={props.noHistory}>Undo</Button>
+      <Button onClick={props.onUndo} disabled={props.noHistory}>
+        <div className="reverse"><Glyphicon glyph="repeat" /></div>
+      </Button>
       <Button bsStyle="link" onClick={props.onAdmin}>Admin</Button>
     </ButtonToolbar>
   );
