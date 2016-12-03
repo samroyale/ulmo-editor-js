@@ -1,7 +1,7 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
     MapCanvas = require('./map-canvas.jsx'),
-    RpgMapService = require('./rpg-maps.js'),
+    RpgMaps = require('./rpg-maps.js'),
     utils = require('../utils.js'),
     tileSize = require('../config.js').tileSize,
     loadImage = require('../utils.js').loadImage;
@@ -26,7 +26,7 @@ var Panel = Bootstrap.Panel,
     ProgressBar = Bootstrap.ProgressBar,
     Glyphicon = Bootstrap.Glyphicon;
 
-const rpgMapService = new RpgMapService();
+const rpgMapService = new RpgMaps.RpgMapService();
 
 var insertSuffix = null;
 loadImage("/img/insert-suffix.png", data => insertSuffix = data.img);

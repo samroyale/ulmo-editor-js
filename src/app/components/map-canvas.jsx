@@ -1,7 +1,8 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
     MapModal = require('./map-modal.jsx'),
-    RpgMapService = require('./rpg-maps.js'),
+    RpgMapService = require('./rpg-maps.js').RpgMapService,
+    Clipboard = require('./rpg-maps.js').Clipboard,
     tilePositionMixin = require('./tile-position-mixin.js'),
     tileSize = require('../config.js').tileSize,
     initHighlight = require('../utils.js').initHighlight;
@@ -27,7 +28,7 @@ const MapCanvas = React.createClass({
   _rpgMap: null,
   _canvas: null,
   _mouseDown: null,
-  _clipboard: null,
+  _clipboard: new Clipboard(),
 
   getInitialState: function() {
     return {
@@ -138,15 +139,13 @@ const MapCanvas = React.createClass({
   applySelectedTile: function(fromPosition, toPosition) {
     if (this.props.tileMode === "ADD") {
       this.processHighlightedTiles((topLeft, rows, cols) => {
-        this._rpgMap.addAsMaskTile(topLeft, rows, cols, this.props.selectedTile);
-        return true;
+        return this._rpgMap.addAsMaskTile(topLeft, rows, cols, this.props.selectedTile);
       });
       return;
     }
     if (this.props.tileMode === "INSERT") {
       this.processHighlightedTiles((topLeft, rows, cols) => {
-        this._rpgMap.insertAsMaskTile(topLeft, rows, cols, this.props.selectedTile);
-        return true;
+        return this._rpgMap.insertAsMaskTile(topLeft, rows, cols, this.props.selectedTile);
       });
     }
     // tileMode is either null or SELECT - do nothing
@@ -154,24 +153,21 @@ const MapCanvas = React.createClass({
 
   sendToBack: function() {
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      this._rpgMap.sendToBack(topLeft, rows, cols);
-      return true;
+      return this._rpgMap.sendToBack(topLeft, rows, cols);
     });
     this.hideOverlay();
   },
 
   keepTop: function() {
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      this._rpgMap.keepTop(topLeft, rows, cols);
-      return true;
+      return this._rpgMap.keepTop(topLeft, rows, cols);
     });
     this.hideOverlay();
   },
 
   clear: function() {
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      this._rpgMap.clear(topLeft, rows, cols);
-      return true;
+      return this._rpgMap.clear(topLeft, rows, cols);
     });
     this.hideOverlay();
   },
@@ -191,20 +187,19 @@ const MapCanvas = React.createClass({
   applyLevelsEdit: function(newLevels) {
     // levels edit applies to all selected tiles
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice(0));
-      return true;
+      return this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice(0));
     });
     this.closeModal();
   },
 
   applyTilesEdit: function(newMaskTiles) {
     // tiles edit applies to only the current tile
-    var oldTile = this._rpgMap.setMaskTiles(this.props.tilePosition.x, this.props.tilePosition.y, newMaskTiles);
+    var oldTiles = this._rpgMap.setMaskTiles(this.props.tilePosition.x, this.props.tilePosition.y, newMaskTiles);
     var topLeft = {
       x: this.props.tilePosition.x,
       y: this.props.tilePosition.y
     }
-    this.props.onMapUpdated(topLeft, [[oldTile]]);
+    this.props.onMapUpdated(topLeft, oldTiles);
     this.closeModal();
   },
 
@@ -215,9 +210,8 @@ const MapCanvas = React.createClass({
     var toPosition = this.props.tilePosition;
     var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
     var tr = this.getTileRange(fromPosition, toPosition);
-    var oldTiles = this._rpgMap.copyTiles(tr.topLeft, tr.rows, tr.cols);
-    var updated = func(tr.topLeft, tr.rows, tr.cols);
-    if (updated) {
+    var oldTiles = func(tr.topLeft, tr.rows, tr.cols);
+    if (oldTiles) {
       this.props.onMapUpdated(tr.topLeft, oldTiles);
     }
   },
@@ -241,16 +235,14 @@ const MapCanvas = React.createClass({
 
   copyTiles: function() {
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      this._clipboard = this._rpgMap.copyTiles(topLeft, rows, cols);
-      return false;
+      return this._rpgMap.copyTiles(topLeft, rows, cols, this._clipboard);
     });
     this.hideOverlay();
   },
 
   cutTiles: function() {
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      this._clipboard = this._rpgMap.cutTiles(topLeft, rows, cols);
-      return true;
+      return this._rpgMap.cutTiles(topLeft, rows, cols, this._clipboard);
     });
     this.hideOverlay();
   },
