@@ -1,8 +1,7 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
     MapModal = require('./map-modal.jsx'),
-    RpgMapService = require('./rpg-maps.js').RpgMapService,
-    Clipboard = require('./rpg-maps.js').Clipboard,
+    RpgMapService = require('./rpg-maps.js'),
     tilePositionMixin = require('./tile-position-mixin.js'),
     tileSize = require('../config.js').tileSize,
     initHighlight = require('../utils.js').initHighlight;
@@ -28,7 +27,7 @@ const MapCanvas = React.createClass({
   _rpgMap: null,
   _canvas: null,
   _mouseDown: null,
-  _clipboard: new Clipboard(),
+  _clipboard: rpgMapService.emptyClipboard(),
 
   getInitialState: function() {
     return {
@@ -63,6 +62,10 @@ const MapCanvas = React.createClass({
       }
       return data;
     });
+  },
+
+  restoreMap: function(rpgMap) {
+    this.applyMap(rpgMap);
   },
 
   applyMap: function(rpgMap) {
@@ -258,8 +261,8 @@ const MapCanvas = React.createClass({
     this.hideOverlay();
   },
 
-  applyTiles: function(topLeft, tiles) {
-    var toPosition = this._rpgMap.applyTiles(topLeft, tiles);
+  restoreTiles: function(topLeft, tiles) {
+    var toPosition = this._rpgMap.restoreTiles(topLeft, tiles);
     this.unhighlightRange(topLeft, toPosition);
     this.props.onMapUpdated();
   },

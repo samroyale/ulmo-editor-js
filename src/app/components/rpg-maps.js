@@ -229,6 +229,13 @@ class RpgMapService {
     }
     return tiles;
   }
+
+  /*
+   * So map canvas doesn't need to know anything about clipboards.
+   */
+  emptyClipboard() {
+    return new Clipboard();
+  }
 }
 
 /* =============================================================================
@@ -252,7 +259,10 @@ class Clipboard {
 /* =============================================================================
  * CLASS: RPG MAP
  * -----------------------------------------------------------------------------
- * The model representing a map of tiles.
+ * The model representing a map of tiles. There is a contract here that any
+ * mutator function must return a snapshot of the mutated tiles BEFORE they are
+ * changed. The only exception is the restoreTiles method which is used by undo
+ * to return the tiles to their original state.
  * =============================================================================
  */
 class RpgMap {
@@ -334,7 +344,7 @@ class RpgMap {
     return oldTiles;
   }
 
-  applyTiles(topLeft, tiles) {
+  restoreTiles(topLeft, tiles) {
     var x = topLeft.x, y = topLeft.y;
     var xBound = tiles.length, yBound = tiles[0].length;
     for (var i = 0; i < xBound; i++) {
@@ -591,7 +601,4 @@ class MaskTile {
   }
 }
 
-module.exports = {
-  RpgMapService: RpgMapService,
-  Clipboard: Clipboard
-};
+module.exports = RpgMapService;

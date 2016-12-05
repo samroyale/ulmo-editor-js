@@ -1,7 +1,7 @@
 var React = require('react'),
     Bootstrap = require('react-bootstrap'),
     MapCanvas = require('./map-canvas.jsx'),
-    RpgMaps = require('./rpg-maps.js'),
+    RpgMapService = require('./rpg-maps.js'),
     utils = require('../utils.js'),
     tileSize = require('../config.js').tileSize,
     loadImage = require('../utils.js').loadImage;
@@ -26,7 +26,7 @@ var Panel = Bootstrap.Panel,
     ProgressBar = Bootstrap.ProgressBar,
     Glyphicon = Bootstrap.Glyphicon;
 
-const rpgMapService = new RpgMaps.RpgMapService();
+const rpgMapService = new RpgMapService();
 
 var insertSuffix = null;
 loadImage("/img/insert-suffix.png", data => insertSuffix = data.img);
@@ -282,11 +282,11 @@ const MapEditor = React.createClass({
     var lastChange = history.pop();
     this.setState( { changeHistory: history });
     if (lastChange.topLeft) {
-      this._mapCanvas.applyTiles(lastChange.topLeft, lastChange.tiles);
+      this._mapCanvas.restoreTiles(lastChange.topLeft, lastChange.tiles);
       return;
     }
     if (lastChange.map) {
-      this._mapCanvas.applyMap(lastChange.map);
+      this._mapCanvas.restoreMap(lastChange.map);
       return;
     }
     console.log("Could not undo (unknown change)");
