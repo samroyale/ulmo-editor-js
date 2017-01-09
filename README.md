@@ -1,2 +1,4 @@
 # ulmo-editor-js
-Ulmo Editor react + react boostrap client with javascript build pipeline and node backend
+Ulmo Editor with React + React Bootstrap client
+Client build implemented with create-react-app
+Node + Mongoose + Mongo backend
