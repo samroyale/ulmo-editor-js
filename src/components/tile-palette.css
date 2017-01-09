@@ -1,0 +1,24 @@
+p.with-top-margin {
+  margin: 10px 0 0 ;
+}
+
+div.component {
+  background-color: #eee;
+}
+
+div.component-panel-body {
+  padding: 12px;
+}
+
+div.component-buttons {
+  padding-bottom: 10px;
+}
+
+div.canvas-container {
+  padding: 0;
+  overflow: auto;
+}
+
+canvas.tiles {
+  background-color: #0f0;
+}

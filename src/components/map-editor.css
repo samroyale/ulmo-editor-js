@@ -1,0 +1,31 @@
+p.with-top-margin {
+  margin: 10px 0 0 ;
+}
+
+div.component {
+  background-color: #eee;
+}
+
+div.component-panel-body {
+  padding: 12px;
+}
+
+div.component-buttons {
+  padding-bottom: 10px;
+}
+
+button.tile-button {
+  padding: 8px 5px 0px 8px;
+}
+
+canvas.tile-button-cvs {
+  background-color: #fff;
+}
+
+button.tile-dropdown {
+  padding: 13px 0px 14px 0px;
+}
+
+div.reverse {
+  transform: scale(-1, 1);
+}
