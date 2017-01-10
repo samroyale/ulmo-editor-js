@@ -1,4 +1,4 @@
-import { tileSize } from './config';
+import { tileSize } from '../config';
 
 /* =============================================================================
  * MIXIN: TILE POSITION

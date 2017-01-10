@@ -2,7 +2,7 @@ import React from 'react';
 import { Overlay, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { EditLevelsModal, EditImagesModal, EditMasksModal } from './map-modal';
 import RpgMapService from '../services/rpg-maps';
-import tilePositionMixin from '../tile-position-mixin';
+import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
 import { initHighlight, initTileHighlight } from '../utils';
 import './map-canvas.css';

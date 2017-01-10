@@ -1,7 +1,7 @@
 import React from 'react';
 import { Panel, Modal, ButtonToolbar, Button, Collapse, Alert } from 'react-bootstrap';
 import TileSetService from '../services/tile-sets';
-import tilePositionMixin from '../tile-position-mixin';
+import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
 import { initTile, initTileHighlight } from '../utils';
 import './tile-palette.css';
