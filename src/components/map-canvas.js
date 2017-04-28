@@ -1,6 +1,7 @@
 import React from 'react';
 import { Overlay, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { EditLevelsModal, EditImagesModal, EditMasksModal } from './map-modal';
+import { PlayMapModal } from './play-modal';
 import RpgMapService from '../services/rpg-maps';
 import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
@@ -181,6 +182,11 @@ const MapCanvas = React.createClass({
     this.showModal("MASKS");
   },
 
+  playMap: function() {
+    // console.log(this.props.tilePosition);
+    this.showModal("PLAY");
+  },
+
   applyLevelsEdit: function(newLevels) {
     // levels edit applies to all selected tiles
     this.processHighlightedTiles((topLeft, rows, cols) => {
@@ -266,7 +272,8 @@ const MapCanvas = React.createClass({
       return [];
     }
     var multipleSelected = this.multipleTilesSelected();
-    var pasteUnavailable = this._clipboard === null || multipleSelected;
+    var pasteInvalid = this._clipboard === null || multipleSelected;
+    var playInvalid = this.currentTile().getLevels().length === 0 || multipleSelected;
     return [
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
@@ -279,8 +286,9 @@ const MapCanvas = React.createClass({
       {label: 'Edit', menuItems: [
         {label: 'Cut', onClick: this.cutTiles},
         {label: 'Copy', onClick: this.copyTiles},
-        {label: 'Paste', onClick: this.pasteTiles, disabled: pasteUnavailable}
-      ]}
+        {label: 'Paste', onClick: this.pasteTiles, disabled: pasteInvalid}
+      ]},
+      {label: 'PLAY!', onClick: this.playMap, disabled: playInvalid},
     ];
   },
 
@@ -369,12 +377,15 @@ const MapCanvas = React.createClass({
     this.setState({ showOverlay: false });
   },
 
+  currentTile: function() {
+    return this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
+  },
+
   showModal: function(name) {
-    var mapTile = this._rpgMap.getMapTile(this.props.tilePosition.x, this.props.tilePosition.y);
     this.setState({
       showModal: name,
       showOverlay: false,
-      editableTile: mapTile.copy()
+      editableTile: this.currentTile().copy()
     });
   },
 
@@ -420,6 +431,12 @@ const MapCanvas = React.createClass({
             editableTile={this.state.editableTile}
             onClose={this.closeModal}
             onSubmit={this.applyTilesEdit} />
+
+        <PlayMapModal
+            showModal={this.state.showModal === "PLAY"}
+            tilePosition={this.props.tilePosition}
+            rpgMap={this._rpgMap}
+            onClose={this.closeModal} />
       </div>
     );
   }

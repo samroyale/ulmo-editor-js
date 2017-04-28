@@ -6,6 +6,7 @@ import { tileSize } from '../config';
 import { getDrawingContext, drawTile } from '../utils';
 import './map-modal.css';
 
+
 /* =============================================================================
  * COMPONENT: EDIT LEVELS MODAL
  * =============================================================================
@@ -296,8 +297,8 @@ export const EditImagesModal = React.createClass({
     return position;
   },
 
-  tileListGroup: function() {
-    var tileItems = this.state.maskTiles.map((maskTile, i) => {
+  tileItems: function() {
+    return this.state.maskTiles.map((maskTile, i) => {
       var tilePosition = this.tilePosition(i, this.state.maskTiles.length - 1);
       return (
         <TileImageItem key={i}
@@ -311,7 +312,6 @@ export const EditImagesModal = React.createClass({
           onDelete={this.delete} />
       );
     });
-    return (<ListGroup fill>{tileItems}</ListGroup>);
   },
 
   render: function() {
@@ -325,7 +325,7 @@ export const EditImagesModal = React.createClass({
             <Row>
               <Col className="edit-tiles-col" lg={4}>
                 <Panel className="tile-images-panel" header="Images">
-                  {this.tileListGroup()}
+                  <ListGroup fill>{this.tileItems()}</ListGroup>
                 </Panel>
               </Col>
               <Col className="edit-tiles-col" lg={2}>
@@ -465,8 +465,8 @@ export const EditMasksModal = React.createClass({
     });
   },
 
-  tileListGroup: function() {
-    var tileItems = this.state.maskTiles.map((maskTile, i) => {
+  tileItems: function() {
+    return this.state.maskTiles.map((maskTile, i) => {
       var maskLevel = maskTile.getMaskLevel();
       var maskVertical = false;
       if (maskLevel) {
@@ -479,14 +479,9 @@ export const EditMasksModal = React.createClass({
         maskLevel = '';
       }
       return (
-        <TileMaskItem key={i}
-          index={i}
-          ref={"item" + i}
-          level={maskLevel}
-          vertical={maskVertical} />
+        <TileMaskItem key={i} index={i} ref={"item" + i} level={maskLevel} vertical={maskVertical} />
       );
     });
-    return (<ListGroup fill>{tileItems}</ListGroup>);
   },
 
   render: function() {
@@ -498,7 +493,7 @@ export const EditMasksModal = React.createClass({
         <Modal.Body>
           <form>
             <Panel className="tile-masks-panel" header="Masks">
-              {this.tileListGroup()}
+              <ListGroup fill>{this.tileItems()}</ListGroup>
             </Panel>
           </form>
         </Modal.Body>

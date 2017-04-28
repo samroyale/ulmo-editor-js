@@ -4,7 +4,7 @@
     "dependencies": {
         "express": "~4.8.0",
         "express-history-api-fallback": "~2.0.0",
-        "mongoose": "~3.6.13",
-        "body-parser": "~1.0.1"
+        "body-parser": "~1.0.1",
+        "mongoose": "~4.9.1"
     }
 }

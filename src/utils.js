@@ -23,24 +23,28 @@ export function drawTile(maskTiles, baseTileCanvas) {
 };
 
 export function initTile(colour) {
-  var emptyCanvas = document.createElement("canvas");
-  emptyCanvas.width = tileSize;
-  emptyCanvas.height = tileSize;
-  var ctx = emptyCanvas.getContext('2d');
-  ctx.fillStyle = colour;
-  ctx.fillRect(0, 0, tileSize, tileSize);
-  return emptyCanvas;
+  return initRect(colour, tileSize, tileSize);
 };
+
+export function initRect(colour, width, height) {
+  var canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = colour;
+  ctx.fillRect(0, 0, width, height);
+  return canvas;
+}
 
 export function initHighlight(rows, cols) {
   // console.log(rows + ", " + cols);
-  var highlightCanvas = document.createElement("canvas");
-  highlightCanvas.width = tileSize * cols;
-  highlightCanvas.height = tileSize * rows;
-  var ctx = highlightCanvas.getContext('2d');
+  var canvas = document.createElement("canvas");
+  canvas.width = tileSize * cols;
+  canvas.height = tileSize * rows;
+  var ctx = canvas.getContext('2d');
   // transparent rect
   ctx.beginPath();
-  ctx.rect(0, 0, highlightCanvas.width, highlightCanvas.height);
+  ctx.rect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = 'rgba(0, 0, 0, 0)';
   ctx.fill();
   ctx.closePath();
@@ -53,7 +57,7 @@ export function initHighlight(rows, cols) {
   ctx.fillStyle = 'white';
   ctx.fill();
   ctx.closePath();
-  return highlightCanvas;
+  return canvas;
 };
 
 export function initTileHighlight() {

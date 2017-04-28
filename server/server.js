@@ -304,7 +304,7 @@ app.use('/api', router);
 // static content
 const root = __dirname + '/static';
 app.use(express.static(root))
-app.use(fallback('index.html', { root }))
+app.use(fallback('index.html', { root: root }))
 //app.use(express.static(__dirname + '/static'));
 
 // START THE SERVER
