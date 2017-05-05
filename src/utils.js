@@ -77,3 +77,46 @@ export function loadImage(imageUrl, callback) {
   //tileSetImage.crossOrigin = "Anonymous"; // CORS
   image.src = imageUrl;
 };
+
+export class Rect {
+  constructor(x, y, width, height) {
+    this.width = width;
+    this.height = height;
+    this.left = x;
+    this.top = y;
+    this._update();
+  }
+
+  _update() {
+    this.right = this.left + this.width - 1;
+    this.bottom = this.top + this.height - 1;
+  }
+
+  move(mx, my) {
+    return new Rect(this.left + mx, this.top + my, this.width, this.height);
+  }
+
+  moveInPlace(mx, my) {
+    this.left += mx;
+    this.top += my;
+    this._update();
+  }
+
+  getTopleft() {
+    return {
+      x: this.left,
+      y: this.top
+    };
+  }
+
+  getBottomRight() {
+    return {
+      x: this.right,
+      y: this.bottom
+    };
+  }
+};
+
+Rect.prototype.toString = function rectToString() {
+    return 'Rect [left: ' + this.left + ', top: ' + this.top + ', width: ' + this.width + ', height: ' + this.height + ']';
+};

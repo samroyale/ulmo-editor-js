@@ -1,7 +1,7 @@
 import React from 'react';
 import { Overlay, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { EditLevelsModal, EditImagesModal, EditMasksModal } from './map-modal';
-import { PlayMapModal } from './play-modal';
+import { PlayMapModal } from '../play/play-modal';
 import RpgMapService from '../services/rpg-maps';
 import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
