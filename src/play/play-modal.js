@@ -133,21 +133,25 @@ export const PlayMapModal = React.createClass({
         }
         // console.log("play loop called: " + this._direction);
         var directionBits = this.processKeysDown();
-        if (directionBits === this._directionBits) {
-            if (this._deferredMovement) {
-                // applyDeferredMovement
-                return;
-            }
+        if (this._deferredMovement && directionBits === this._directionBits) {
+            this.applyDeferredMovement();
         }
-        this._directionBits = directionBits;
-        var movement = this.getMovement(directionBits);
-        if (movement) {
-            //console.log(this._px + ":" + this._py);
-            this.movePlayer(movement[0], movement[1]);
-            this.viewMap(this._playerRect);
+        else {
+            this._directionBits = directionBits;
+            var movement = this.getMovement(directionBits);
+            if (movement) {
+                //console.log(this._px + ":" + this._py);
+                this.movePlayer(movement[0], movement[1]);
+                this.viewMap(this._playerRect);
+            }
         }
         this.processKeysUp();
         setTimeout(this.playLoop, 17);
+    },
+
+    applyDeferredMovement() {
+        var [level, mx, my] = this._deferredMovement;
+        this.applyMovement(level, mx, my);
     },
 
     applyMovement: function(newLevel, mx, my) {
@@ -171,6 +175,12 @@ export const PlayMapModal = React.createClass({
         this._playerLevel = newLevel;
         // draw player in new position
         this._playerBackground = this.showPlayer(ctx);
+        // reset deferred movement
+        this._deferredMovement = null;
+    },
+
+    deferMovement: function(newLevel, mx, my) {
+        this._deferredMovement = [newLevel, mx, my];
     },
 
     movePlayer: function(mx, my) {
@@ -209,17 +219,18 @@ export const PlayMapModal = React.createClass({
         if (mx === 0) {
             var [valid, level, shuffle] = this._playMap.isVerticalValid(this._playerLevel, this._baseRect);
             if (valid) {
-                this.applyMovement(level, shuffle, 0);
+                this.deferMovement(level, shuffle, 0);
             }
             return valid;
         }
         // check if we can shuffle vertically
-        var [valid, level, shuffle] = this._playMap.isHorizontalValid(this._playerLevel, this._baseRect);
+        [valid, level, shuffle] = this._playMap.isHorizontalValid(this._playerLevel, this._baseRect);
         if (valid) {
-            this.applyMovement(level, 0, shuffle);
+            this.deferMovement(level, 0, shuffle);
         }
         return valid;
     },
+
     // def shuffle(self, movement):
     //     px, py, direction, diagonal = movement
     //     # check if we can shuffle horizontally
@@ -238,13 +249,13 @@ export const PlayMapModal = React.createClass({
         var newBaseRect = this._baseRect.move(mx, 0);
         var [moveValid, newLevel] =  this._playMap.isMoveValid(this._playerLevel, newBaseRect);
         if (moveValid) {
-            this.applyMovementWithBaseRect(newLevel, mx, 0, newBaseRect);
+            this.deferMovement(newLevel, mx, 0);
             return moveValid;
         }
         newBaseRect = this._baseRect.move(0, my);
         [moveValid, newLevel] =  this._playMap.isMoveValid(this._playerLevel, newBaseRect);
         if (moveValid) {
-            this.applyMovementWithBaseRect(newLevel, 0, my, newBaseRect);
+            this.deferMovement(newLevel, 0, my);
         }
         return moveValid;
     },

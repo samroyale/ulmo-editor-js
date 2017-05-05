@@ -14,9 +14,6 @@ const maxShuffle = {
     shuffle2: -2
 };
 
-const MIN_SHUFFLE = [0, -1, -1, 1],
-      MAX_SHUFFLE = [-1, 1, 0, -1];
-
 /* =============================================================================
  * CLASS: PLAY TILE
  * =============================================================================
@@ -43,7 +40,7 @@ class PlayTile {
     }
 
     addLevel(levelStr) {
-        this.levels.push(Number.parseInt(levelStr));
+        this.levels.push(Number.parseInt(levelStr, 10));
     }
 
     addSpecialLevel(levelStr) {
@@ -187,13 +184,13 @@ class PlayMap {
 
     _isShuffleValid(stripes, keys, level, shuffle) {
         var stripe = stripes.get(keys[shuffle.index1]);
-        var [valid, level] = this.isSpanValid(level, stripe);
+        var [valid, newLevel] = this.isSpanValid(level, stripe);
         if (valid) {
-            return [valid, level, shuffle.shuffle1];
+            return [valid, newLevel, shuffle.shuffle1];
         }
         stripe = stripes.get(keys[shuffle.index2]);
-        [valid, level] = this.isSpanValid(level, stripe);
-        return [valid, level, shuffle.shuffle2];
+        [valid, newLevel] = this.isSpanValid(level, stripe);
+        return [valid, newLevel, shuffle.shuffle2];
     }
 //     def isShuffleValid(self, stripes, sortedKeys, level, shuffle):
 //     index1, shuffle1, index2, shuffle2 = shuffle
