@@ -15,18 +15,40 @@ const maxShuffle = {
 };
 
 /* =============================================================================
+ * CLASS: MASK INFO
+ * =============================================================================
+ */
+class MaskInfo {
+    constructor(tileIndex, level, flat, y) {
+        this.level = level;
+        this.flat = flat;
+        this.tileIndex = tileIndex;
+        this.z1 = (y + 1) * tileSize + level * tileSize - 1;
+        this.z2 = this.flat ? this.z1 : this.z1 + tileSize;
+    }
+}
+
+/* =============================================================================
  * CLASS: PLAY TILE
  * =============================================================================
  */
 class PlayTile {
-    constructor(mapTile) {
+    constructor(mapTile, x, y) {
+        this.x = x;
+        this.y = y;
+
+        // tile images
+        this.tileImages = [];
+        mapTile.getMaskTiles().forEach(maskTile => {
+            this.tileImages.push(maskTile.getTile().getCanvas());
+        });
+
+        // levels
         this.levels = [];
         this.specialLevels = null;
         this.downLevels = null;
-        this.verticals = null;
-        this.horizontals = null;
         mapTile.getLevels().forEach(level => {
-            var firstChar = level.toString()[0];
+            var firstChar = level[0];
             if (firstChar === 'S') {
                 this.addSpecialLevel(level);
                 return;
@@ -37,6 +59,24 @@ class PlayTile {
             }
             this.addLevel(level);
         });
+
+        // masks
+        this.masks = null;
+        mapTile.getMaskTiles().forEach((maskTile, i) => {
+            var maskLevel = maskTile.getMaskLevel();
+            if (maskLevel) {
+                var firstChar = maskLevel[0];
+                if (firstChar === 'V') {
+                    this.addMask(i, Number.parseInt(maskLevel.substr(1), 10), false, y);
+                    return;
+                }
+                this.addMask(i, Number.parseInt(maskLevel, 10), true, y);
+            }
+        });
+
+        // other stuff
+        this.verticals = null;
+        this.horizontals = null;
     }
 
     addLevel(levelStr) {
@@ -61,6 +101,13 @@ class PlayTile {
             this.downLevels = new Map();
         }
         this.downLevels.set(level, level);
+    }
+
+    addMask(tileIndex, level, flat, y) {
+        if (!this.masks) {
+            this.masks = [];
+        }
+        this.masks.push(new MaskInfo(tileIndex, level, flat, y));
     }
 
     testValidity(level) {
@@ -110,6 +157,22 @@ class PlayTile {
         }
     }
 
+    getMasks(spriteZ, spriteUpright) {
+        if (!this.masks) {
+            return null;
+        }
+        var activeMasks = [];
+        this.masks.forEach(maskInfo => {
+            var tileZ = spriteUpright ? maskInfo.z1 : maskInfo.z2;
+            if (spriteUpright) {
+                if (tileZ > spriteZ) {
+                    activeMasks.push(this.tileImages[maskInfo.tileIndex]);
+                }
+            }
+        });
+        return activeMasks;
+    }
+
     getALevel() {
         return this.levels[0];
     }
@@ -129,7 +192,7 @@ class PlayMap {
         for (var x = 0; x < this.cols; x++) {
             tiles[x] = new Array(this.rows);
             for (var y = 0; y < this.rows; y++) {
-                tiles[x][y] = new PlayTile(rpgMap.getMapTile(x, y));
+                tiles[x][y] = new PlayTile(rpgMap.getMapTile(x, y), x, y);
             }
         }
         this.tiles = tiles;
@@ -143,7 +206,7 @@ class PlayMap {
         if ((baseRect.left < 0) || (baseRect.right >= this.width)) {
             return true;
         }
-        console.log(baseRect.bottom + ' :: ' + this.height);
+        // console.log(baseRect.bottom + ' :: ' + this.height);
         if ((baseRect.top < 0) || (baseRect.bottom >= this.height)) {
             return true;
         }
@@ -233,11 +296,41 @@ class PlayMap {
         return this._isStripeValid(level, this.horizontals, baseRect.top, baseRect.bottom);
     }
 
+    getMasksForUpright(spriteRect, spriteZ) {
+        return this.getMasks(spriteRect, spriteZ, true);
+    }
+
+    getMasks(spriteRect, spriteZ, spriteUpright) {
+        var spriteTiles = this._getSpanTiles(spriteRect);
+        var masks = [];
+        spriteTiles.forEach(tile => {
+            // TODO do we need to check the tile exists?
+            var tileMasks = tile.getMasks(spriteZ, spriteUpright);
+            if (tileMasks) {
+                masks.push({
+                    x: tile.x,
+                    y: tile.y,
+                    tileMasks: tileMasks
+                });
+            }
+        });
+        return masks;
+    }
+    // def getMasks(self, sprite):
+    //     spriteTiles = self.getSpanTiles(sprite.mapRect)
+    //     masks = {}
+    //     for tile in spriteTiles:
+    //         if tile:
+    //             tileMasks = tile.getMasks(sprite.level, sprite.z, sprite.upright)
+    //             if tileMasks:
+    //                 masks[(tile.x, tile.y)] = tileMasks
+    //     return masks
+
     _getSpanTiles(rect) {
         var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
         var rectTiles = [];
-        for (var x = tx1; x <= tx2; x++) {
-            for (var y = ty1; y <= ty2; y++) {
+        for (var x = tx1; x < tx2; x++) {
+            for (var y = ty1; y < ty2; y++) {
                 rectTiles.push(this.tiles[x][y]);
             }
         }
@@ -273,18 +366,5 @@ class PlayMap {
         return [tx1, ty1, tx2, ty2];
     }
 }
-
-/* =============================================================================
- * CLASS: MASK INFO
- * =============================================================================
- */
-// class MaskInfo {
-//     constructor(tileIndex, level, flat, y) {
-//         this.level = level;
-//         this.flat = flat;
-//         this.tileIndex = tileIndex;
-//         this.z = (y + 1) * tileSize + level * tileSize - 1;
-//     }
-// }
 
 export default PlayMap;

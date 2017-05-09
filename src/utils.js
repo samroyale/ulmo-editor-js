@@ -27,27 +27,33 @@ export function initTile(colour) {
 };
 
 export function initRect(colour, width, height) {
-  var canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  var canvas = initTransparentRect(width, height);
   var ctx = canvas.getContext('2d');
   ctx.fillStyle = colour;
   ctx.fillRect(0, 0, width, height);
   return canvas;
 }
 
+export function initTransparentRect(width, height) {
+  var canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  // canvas transparent by default?
+  return canvas;
+}
+
 export function initHighlight(rows, cols) {
   // console.log(rows + ", " + cols);
-  var canvas = document.createElement("canvas");
-  canvas.width = tileSize * cols;
-  canvas.height = tileSize * rows;
+  var canvas = initTransparentRect(tileSize * cols, tileSize * rows);
+  // canvas.width = tileSize * cols;
+  // canvas.height = tileSize * rows;
   var ctx = canvas.getContext('2d');
   // transparent rect
-  ctx.beginPath();
-  ctx.rect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0)';
-  ctx.fill();
-  ctx.closePath();
+  // ctx.beginPath();
+  // ctx.rect(0, 0, canvas.width, canvas.height);
+  // ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+  // ctx.fill();
+  // ctx.closePath();
   // white border, 2px thick
   ctx.beginPath();
   ctx.rect(0, 0, tileSize * cols, 2);

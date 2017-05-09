@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { tileSize, viewWidth, viewHeight } from '../config';
-import { initRect, Rect } from '../utils';
+import { initRect, initTransparentRect, Rect } from '../utils';
 import PlayMap from './play-map';
 import './play-modal.css';
 
@@ -39,10 +39,13 @@ export const PlayMapModal = React.createClass({
     _playMap: null,
 
     _playerCanvas: null,
+    _unspoiledPlayerCanvas: null,
     _playerBackground: null,
     _playerRect: null,
     _playerLevel: null,
+    _playerZ: null,
     _baseRect: null,
+    _masked: false,
 
     _keysDown: null,
     _keysUp: [],
@@ -166,13 +169,16 @@ export const PlayMapModal = React.createClass({
 
     performMovement: function (newLevel, mx, my) {
         // restore background of current position
+        console.log('perform movement');
         var ctx = this._fullMapCanvas.getContext('2d');
         this._restoreBackground(ctx);
+        this._clearMasks();
         // perform movement
         this._playerRect.moveInPlace(mx, my);
         // console.log(this._baseRect);
         // console.log(this._playerRect);
         this._playerLevel = newLevel;
+        this._getAndApplyMasks();
         // draw player in new position
         this._playerBackground = this.showPlayer(ctx);
         // reset deferred movement
@@ -277,6 +283,54 @@ export const PlayMapModal = React.createClass({
     _restoreBackground(ctx) {
         ctx.putImageData(this._playerBackground, this._playerRect.left, this._playerRect.top);
     },
+
+    _clearMasks() {
+        if (this.masked) {
+            console.log('clear masks');
+            this.masked = false;
+            this._playerCanvas = this._unspoiledPlayerCanvas;
+        }
+    },
+
+    _getAndApplyMasks() {
+        console.log('get and apply masks');
+        this._playerZ = this._updatePlayerZ();
+        var masks = this._playMap.getMasksForUpright(this._playerRect, this._playerZ);
+        //var masks = this._playMap.getMasks(this._playerRect, this._playerZ, false);
+        this._applyMasks(masks);
+    },
+
+    // masks is a list of lists + x, y values
+    _applyMasks(masks) {
+        console.log('apply masks');
+        if (masks.length > 0) {
+            console.log('masks: ' + masks);
+            this.masked = true;
+            this._unspoiledPlayerCanvas = this._copyPlayerCanvas();
+            masks.forEach(mask => {
+                var px = mask.x * tileSize - this._playerRect.left;
+                var py = mask.y * tileSize - this._playerRect.top;
+                var ctx = this._playerCanvas.getContext('2d');
+                console.log('mask: [' + px + ', ' + py + ']');
+                mask.tileMasks.forEach(tileMask => {
+                    ctx.drawImage(tileMask, px, py);
+                });
+            });
+        }
+    },
+
+    _copyPlayerCanvas() {
+        var canvas = initTransparentRect(this._playerCanvas.width, this._playerCanvas.height);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(this._playerCanvas, 0, 0);
+        return canvas;
+    },
+
+    _updatePlayerZ() {
+        return Math.floor(this._playerRect.bottom + this._playerLevel * tileSize);
+    },
+    // def calculateZ(self):
+    //     return int(self.mapRect.bottom + self.level * TILE_SIZE)
 
     showPlayer: function(ctx) {
         var background = ctx.getImageData(this._playerRect.left, this._playerRect.top,
