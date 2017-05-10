@@ -94,8 +94,8 @@ export class Rect {
   }
 
   _update() {
-    this.right = this.left + this.width - 1;
-    this.bottom = this.top + this.height - 1;
+    this.right = this.left + this.width;
+    this.bottom = this.top + this.height;
   }
 
   move(mx, my) {

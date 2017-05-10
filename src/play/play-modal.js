@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { tileSize, viewWidth, viewHeight } from '../config';
-import { initRect, initTransparentRect, Rect } from '../utils';
+import { drawTile, initRect, initTile, initTransparentRect, Rect } from '../utils';
 import PlayMap from './play-map';
 import './play-modal.css';
 
@@ -67,21 +67,22 @@ export const PlayMapModal = React.createClass({
         var ctx = mapCanvas.getContext('2d');
         for (var x = 0; x < cols; x++) {
             for (var y = 0; y < rows; y++) {
-                ctx.putImageData(this.state.rpgMap.getMapTile(x, y).getImage(), x * tileSize, y * tileSize);
+                var tileCanvas = drawTile(this.state.rpgMap.getMapTile(x, y).getMaskTiles(), initTile('black'));
+                ctx.drawImage(tileCanvas, x * tileSize, y * tileSize);
             }
         }
         return mapCanvas;
     },
 
     viewMap: function(playerRect) {
-        // var tlx = Math.max(0, px + (tileSize / 2) - (viewWidth / 2));
-        // var tly = Math.max(0, py + (tileSize / 2) - (viewHeight / 2));
         var tlx = Math.max(0, playerRect.left + (playerRect.width / 2) - (viewWidth / 2));
         var tly = Math.max(0, playerRect.top + (playerRect.height / 2) - (viewHeight / 2));
         tlx = Math.min(tlx, this._fullMapCanvas.width - viewWidth);
         tly = Math.min(tly, this._fullMapCanvas.height - viewHeight);
         var viewCtx = this._canvas.getContext('2d');
-        viewCtx.drawImage(this._fullMapCanvas, tlx, tly, viewWidth, viewHeight, 0, 0, viewWidth, viewHeight);
+        viewCtx.drawImage(this._fullMapCanvas,
+            tlx < 0 ? tlx / 2 : tlx, tly < 0 ? tly / 2 : tly, viewWidth, viewHeight,
+            0, 0, viewWidth, viewHeight);
     },
 
     initPlayer: function(tx, ty) {
@@ -121,8 +122,6 @@ export const PlayMapModal = React.createClass({
             this._keysDown = Array(128).fill(false);
             this._fullMapCanvas = this.drawMap();
             this._playMap = new PlayMap(this.state.rpgMap);
-            // this._px = this.props.tilePosition.x * tileSize + marginX;
-            // this._py = this.props.tilePosition.y * tileSize + marginY;
             this.initPlayer(this.props.tilePosition.x, this.props.tilePosition.y);
             this._playerBackground = this.showPlayer(this._fullMapCanvas.getContext('2d'));
             this.viewMap(this._playerRect);
@@ -159,25 +158,24 @@ export const PlayMapModal = React.createClass({
 
     applyMovement: function(newLevel, mx, my) {
         this._baseRect.moveInPlace(mx, my);
-        this.performMovement(newLevel, mx, my)
+        this.performMovement(newLevel, this._playerRect.move(mx, my));
     },
 
-    applyMovementWithBaseRect(newLevel, mx, my, newBaseRect) {
+    applyMovementWithBaseRect(newLevel, newBaseRect, newPlayerRect) {
         this._baseRect = newBaseRect;
-        this.performMovement(newLevel, mx, my)
+        this.performMovement(newLevel, newPlayerRect);
     },
 
-    performMovement: function (newLevel, mx, my) {
-        // restore background of current position
+    performMovement: function (newLevel, newPlayerRect) {
         console.log('perform movement');
         var ctx = this._fullMapCanvas.getContext('2d');
-        this._restoreBackground(ctx);
-        this._clearMasks();
+        // this._clearMasks();
+        this._restoreBackground(ctx); // must happen before playerRect updated
         // perform movement
-        this._playerRect.moveInPlace(mx, my);
         // console.log(this._baseRect);
         // console.log(this._playerRect);
         this._playerLevel = newLevel;
+        this._playerRect = newPlayerRect;
         this._getAndApplyMasks();
         // draw player in new position
         this._playerBackground = this.showPlayer(ctx);
@@ -190,17 +188,17 @@ export const PlayMapModal = React.createClass({
     },
 
     movePlayer: function(mx, my) {
-        var newBaseRect = this._baseRect.move(mx, my);
-
         // check requested movement falls within map boundary
-        if (this._playMap.isMapBoundaryBreached(newBaseRect)) {
+        var newPlayerRect = this._playerRect.move(mx, my);
+        if (this._playMap.isMapBoundaryBreached(newPlayerRect)) {
             return;
         }
 
         // check requested movement is valid
+        var newBaseRect = this._baseRect.move(mx, my);
         var [moveValid, newLevel] =  this._playMap.isMoveValid(this._playerLevel, newBaseRect);
         if (moveValid) {
-            this.applyMovementWithBaseRect(newLevel, mx, my, newBaseRect);
+            this.applyMovementWithBaseRect(newLevel, newBaseRect, newPlayerRect);
             return;
         }
 
@@ -237,20 +235,6 @@ export const PlayMapModal = React.createClass({
         return valid;
     },
 
-    // def shuffle(self, movement):
-    //     px, py, direction, diagonal = movement
-    //     # check if we can shuffle horizontally
-    //     if px == 0:
-    //         valid, level, shuffle = self.rpgMap.isVerticalValid(self.level, self.baseRect)
-    //         if valid:
-    //             self.deferMovement(level, direction, px + shuffle * MOVE_UNIT, 0)
-    //         return valid
-    //     # check if we can shuffle vertically
-    //     valid, level, shuffle = self.rpgMap.isHorizontalValid(self.level, self.baseRect)
-    //     if valid:
-    //         self.deferMovement(level, direction, 0, py + shuffle * MOVE_UNIT)
-    //     return valid
-
     _slide(mx, my) {
         var newBaseRect = this._baseRect.move(mx, 0);
         var [moveValid, newLevel] =  this._playMap.isMoveValid(this._playerLevel, newBaseRect);
@@ -265,46 +249,28 @@ export const PlayMapModal = React.createClass({
         }
         return moveValid;
     },
-    // def slide(self, movement):
-    //     px, py, direction, diagonal = movement
-    //     # check if we can slide horizontally
-    //     xBaseRect = self.baseRect.move(px, 0)
-    //     valid, level = self.rpgMap.isMoveValid(self.level, xBaseRect)
-    //     if valid:
-    //         self.deferMovement(level, direction, px, 0)
-    //         return valid
-    //     # check if we can slide vertically
-    //     yBaseRect = self.baseRect.move(0, py)
-    //     valid, level = self.rpgMap.isMoveValid(self.level, yBaseRect)
-    //     if valid:
-    //         self.deferMovement(level, direction, 0, py)
-    //     return valid
 
     _restoreBackground(ctx) {
         ctx.putImageData(this._playerBackground, this._playerRect.left, this._playerRect.top);
     },
 
-    _clearMasks() {
+    _getAndApplyMasks() {
         if (this.masked) {
-            console.log('clear masks');
+            // console.log('clear masks');
             this.masked = false;
             this._playerCanvas = this._unspoiledPlayerCanvas;
         }
-    },
-
-    _getAndApplyMasks() {
-        console.log('get and apply masks');
+        // console.log('get and apply masks');
         this._playerZ = this._updatePlayerZ();
         var masks = this._playMap.getMasksForUpright(this._playerRect, this._playerZ);
-        //var masks = this._playMap.getMasks(this._playerRect, this._playerZ, false);
         this._applyMasks(masks);
     },
 
     // masks is a list of lists + x, y values
     _applyMasks(masks) {
-        console.log('apply masks');
+        // console.log('apply masks');
         if (masks.length > 0) {
-            console.log('masks: ' + masks);
+            // console.log('masks: ' + masks);
             this.masked = true;
             this._unspoiledPlayerCanvas = this._copyPlayerCanvas();
             masks.forEach(mask => {
@@ -329,8 +295,6 @@ export const PlayMapModal = React.createClass({
     _updatePlayerZ() {
         return Math.floor(this._playerRect.bottom + this._playerLevel * tileSize);
     },
-    // def calculateZ(self):
-    //     return int(self.mapRect.bottom + self.level * TILE_SIZE)
 
     showPlayer: function(ctx) {
         var background = ctx.getImageData(this._playerRect.left, this._playerRect.top,

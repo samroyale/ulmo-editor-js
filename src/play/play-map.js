@@ -203,11 +203,11 @@ class PlayMap {
     }
 
     isMapBoundaryBreached(baseRect) {
-        if ((baseRect.left < 0) || (baseRect.right >= this.width)) {
+        if ((baseRect.left < 0) || (baseRect.right > this.width)) {
             return true;
         }
         // console.log(baseRect.bottom + ' :: ' + this.height);
-        if ((baseRect.top < 0) || (baseRect.bottom >= this.height)) {
+        if ((baseRect.top < 0) || (baseRect.bottom > this.height)) {
             return true;
         }
         return false;
@@ -241,7 +241,6 @@ class PlayMap {
     }
 
     isMoveValid(level, baseRect) {
-        // return this.isSpanValid(level, this._getSpanTiles(baseRect));
         return this.isSpanValid(level, this._getSpanTilesAndCacheStripes(baseRect));
     }
 
@@ -255,15 +254,6 @@ class PlayMap {
         [valid, newLevel] = this.isSpanValid(level, stripe);
         return [valid, newLevel, shuffle.shuffle2];
     }
-//     def isShuffleValid(self, stripes, sortedKeys, level, shuffle):
-//     index1, shuffle1, index2, shuffle2 = shuffle
-//     stripe = stripes[sortedKeys[index1]]
-//     valid, level = self.isSpanValid(level, stripe)
-//     if valid:
-//       return valid, level, shuffle1
-//     stripe = stripes[sortedKeys[index2]]
-//     valid, level = self.isSpanValid(level, stripe)
-//     return valid, level, shuffle2
 
     _isStripeValid(level, stripes, min, max) {
         if (stripes.size < 2) {
@@ -277,16 +267,6 @@ class PlayMap {
         }
         return this._isShuffleValid(stripes, keys, level, maxShuffle);
     }
-    // def isStripeValid(self, level, stripes, min, max):
-    // if len(stripes) < 2:
-    //   return False, level, 0
-    // sortedKeys = sorted(stripes.keys())
-    // minDiff = abs(sortedKeys[0] * TILE_SIZE - min)
-    // maxDiff = abs((sortedKeys[-1] + 1) * TILE_SIZE - max)
-    // if minDiff < maxDiff:
-    //   return self.isShuffleValid(stripes, sortedKeys, level, MIN_SHUFFLE)
-    // return self.isShuffleValid(stripes, sortedKeys, level, MAX_SHUFFLE)
-
 
     isVerticalValid(level, baseRect) {
         return this._isStripeValid(level, this.verticals, baseRect.left, baseRect.right);
@@ -359,10 +339,10 @@ class PlayMap {
     }
 
     _convertRect(rect) {
-        var tx1 = Math.floor(rect.left / tileSize);
-        var ty1 = Math.floor(rect.top / tileSize);
-        var tx2 = Math.floor(rect.right / tileSize) + 1;
-        var ty2 = Math.floor(rect.bottom / tileSize) + 1;
+        var tx1 = Math.max(0, Math.floor(rect.left / tileSize));
+        var ty1 = Math.max(0, Math.floor(rect.top / tileSize));
+        var tx2 = Math.min(this.cols - 1, Math.floor((rect.right - 1) / tileSize)) + 1;
+        var ty2 = Math.min(this.rows - 1, Math.floor((rect.bottom - 1) / tileSize)) + 1;
         return [tx1, ty1, tx2, ty2];
     }
 }
