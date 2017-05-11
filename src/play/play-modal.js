@@ -167,13 +167,10 @@ export const PlayMapModal = React.createClass({
     },
 
     performMovement: function (newLevel, newPlayerRect) {
-        console.log('perform movement');
         var ctx = this._fullMapCanvas.getContext('2d');
-        // this._clearMasks();
         this._restoreBackground(ctx); // must happen before playerRect updated
-        // perform movement
-        // console.log(this._baseRect);
-        // console.log(this._playerRect);
+        // update rects
+        // console.log(this._baseRect + " : " + this._playerRect);
         this._playerLevel = newLevel;
         this._playerRect = newPlayerRect;
         this._getAndApplyMasks();
@@ -262,22 +259,20 @@ export const PlayMapModal = React.createClass({
         }
         // console.log('get and apply masks');
         this._playerZ = this._updatePlayerZ();
-        var masks = this._playMap.getMasksForUpright(this._playerRect, this._playerZ);
+        var masks = this._playMap.getMasksForUpright(this._playerRect, this._playerZ, this._playerLevel);
+        // var masks = this._playMap.getMasks(this._playerRect, this._playerZ, this._playerLevel, false);
         this._applyMasks(masks);
     },
 
     // masks is a list of lists + x, y values
     _applyMasks(masks) {
-        // console.log('apply masks');
         if (masks.length > 0) {
-            // console.log('masks: ' + masks);
             this.masked = true;
             this._unspoiledPlayerCanvas = this._copyPlayerCanvas();
             masks.forEach(mask => {
                 var px = mask.x * tileSize - this._playerRect.left;
                 var py = mask.y * tileSize - this._playerRect.top;
                 var ctx = this._playerCanvas.getContext('2d');
-                console.log('mask: [' + px + ', ' + py + ']');
                 mask.tileMasks.forEach(tileMask => {
                     ctx.drawImage(tileMask, px, py);
                 });

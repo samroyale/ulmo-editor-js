@@ -23,8 +23,9 @@ class MaskInfo {
         this.level = level;
         this.flat = flat;
         this.tileIndex = tileIndex;
-        this.z1 = (y + 1) * tileSize + level * tileSize - 1;
-        this.z2 = this.flat ? this.z1 : this.z1 + tileSize;
+        // this.z1 = (y + 1) * tileSize + level * tileSize;
+        this.z1 = tileSize * (y + level + 1);
+        this.z2 = flat ? this.z1 + tileSize : this.z1 + 2 * tileSize;
     }
 }
 
@@ -157,17 +158,18 @@ class PlayTile {
         }
     }
 
-    getMasks(spriteZ, spriteUpright) {
+    getMasks(spriteZ, spriteLevel, spriteUpright) {
         if (!this.masks) {
             return null;
         }
         var activeMasks = [];
         this.masks.forEach(maskInfo => {
+            if (maskInfo.flat && maskInfo.level === spriteLevel) {
+                return;
+            }
             var tileZ = spriteUpright ? maskInfo.z1 : maskInfo.z2;
-            if (spriteUpright) {
-                if (tileZ > spriteZ) {
-                    activeMasks.push(this.tileImages[maskInfo.tileIndex]);
-                }
+            if (tileZ > spriteZ) {
+                activeMasks.push(this.tileImages[maskInfo.tileIndex]);
             }
         });
         return activeMasks;
@@ -276,16 +278,16 @@ class PlayMap {
         return this._isStripeValid(level, this.horizontals, baseRect.top, baseRect.bottom);
     }
 
-    getMasksForUpright(spriteRect, spriteZ) {
-        return this.getMasks(spriteRect, spriteZ, true);
+    getMasksForUpright(spriteRect, spriteLevel, spriteZ) {
+        return this.getMasks(spriteRect, spriteLevel, spriteZ, true);
     }
 
-    getMasks(spriteRect, spriteZ, spriteUpright) {
+    getMasks(spriteRect, spriteZ, spriteLevel, spriteUpright) {
         var spriteTiles = this._getSpanTiles(spriteRect);
         var masks = [];
         spriteTiles.forEach(tile => {
             // TODO do we need to check the tile exists?
-            var tileMasks = tile.getMasks(spriteZ, spriteUpright);
+            var tileMasks = tile.getMasks(spriteZ, spriteLevel, spriteUpright);
             if (tileMasks) {
                 masks.push({
                     x: tile.x,
@@ -296,15 +298,6 @@ class PlayMap {
         });
         return masks;
     }
-    // def getMasks(self, sprite):
-    //     spriteTiles = self.getSpanTiles(sprite.mapRect)
-    //     masks = {}
-    //     for tile in spriteTiles:
-    //         if tile:
-    //             tileMasks = tile.getMasks(sprite.level, sprite.z, sprite.upright)
-    //             if tileMasks:
-    //                 masks[(tile.x, tile.y)] = tileMasks
-    //     return masks
 
     _getSpanTiles(rect) {
         var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
