@@ -5,6 +5,8 @@ import { drawTile, initRect, initTile, initTransparentRect, Rect } from '../util
 import PlayMap from './play-map';
 import './play-modal.css';
 
+const fps = 60;
+
 const upKey = 38, downKey = 40, leftKey = 37, rightKey = 39;
 
 const up = 1, down = 2, left = 4, right = 8;
@@ -37,6 +39,9 @@ export const PlayMapModal = React.createClass({
     _canvas: null,
     _fullMapCanvas: null,
     _playMap: null,
+    _onEachFrame: null,
+    _requestId: null, // only set if using requestAnimationFrame
+    _intervalId: null, // only set if using setInterval
 
     _playerCanvas: null,
     _unspoiledPlayerCanvas: null,
@@ -96,6 +101,14 @@ export const PlayMapModal = React.createClass({
     },
 
     closeModal() {
+        if (this._requestId) {
+            window.cancelAnimationFrame(this._requestId);
+            this._requestId = null;
+        }
+        if (this._intervalId) {
+            clearInterval(this._intervalId);
+            this._intervalId = null;
+        }
         this._fullMapCanvas = null;
         this.props.onClose();
     },
@@ -125,15 +138,64 @@ export const PlayMapModal = React.createClass({
             this.initPlayer(this.props.tilePosition.x, this.props.tilePosition.y);
             this._playerBackground = this.showPlayer(this._fullMapCanvas.getContext('2d'));
             this.viewMap(this._playerRect);
-            this.playLoop();
+            this._onEachFrame = this.assignOnEachFrame();
+            // this._onEachFrame(this.playMain());
+            this._onEachFrame(this.playMain);
         }
     },
 
-    playLoop: function() {
-        if (!this.props.showModal) {
-            return;
+    assignOnEachFrame() {
+        if (window.requestAnimationFrame) {
+            console.log('Using requestAnimationFrame');
+            return (cb) => {
+                var _cb = () => {
+                    cb();
+                    this._requestId = window.requestAnimationFrame(_cb);
+                }
+                _cb();
+            };
         }
-        // console.log("play loop called: " + this._direction);
+        return (cb) => {
+            console.log('Using setInterval');
+            this._intervalId = setInterval(cb, 1000 / fps);
+        }
+    },
+
+    /*
+     * Simple version of playMain
+     */
+    playMain: function() {
+        this.playUpdate();
+        this.processKeysUp();
+        this.viewMap(this._playerRect);
+    },
+
+    /*
+     * Alternative version of playMain, that attempts to apply consistent updates
+     * even when the framerate drops below the specified level.
+     */
+    // playMain: function() {
+    //     console.log("playMain");
+    //     var loops = 0,
+    //         skipTicks = 1000 / fps,
+    //         maxFrameSkip = 10,
+    //         nextGameTick = new Date().getTime();
+    //
+    //     return () => {
+    //         loops = 0;
+    //
+    //         while (new Date().getTime() > nextGameTick && loops < maxFrameSkip) {
+    //             this.playUpdate();
+    //             nextGameTick += skipTicks;
+    //             loops++;
+    //         }
+    //
+    //         this.processKeysUp();
+    //         this.viewMap(this._playerRect);
+    //     };
+    // },
+
+    playUpdate: function() {
         var directionBits = this.processKeysDown();
         if (this._deferredMovement && directionBits === this._directionBits) {
             this.applyDeferredMovement();
@@ -144,11 +206,8 @@ export const PlayMapModal = React.createClass({
             if (movement) {
                 //console.log(this._px + ":" + this._py);
                 this.movePlayer(movement[0], movement[1]);
-                this.viewMap(this._playerRect);
             }
         }
-        this.processKeysUp();
-        setTimeout(this.playLoop, 17);
     },
 
     applyDeferredMovement() {
