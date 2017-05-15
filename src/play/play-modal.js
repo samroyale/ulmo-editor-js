@@ -2,25 +2,26 @@ import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { tileSize, viewWidth, viewHeight } from '../config';
 import { drawTile, initRect, initTile, initTransparentRect, Rect } from '../utils';
+import Keys from './player';
 import PlayMap from './play-map';
 import './play-modal.css';
 
 const fps = 60;
 
-const upKey = 38, downKey = 40, leftKey = 37, rightKey = 39;
+//const upKey = 38, downKey = 40, leftKey = 37, rightKey = 39;
 
-const up = 1, down = 2, left = 4, right = 8;
+//const up = 1, down = 2, left = 4, right = 8;
 
-const movement = new Map([
-    [up, [0, -2]],
-    [down, [0, 2]],
-    [left, [-2, 0]],
-    [right, [2, 0]],
-    [up + left, [-2, -2]],
-    [up + right, [2, -2]],
-    [down + left, [-2, 2]],
-    [down + right, [2, 2]]
-]);
+// const movement = new Map([
+//     [up, [0, -2]],
+//     [down, [0, 2]],
+//     [left, [-2, 0]],
+//     [right, [2, 0]],
+//     [up + left, [-2, -2]],
+//     [up + right, [2, -2]],
+//     [down + left, [-2, 2]],
+//     [down + right, [2, 2]]
+// ]);
 
 const playerWidth = 24,
       playerHeight = 36,
@@ -52,9 +53,8 @@ export const PlayMapModal = React.createClass({
     _baseRect: null,
     _masked: false,
 
-    _keysDown: null,
-    _keysUp: [],
-    _directionBits: 0,
+    _keys: null,
+    _keyBits: 0,
     _deferredMovement: null,
 
     getInitialState: function() {
@@ -132,7 +132,7 @@ export const PlayMapModal = React.createClass({
             return;
         }
         if (this.state.rpgMap && !this._fullMapCanvas) {
-            this._keysDown = Array(128).fill(false);
+            this._keys = new Keys();
             this._fullMapCanvas = this.drawMap();
             this._playMap = new PlayMap(this.state.rpgMap);
             this.initPlayer(this.props.tilePosition.x, this.props.tilePosition.y);
@@ -155,8 +155,8 @@ export const PlayMapModal = React.createClass({
                 _cb();
             };
         }
+        console.log('Using setInterval');
         return (cb) => {
-            console.log('Using setInterval');
             this._intervalId = setInterval(cb, 1000 / fps);
         }
     },
@@ -166,7 +166,6 @@ export const PlayMapModal = React.createClass({
      */
     playMain: function() {
         this.playUpdate();
-        this.processKeysUp();
         this.viewMap(this._playerRect);
     },
 
@@ -176,38 +175,38 @@ export const PlayMapModal = React.createClass({
      */
     // playMain: function() {
     //     console.log("playMain");
-    //     var loops = 0,
+    //     var i = 0,
     //         skipTicks = 1000 / fps,
     //         maxFrameSkip = 10,
     //         nextGameTick = new Date().getTime();
     //
     //     return () => {
-    //         loops = 0;
+    //         i = 0;
     //
-    //         while (new Date().getTime() > nextGameTick && loops < maxFrameSkip) {
+    //         while (new Date().getTime() > nextGameTick && i < maxFrameSkip) {
     //             this.playUpdate();
     //             nextGameTick += skipTicks;
-    //             loops++;
+    //             i++;
     //         }
     //
-    //         this.processKeysUp();
     //         this.viewMap(this._playerRect);
     //     };
     // },
 
     playUpdate: function() {
-        var directionBits = this.processKeysDown();
-        if (this._deferredMovement && directionBits === this._directionBits) {
+        var keyBits = this._keys.processKeysDown();
+        if (this._deferredMovement && keyBits === this._keyBits) {
             this.applyDeferredMovement();
         }
         else {
-            this._directionBits = directionBits;
-            var movement = this.getMovement(directionBits);
+            this._keyBits = keyBits;
+            var movement = this._keys.getMovement(keyBits);
             if (movement) {
                 //console.log(this._px + ":" + this._py);
                 this.movePlayer(movement[0], movement[1]);
             }
         }
+        this._keys.flush();
     },
 
     applyDeferredMovement() {
@@ -358,46 +357,11 @@ export const PlayMapModal = React.createClass({
     },
 
     keyDown: function(e) {
-        // console.log("DOWN: " + e.keyCode);
-        if (e.keyCode < 128) {
-            this._keysDown[e.keyCode] = true;
-        }
+        this._keys.keyDown(e.keyCode);
     },
 
     keyUp: function(e) {
-        // console.log("UP: " + e.keyCode);
-        if (e.keyCode < 128) {
-            this._keysUp.push(e.keyCode);
-        }
-    },
-
-    processKeysDown: function() {
-        var directionBits = 0;
-        if (this._keysDown[upKey]) {
-            directionBits += up;
-        }
-        if (this._keysDown[downKey]) {
-            directionBits += down;
-        }
-        if (this._keysDown[leftKey]) {
-            directionBits += left;
-        }
-        if (this._keysDown[rightKey]) {
-            directionBits += right;
-        }
-        return directionBits;
-    },
-
-    getMovement: function(directionBits) {
-        return movement.get(directionBits);
-    },
-
-    processKeysUp: function() {
-        if (this._keysUp.length === 0) {
-            return;
-        }
-        this._keysUp.forEach(k => this._keysDown[k] = false);
-        this._keysUp = [];
+        this._keys.keyUp(e.keyCode);
     },
 
     modalBody: function() {
