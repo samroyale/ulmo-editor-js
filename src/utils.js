@@ -70,6 +70,13 @@ export function initTileHighlight() {
   return initHighlight(1, 1);
 };
 
+export function copyCanvas(canvas) {
+  var copy = initTransparentRect(canvas.width, canvas.height);
+  var ctx = copy.getContext('2d');
+  ctx.drawImage(canvas, 0, 0);
+  return copy;
+};
+
 export function loadImage(imageUrl, callback) {
   var image = new Image();
   image.onerror = () => {
@@ -121,8 +128,8 @@ export class Rect {
       y: this.bottom
     };
   }
-};
 
-Rect.prototype.toString = function rectToString() {
+  toString() {
     return 'Rect [left: ' + this.left + ', top: ' + this.top + ', width: ' + this.width + ', height: ' + this.height + ']';
+  }
 };
