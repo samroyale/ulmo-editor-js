@@ -14,13 +14,9 @@ const fps = 60;
  */
 export const PlayMapModal = React.createClass({
     _canvas: null,
-    _fullMapCanvas: null,
-    _onEachFrame: null,
     _requestId: null, // only set if using requestAnimationFrame
     _intervalId: null, // only set if using setInterval
-
     _player: null,
-
     _keys: null,
     _keyBits: 0,
 
@@ -28,33 +24,6 @@ export const PlayMapModal = React.createClass({
         return {
             rpgMap: null
         };
-    },
-
-    drawMap: function() {
-        var mapCanvas = document.createElement("canvas");
-        var cols = this.state.rpgMap.getCols();
-        var rows = this.state.rpgMap.getRows();
-        mapCanvas.width = cols * tileSize;
-        mapCanvas.height = rows * tileSize;
-        var ctx = mapCanvas.getContext('2d');
-        for (var x = 0; x < cols; x++) {
-            for (var y = 0; y < rows; y++) {
-                var tileCanvas = drawTile(this.state.rpgMap.getMapTile(x, y).getMaskTiles(), initTile('black'));
-                ctx.drawImage(tileCanvas, x * tileSize, y * tileSize);
-            }
-        }
-        return mapCanvas;
-    },
-
-    _viewMap: function(playerRect) {
-        var tlx = Math.max(0, playerRect.left + (playerRect.width / 2) - (viewWidth / 2));
-        var tly = Math.max(0, playerRect.top + (playerRect.height / 2) - (viewHeight / 2));
-        tlx = Math.min(tlx, this._fullMapCanvas.width - viewWidth);
-        tly = Math.min(tly, this._fullMapCanvas.height - viewHeight);
-        var viewCtx = this._canvas.getContext('2d');
-        viewCtx.drawImage(this._fullMapCanvas,
-            tlx < 0 ? tlx / 2 : tlx, tly < 0 ? tly / 2 : tly, viewWidth, viewHeight,
-            0, 0, viewWidth, viewHeight);
     },
 
     closeModal() {
@@ -66,7 +35,7 @@ export const PlayMapModal = React.createClass({
             clearInterval(this._intervalId);
             this._intervalId = null;
         }
-        this._fullMapCanvas = null;
+        this._player = null;
         this.props.onClose();
     },
 
@@ -88,15 +57,14 @@ export const PlayMapModal = React.createClass({
         if (!this.props.showModal) {
             return;
         }
-        if (this.state.rpgMap && !this._fullMapCanvas) {
+        if (this.state.rpgMap && !this._player) {
             this._keys = new Keys();
-            this._fullMapCanvas = this.drawMap();
             var playMap = new PlayMap(this.state.rpgMap);
             this._player = new Player(playMap, this.props.tilePosition.x, this.props.tilePosition.y)
-            this._player.showPlayer(this._fullMapCanvas.getContext('2d'));
-            this._viewMap(this._player.getRect());
-            this._onEachFrame = this.assignOnEachFrame();
-            this._onEachFrame(this.playMain());
+            this._player.show();
+            this._renderView();
+            var onEachFrameFunc = this.assignOnEachFrame();
+            onEachFrameFunc(this.playMain());
         }
     },
 
@@ -123,8 +91,12 @@ export const PlayMapModal = React.createClass({
     playMain: function() {
         return () => {
             this._playUpdate();
-            this._viewMap(this._player.getRect());
+            this._renderView();
         };
+    },
+
+    _renderView: function() {
+        this._player.viewMap(this._canvas.getContext('2d'));
     },
 
     /*
@@ -147,21 +119,20 @@ export const PlayMapModal = React.createClass({
     //             i++;
     //         }
     //
-    //         this._viewMap(this._player.getRect());
+    //         this._renderView();
     //     };
     // },
 
     _playUpdate: function() {
+        // TODO: most of the keys stuff should be in Player - the move function should take a keys argument
         var keyBits = this._keys.processKeysDown();
-        var mapCtx = this._fullMapCanvas.getContext('2d');
-        if (keyBits === this._keyBits && this._player.applyDeferredMovement(mapCtx)) {
+        if (keyBits === this._keyBits && this._player.applyDeferredMovement()) {
             return;
         }
         this._keyBits = keyBits;
         var movement = this._keys.getMovement(keyBits);
         if (movement) {
-            //console.log(this._px + ":" + this._py);
-            this._player.move(movement[0], movement[1], mapCtx);
+            this._player.move(movement[0], movement[1]);
         }
     },
 

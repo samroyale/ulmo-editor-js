@@ -115,11 +115,11 @@ export class Player {
         this._canvas = initRect("#FF0000", playerWidth, playerHeight);
     }
 
-    getRect() {
-        return this._rect;
+    viewMap(viewCtx) {
+        this._playMap.viewMap(this._rect, viewCtx);
     }
-
-    move(mx, my, mapCtx) {
+    
+    move(mx, my) {
         // check requested movement falls within map boundary
         var newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
@@ -130,14 +130,18 @@ export class Player {
         var newBaseRect = this._baseRect.move(mx, my);
         var [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
-            this._applyRectMovement(level, newBaseRect, newRect, mapCtx);
+            this._applyRectMovement(level, newBaseRect, newRect);
             return;
         }
 
         // movement invalid but we might be able to slide or shuffle
-        // TODO: change structure
-        if (mx === 0 || my === 0) {
-            if (this._shuffle(mx, my)) {
+        if (mx === 0) {
+            if (this._shuffleX()) {
+                return;
+            }
+        }
+        else if (my === 0) {
+            if (this._shuffleY()) {
                 return;
             }
         }
@@ -151,17 +155,18 @@ export class Player {
         // movement invalid - apply a stationary change of direction if needed
     }
 
-    _shuffle(mx, my) {
+    _shuffleX() {
         // see if we can shuffle horizontally
-        if (mx === 0) {
-            var [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
-            if (valid) {
-                this._deferMovement(level, shuffle, 0);
-            }
-            return valid;
+        var [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
+        if (valid) {
+            this._deferMovement(level, shuffle, 0);
         }
+        return valid;
+    }
+
+    _shuffleY() {
         // see if we can shuffle vertically
-        [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
+        var [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
         if (valid) {
             this._deferMovement(level, 0, shuffle);
         }
@@ -185,34 +190,34 @@ export class Player {
         return valid;
     }
 
-    applyDeferredMovement(mapCtx) {
+    applyDeferredMovement() {
         if (this._deferredMovement) {
             var [level, mx, my] = this._deferredMovement;
-            this._applyMovement(level, mx, my, mapCtx);
+            this._applyMovement(level, mx, my);
             return true;
         }
         return false;
     }
 
-    _applyMovement(newLevel, mx, my, mapCtx) {
+    _applyMovement(newLevel, mx, my) {
         this._baseRect.moveInPlace(mx, my);
-        this._moveInternal(newLevel, this._rect.move(mx, my), mapCtx);
+        this._moveInternal(newLevel, this._rect.move(mx, my));
     }
 
-    _applyRectMovement(newLevel, newBaseRect, newRect, mapCtx) {
+    _applyRectMovement(newLevel, newBaseRect, newRect) {
         this._baseRect = newBaseRect;
-        this._moveInternal(newLevel, newRect, mapCtx);
+        this._moveInternal(newLevel, newRect);
     }
 
-    _moveInternal(level, rect, mapCtx) {
-        // var mapCtx = this._fullMapCanvas.getContext('2d');
+    _moveInternal(level, rect) {
+        var mapCtx = this._playMap.getMapCanvas().getContext('2d');
         this._restoreBackground(mapCtx); // must happen before _rect updated
         // update rects
-        // console.log(this._baseRect + " : " + this._rect);
+        console.log(this._baseRect + " : " + this._rect);
         this._level = level;
         this._rect = rect;
         // draw player in new position
-        this.showPlayer(mapCtx);
+        this._showInternal(mapCtx);
         // reset deferred movement
         this._deferredMovement = null;
     }
@@ -221,7 +226,12 @@ export class Player {
         this._deferredMovement = [newLevel, mx, my];
     }
 
-    showPlayer(ctx) {
+    show() {
+        var mapCtx = this._playMap.getMapCanvas().getContext('2d');
+        this._showInternal(mapCtx);
+    }
+
+    _showInternal(ctx) {
         this._applyMasksFromMap();
         this._background = ctx.getImageData(this._rect.left, this._rect.top,
             this._rect.width, this._rect.height);

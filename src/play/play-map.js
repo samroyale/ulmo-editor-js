@@ -1,4 +1,5 @@
-import { tileSize } from '../config';
+import { tileSize, viewWidth, viewHeight } from '../config';
+import { drawTile, initTile } from '../utils';
 
 const minShuffle = {
     index1: 0,
@@ -13,6 +14,8 @@ const maxShuffle = {
     index2: 0,
     shuffle2: -2
 };
+
+const blackTile = initTile('black');
 
 /* =============================================================================
  * CLASS: MASK INFO
@@ -188,8 +191,7 @@ class PlayMap {
     constructor(rpgMap) {
         this.cols = rpgMap.getCols();
         this.rows = rpgMap.getRows();
-        this.width = this.cols * tileSize;
-        this.height = this.rows * tileSize;
+        this.mapCanvas = this.drawMap(rpgMap);
         var tiles = new Array(this.cols);
         for (var x = 0; x < this.cols; x++) {
             tiles[x] = new Array(this.rows);
@@ -200,16 +202,44 @@ class PlayMap {
         this.tiles = tiles;
     }
 
+    drawMap(rpgMap) {
+        var mapCanvas = document.createElement("canvas");
+        mapCanvas.width = this.cols * tileSize;
+        mapCanvas.height = this.rows * tileSize;
+        var ctx = mapCanvas.getContext('2d');
+        for (var x = 0; x < this.cols; x++) {
+            for (var y = 0; y < this.rows; y++) {
+                var tileCanvas = drawTile(rpgMap.getMapTile(x, y).getMaskTiles(), blackTile);
+                ctx.drawImage(tileCanvas, x * tileSize, y * tileSize);
+            }
+        }
+        return mapCanvas;
+    }
+
+    viewMap(playerRect, viewCtx) {
+        var tlx = Math.max(0, playerRect.left + (playerRect.width / 2) - (viewWidth / 2));
+        var tly = Math.max(0, playerRect.top + (playerRect.height / 2) - (viewHeight / 2));
+        tlx = Math.min(tlx, this.mapCanvas.width - viewWidth);
+        tly = Math.min(tly, this.mapCanvas.height - viewHeight);
+        viewCtx.drawImage(this.mapCanvas,
+            tlx < 0 ? tlx / 2 : tlx, tly < 0 ? tly / 2 : tly, viewWidth, viewHeight,
+            0, 0, viewWidth, viewHeight);
+    }
+
+    getMapCanvas() {
+        return this.mapCanvas;
+    }
+
     getValidLevel(tx, ty) {
         return this.tiles[tx][ty].getALevel();
     }
 
-    isMapBoundaryBreached(baseRect) {
-        if ((baseRect.left < 0) || (baseRect.right > this.width)) {
+    isMapBoundaryBreached(rect) {
+        if ((rect.left < 0) || (rect.right > this.mapCanvas.width)) {
             return true;
         }
         // console.log(baseRect.bottom + ' :: ' + this.height);
-        if ((baseRect.top < 0) || (baseRect.bottom > this.height)) {
+        if ((rect.top < 0) || (rect.bottom > this.mapCanvas.height)) {
             return true;
         }
         return false;
