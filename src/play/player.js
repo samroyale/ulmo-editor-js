@@ -1,19 +1,21 @@
 import { tileSize } from '../config';
-import { copyCanvas, initRect, Rect } from '../utils';
+import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
 
 const upKey = 38, downKey = 40, leftKey = 37, rightKey = 39;
 
 const up = 1, down = 2, left = 4, right = 8;
 
+const directions = [up, down, left, right];
+
 const movement = new Map([
-    [up, [0, -2]],
-    [down, [0, 2]],
-    [left, [-2, 0]],
-    [right, [2, 0]],
-    [up + left, [-2, -2]],
-    [up + right, [2, -2]],
-    [down + left, [-2, 2]],
-    [down + right, [2, 2]]
+    [up, [up, 0, -2]],
+    [down, [down, 0, 2]],
+    [left, [left, -2, 0]],
+    [right, [right, 2, 0]],
+    [up + left, [up, -2, -2]],
+    [up + right, [up, 2, -2]],
+    [down + left, [down, -2, 2]],
+    [down + right, [down, 2, 2]]
 ]);
 
 const playerWidth = 24,
@@ -21,8 +23,7 @@ const playerWidth = 24,
       marginX = (tileSize - playerWidth) / 2,
       marginY = (tileSize * 2 - playerHeight) / 2;
 
-const baseRectWidth = 24,
-      baseRectHeight = 18,
+const baseRectHeight = 18,
       baseRectExtension = 2;
 
 /* =============================================================================
@@ -90,36 +91,107 @@ export class Keys {
 };
 
 /* =============================================================================
+ * CLASS: SPRITE FRAMES
+ * =============================================================================
+ */
+class SpriteFrames {
+    constructor(framesImageUrl, directions, frameCount, frameTicks, callback) {
+        this._direction = down;
+        this._frameIndex = 0;
+        this._tick = 0;
+        this._frameCount = frameCount;
+        this._frameTicks = frameTicks;
+        loadImage(framesImageUrl, data => {
+            if (data.err) {
+                // failed to load
+                return;
+            }
+            this._processFrames(data.img, directions, frameCount);
+            callback(this.currentFrame());
+        });
+    }
+
+    _processFrames(img, directions, frameCount) {
+        this._frames = new Map();
+        let spriteWidth = img.width / frameCount;
+        let spriteHeight = img.height / directions.length;
+        for (let i = 0; i < directions.length; i++) {
+            let frames = [];
+            for (let j = 0; j < frameCount; j++) {
+                let frameCanvas = document.createElement("canvas");
+                frameCanvas.width = spriteWidth * 2;
+                frameCanvas.height = spriteHeight * 2;
+                let frameCtx = getDrawingContext(frameCanvas);
+                frameCtx.drawImage(img,
+                    j * spriteWidth, i * spriteHeight, spriteWidth, spriteHeight,
+                    0, 0, spriteWidth * 2, spriteHeight * 2);
+                frames.push(frameCanvas);
+            }
+            this._frames.set(directions[i], frames);
+        }
+    }
+
+    getDirection() {
+        return this._direction;
+    }
+
+    advanceFrame(direction) {
+        this._direction = direction;
+        this._tick = (this._tick + 1) % this._frameTicks;
+        if (this._tick === 0) {
+            this._frameIndex = (this._frameIndex + 1) % this._frameCount;
+        }
+        return this.currentFrame();
+    }
+
+    currentFrame() {
+        return this._frames.get(this._direction)[this._frameIndex];
+    }
+
+    copyFrame() {
+        return copyCanvas(this.currentFrame());
+    }
+}
+
+/* =============================================================================
  * CLASS: PLAYER
  * =============================================================================
  */
 export class Player {
-    constructor(playMap, tx, ty) {
-        //this._playerCanvas = null,
+    constructor(playMap, tx, ty, callback) {
         this._playMap = playMap;
-        this._initPlayer(tx, ty);
+        this._canvas = null;
         this._deferredMovement = null;
-        this._unspoiledCanvas = null;
         this._background = null;
         this._masked = false;
+        this._initPlayer(tx, ty, callback);
     }
 
-    _initPlayer(tx, ty) {
-        var px = tx * tileSize + marginX;
-        var py = ty * tileSize + marginY;
-        this._rect = new Rect(px, py, playerWidth, playerHeight);
-        py = this._rect.bottom + baseRectExtension - baseRectHeight;
-        this._baseRect = new Rect(px, py, baseRectWidth, baseRectHeight);
+    _initPlayer(tx, ty, callback) {
         this._level = this._playMap.getValidLevel(tx, ty);
-        this._zIndex = this._updateZIndex();
-        this._canvas = initRect("#FF0000", playerWidth, playerHeight);
+        this._frames = new SpriteFrames('/img/sprites/ulmo-frames.png', directions, 4, 6, (currentFrame) => {
+            this._canvas = currentFrame;
+            let marginX = (tileSize - this._canvas.width) / 2;
+            let marginY = (tileSize * 2 - this._canvas.height) / 2;
+            let px = tx * tileSize + marginX;
+            let py = ty * tileSize + marginY;
+            this._rect = new Rect(px, py, this._canvas.width, this._canvas.height);
+            this._baseRect = this._initBaseRect(px)
+            this._zIndex = this._updateZIndex();
+            callback();
+        });
+    }
+
+    _initBaseRect(baseRectLeft) {
+        let baseRectTop = this._rect.bottom + baseRectExtension - baseRectHeight;
+        return new Rect(baseRectLeft, baseRectTop, this._canvas.width, baseRectHeight);
     }
 
     viewMap(viewCtx) {
         this._playMap.viewMap(this._rect, viewCtx);
     }
     
-    move(mx, my) {
+    move(direction, mx, my) {
         // check requested movement falls within map boundary
         var newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
@@ -130,105 +202,108 @@ export class Player {
         var newBaseRect = this._baseRect.move(mx, my);
         var [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
-            this._applyRectMovement(level, newBaseRect, newRect);
+            this._applyRectMovement(direction, level, newBaseRect, newRect);
             return;
         }
 
         // movement invalid but we might be able to slide or shuffle
         if (mx === 0) {
-            if (this._shuffleX()) {
+            if (this._shuffleX(direction)) {
                 return;
             }
         }
         else if (my === 0) {
-            if (this._shuffleY()) {
+            if (this._shuffleY(direction)) {
                 return;
             }
         }
         else {
             // diagonal movement
-            if (this._slide(mx, my)) {
+            if (this._slide(direction, mx, my)) {
                 return;
             }
         }
 
         // movement invalid - apply a stationary change of direction if needed
+        if (this._frames.getDirection() !== direction) {
+            this._moveInternal(direction, this._level, this._rect);
+        }
     }
 
-    _shuffleX() {
+    _shuffleX(direction) {
         // see if we can shuffle horizontally
         var [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
         if (valid) {
-            this._deferMovement(level, shuffle, 0);
+            this._deferMovement(direction, level, shuffle, 0);
         }
         return valid;
     }
 
-    _shuffleY() {
+    _shuffleY(direction) {
         // see if we can shuffle vertically
         var [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
         if (valid) {
-            this._deferMovement(level, 0, shuffle);
+            this._deferMovement(direction, level, 0, shuffle);
         }
         return valid;
     }
 
-    _slide(mx, my) {
+    _slide(direction, mx, my) {
         // see if we can slide horizontally
         var newBaseRect = this._baseRect.move(mx, 0);
         var [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
-            this._deferMovement(level, mx, 0);
+            this._deferMovement(direction, level, mx, 0);
             return valid;
         }
         // see if we can slide vertically
         newBaseRect = this._baseRect.move(0, my);
         [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
-            this._deferMovement(level, 0, my);
+            this._deferMovement(direction, level, 0, my);
         }
         return valid;
     }
 
     applyDeferredMovement() {
         if (this._deferredMovement) {
-            var [level, mx, my] = this._deferredMovement;
-            this._applyMovement(level, mx, my);
+            var [direction, level, mx, my] = this._deferredMovement;
+            this._applyMovement(direction, level, mx, my);
+            this._deferredMovement = null;
             return true;
         }
         return false;
     }
 
-    _applyMovement(newLevel, mx, my) {
+    _applyMovement(direction, level, mx, my) {
         this._baseRect.moveInPlace(mx, my);
-        this._moveInternal(newLevel, this._rect.move(mx, my));
+        this._moveInternal(direction, level, this._rect.move(mx, my));
     }
 
-    _applyRectMovement(newLevel, newBaseRect, newRect) {
-        this._baseRect = newBaseRect;
-        this._moveInternal(newLevel, newRect);
+    _applyRectMovement(direction, level, baseRect, rect) {
+        this._baseRect = baseRect;
+        this._moveInternal(direction, level, rect);
     }
 
-    _moveInternal(level, rect) {
-        var mapCtx = this._playMap.getMapCanvas().getContext('2d');
+    _deferMovement(direction, level, mx, my) {
+        this._deferredMovement = [direction, level, mx, my];
+        this._moveInternal(direction, level, this._rect);
+    }
+
+    _moveInternal(direction, level, rect) {
+        var mapCtx = this._mapCtx();
         this._restoreBackground(mapCtx); // must happen before _rect updated
         // update rects
         console.log(this._baseRect + " : " + this._rect);
         this._level = level;
         this._rect = rect;
         // draw player in new position
+        this._canvas = this._frames.advanceFrame(direction);
         this._showInternal(mapCtx);
-        // reset deferred movement
-        this._deferredMovement = null;
-    }
-
-    _deferMovement(newLevel, mx, my) {
-        this._deferredMovement = [newLevel, mx, my];
     }
 
     show() {
-        var mapCtx = this._playMap.getMapCanvas().getContext('2d');
-        this._showInternal(mapCtx);
+        this._showInternal(this._mapCtx());
     }
 
     _showInternal(ctx) {
@@ -242,12 +317,11 @@ export class Player {
         if (this._masked) {
             // console.log('clear masks');
             this._masked = false;
-            this._canvas = this._unspoiledCanvas;
+            this._canvas = this._frames.currentFrame();
         }
         // console.log('get and apply masks');
         this._zIndex = this._updateZIndex();
         var masks = this._playMap.getMasksForUpright(this._rect, this._zIndex, this._level);
-        // var masks = playMap.getMasks(this._rect, this._zIndex, this._level, false);
         this._applyMasks(masks);
     }
 
@@ -255,7 +329,7 @@ export class Player {
     _applyMasks(masks) {
         if (masks.length > 0) {
             this._masked = true;
-            this._unspoiledCanvas = copyCanvas(this._canvas);
+            this._canvas = this._frames.copyFrame();
             masks.forEach(mask => {
                 var px = mask.x * tileSize - this._rect.left;
                 var py = mask.y * tileSize - this._rect.top;
@@ -265,6 +339,10 @@ export class Player {
                 });
             });
         }
+    }
+
+    _mapCtx() {
+        return this._playMap.getMapCanvas().getContext('2d');
     }
 
     _restoreBackground(ctx) {
