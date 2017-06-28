@@ -169,13 +169,13 @@ export class Player {
 
     _initPlayer(tx, ty, callback) {
         this._level = this._playMap.getValidLevel(tx, ty);
-        this._frames = new SpriteFrames('/img/sprites/ulmo-frames.png', directions, 4, 6, (currentFrame) => {
-            this._canvas = currentFrame;
-            let marginX = (tileSize - this._canvas.width) / 2;
-            let marginY = (tileSize * 2 - this._canvas.height) / 2;
+        this._frames = new SpriteFrames('/img/sprites/ulmo-frames.png', directions, 4, 6, frame => {
+            this._canvas = frame;
+            let marginX = (tileSize - frame.width) / 2;
+            let marginY = (tileSize * 2 - frame.height) / 2;
             let px = tx * tileSize + marginX;
-            let py = ty * tileSize + marginY;
-            this._rect = new Rect(px, py, this._canvas.width, this._canvas.height);
+            let py = (ty - 1) * tileSize + marginY;
+            this._rect = new Rect(px, py, frame.width, frame.height);
             this._baseRect = this._initBaseRect(px)
             this._zIndex = this._updateZIndex();
             callback();
