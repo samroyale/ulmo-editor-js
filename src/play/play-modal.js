@@ -60,12 +60,14 @@ export const PlayMapModal = React.createClass({
         if (this.state.rpgMap && !this._player) {
             this._keys = new Keys();
             var playMap = new PlayMap(this.state.rpgMap);
-            this._player = new Player(playMap, this.props.tilePosition.x, this.props.tilePosition.y, () => {
+            this._player = new Player(playMap, this.props.tilePosition.x, this.props.tilePosition.y);
+            var p = this._player.load();
+            p.then(() => {
                 this._player.show();
                 this._renderView();
                 var onEachFrameFunc = this.assignOnEachFrame();
                 onEachFrameFunc(this.playMain());
-            })
+            });
         }
     },
 

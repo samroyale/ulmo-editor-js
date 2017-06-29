@@ -1,4 +1,5 @@
-import { tileSize } from '../config';
+import Q from 'q';
+import { tileSize, spritesImgPath } from '../config';
 import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
 
 const upKey = 38, downKey = 40, leftKey = 37, rightKey = 39;
@@ -17,11 +18,6 @@ const movement = new Map([
     [down + left, [down, -2, 2]],
     [down + right, [down, 2, 2]]
 ]);
-
-const playerWidth = 24,
-      playerHeight = 36,
-      marginX = (tileSize - playerWidth) / 2,
-      marginY = (tileSize * 2 - playerHeight) / 2;
 
 const baseRectHeight = 18,
       baseRectExtension = 2;
@@ -95,29 +91,45 @@ export class Keys {
  * =============================================================================
  */
 class SpriteFrames {
-    constructor(framesImageUrl, directions, frameCount, frameTicks, callback) {
+    constructor(imageUrl, directions, frameCount, frameTicks) {
+        this._imageUrl = imageUrl;
+        this._frameCount = frameCount;
+        this._frameTicks = frameTicks;
         this._direction = down;
         this._frameIndex = 0;
         this._tick = 0;
-        this._frameCount = frameCount;
-        this._frameTicks = frameTicks;
-        loadImage(framesImageUrl, data => {
-            if (data.err) {
-                // failed to load
-                return;
-            }
-            this._processFrames(data.img, directions, frameCount);
-            callback(this.currentFrame());
-        });
+        
+
+        // loadImage(framesImageUrl, data => {
+        //     if (data.err) {
+        //         // failed to load
+        //         return;
+        //     }
+        //     this._processFrames(data.img, directions, frameCount);
+        //     callback(this.currentFrame());
+        // });
     }
 
-    _processFrames(img, directions, frameCount) {
+    load() {
+        let deferred = Q.defer();
+        loadImage(this._imageUrl, data => {
+            if (data.err) {
+                deferred.reject({ err: data.err });
+                return;
+            }
+            this._processFrames(data.img, directions);
+            deferred.resolve({ currentFrame: this.currentFrame() });
+        });
+        return deferred.promise;
+    }
+    
+    _processFrames(img, directions) {
         this._frames = new Map();
-        let spriteWidth = img.width / frameCount;
+        let spriteWidth = img.width / this._frameCount;
         let spriteHeight = img.height / directions.length;
         for (let i = 0; i < directions.length; i++) {
             let frames = [];
-            for (let j = 0; j < frameCount; j++) {
+            for (let j = 0; j < this._frameCount; j++) {
                 let frameCanvas = document.createElement("canvas");
                 frameCanvas.width = spriteWidth * 2;
                 frameCanvas.height = spriteHeight * 2;
@@ -158,33 +170,37 @@ class SpriteFrames {
  * =============================================================================
  */
 export class Player {
-    constructor(playMap, tx, ty, callback) {
+    constructor(playMap, tx, ty) {
         this._playMap = playMap;
+        this._tx = tx;
+        this._ty = ty;
+        this._level = this._playMap.getValidLevel(tx, ty);
         this._canvas = null;
         this._deferredMovement = null;
         this._background = null;
         this._masked = false;
-        this._initPlayer(tx, ty, callback);
+        this._frames = new SpriteFrames(spritesImgPath + '/ulmo-frames.png', directions, 4, 6);
     }
 
-    _initPlayer(tx, ty, callback) {
-        this._level = this._playMap.getValidLevel(tx, ty);
-        this._frames = new SpriteFrames('/img/sprites/ulmo-frames.png', directions, 4, 6, frame => {
-            this._canvas = frame;
+    load() {
+        let p = this._frames.load();
+        return p.then(data => {
+            let frame = data.currentFrame;
             let marginX = (tileSize - frame.width) / 2;
             let marginY = (tileSize * 2 - frame.height) / 2;
-            let px = tx * tileSize + marginX;
-            let py = (ty - 1) * tileSize + marginY;
+            let px = this._tx * tileSize + marginX;
+            let py = (this._ty - 1) * tileSize + marginY;
             this._rect = new Rect(px, py, frame.width, frame.height);
-            this._baseRect = this._initBaseRect(px)
+            this._baseRect = this._initBaseRect(px, frame.width);
             this._zIndex = this._updateZIndex();
-            callback();
-        });
+            this._canvas = frame;
+            // callback();
+        }, () => console.log('error!'));
     }
 
-    _initBaseRect(baseRectLeft) {
+    _initBaseRect(baseRectLeft, baseRectWidth) {
         let baseRectTop = this._rect.bottom + baseRectExtension - baseRectHeight;
-        return new Rect(baseRectLeft, baseRectTop, this._canvas.width, baseRectHeight);
+        return new Rect(baseRectLeft, baseRectTop, baseRectWidth, baseRectHeight);
     }
 
     viewMap(viewCtx) {
