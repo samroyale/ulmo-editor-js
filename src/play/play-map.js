@@ -203,7 +203,7 @@ class PlayMap {
     }
 
     drawMap(rpgMap) {
-        var mapCanvas = document.createElement("canvas");
+        var mapCanvas = document.createElement('canvas');
         mapCanvas.width = this.cols * tileSize;
         mapCanvas.height = this.rows * tileSize;
         var ctx = mapCanvas.getContext('2d');

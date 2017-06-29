@@ -1,7 +1,7 @@
 import { tileSize } from './config';
 
 export function getDrawingContext(canvas) {
-  var context = canvas.getContext("2d");
+  var context = canvas.getContext('2d');
   context.imageSmoothingEnabled = false;
   context.webkitImageSmoothingEnabled = false;
   context.mozImageSmoothingEnabled = false;
@@ -9,7 +9,7 @@ export function getDrawingContext(canvas) {
 };
 
 export function drawTile(maskTiles, baseTileCanvas) {
-  var tileCanvas = document.createElement("canvas");
+  var tileCanvas = document.createElement('canvas');
   tileCanvas.width = tileSize;
   tileCanvas.height = tileSize;
   var ctx = tileCanvas.getContext('2d');
@@ -35,7 +35,7 @@ export function initRect(colour, width, height) {
 }
 
 export function initTransparentRect(width, height) {
-  var canvas = document.createElement("canvas");
+  var canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   // canvas transparent by default?
@@ -81,7 +81,7 @@ export function loadImage(imageUrl, callback) {
   var image = new Image();
   image.onerror = () => {
     callback({
-      err: imageUrl + " failed to load"
+      err: imageUrl + ' failed to load'
     });
   };
   image.onload = () => {

@@ -22,6 +22,8 @@ const movement = new Map([
 const baseRectHeight = 18,
       baseRectExtension = 2;
 
+const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
+
 /* =============================================================================
  * CLASS: KEYS
  * =============================================================================
@@ -98,16 +100,6 @@ class SpriteFrames {
         this._direction = down;
         this._frameIndex = 0;
         this._tick = 0;
-        
-
-        // loadImage(framesImageUrl, data => {
-        //     if (data.err) {
-        //         // failed to load
-        //         return;
-        //     }
-        //     this._processFrames(data.img, directions, frameCount);
-        //     callback(this.currentFrame());
-        // });
     }
 
     load() {
@@ -130,7 +122,7 @@ class SpriteFrames {
         for (let i = 0; i < directions.length; i++) {
             let frames = [];
             for (let j = 0; j < this._frameCount; j++) {
-                let frameCanvas = document.createElement("canvas");
+                let frameCanvas = document.createElement('canvas');
                 frameCanvas.width = spriteWidth * 2;
                 frameCanvas.height = spriteHeight * 2;
                 let frameCtx = getDrawingContext(frameCanvas);
@@ -179,7 +171,7 @@ export class Player {
         this._deferredMovement = null;
         this._background = null;
         this._masked = false;
-        this._frames = new SpriteFrames(spritesImgPath + '/ulmo-frames.png', directions, 4, 6);
+        this._frames = new SpriteFrames(playerFramesUrl, directions, 4, 6);
     }
 
     load() {
@@ -194,8 +186,7 @@ export class Player {
             this._baseRect = this._initBaseRect(px, frame.width);
             this._zIndex = this._updateZIndex();
             this._canvas = frame;
-            // callback();
-        }, () => console.log('error!'));
+        });
     }
 
     _initBaseRect(baseRectLeft, baseRectWidth) {
@@ -310,7 +301,7 @@ export class Player {
         var mapCtx = this._mapCtx();
         this._restoreBackground(mapCtx); // must happen before _rect updated
         // update rects
-        console.log(this._baseRect + " : " + this._rect);
+        // console.log(this._baseRect + " : " + this._rect);
         this._level = level;
         this._rect = rect;
         // draw player in new position

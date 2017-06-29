@@ -1,7 +1,6 @@
 import React from 'react';
-import { Modal } from 'react-bootstrap';
-import { tileSize, viewWidth, viewHeight } from '../config';
-import { drawTile, initTile } from '../utils';
+import { Alert, Collapse, Modal } from 'react-bootstrap';
+import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
 import PlayMap from './play-map';
 import './play-modal.css';
@@ -37,6 +36,10 @@ export const PlayMapModal = React.createClass({
         }
         this._player = null;
         this.props.onClose();
+        this.setState({
+            playReady: false,
+            playError: false
+        });
     },
 
     componentWillMount: function() {
@@ -62,13 +65,24 @@ export const PlayMapModal = React.createClass({
             var playMap = new PlayMap(this.state.rpgMap);
             this._player = new Player(playMap, this.props.tilePosition.x, this.props.tilePosition.y);
             var p = this._player.load();
-            p.then(() => {
-                this._player.show();
-                this._renderView();
-                var onEachFrameFunc = this.assignOnEachFrame();
-                onEachFrameFunc(this.playMain());
+            p.then(this.playReady, data => {
+                this.setState({
+                    playReady: false,
+                    playError: data.err
+                });
             });
         }
+    },
+
+    playReady() {
+        this._player.show();
+        this._renderView();
+        var onEachFrameFunc = this.assignOnEachFrame();
+        onEachFrameFunc(this.playMain());
+        this.setState({
+            playReady: true,
+            playError: false
+        });
     },
 
     assignOnEachFrame() {
@@ -149,10 +163,20 @@ export const PlayMapModal = React.createClass({
 
     modalBody: function() {
         if (this.props.showModal && this.state.rpgMap) {
+            let showError = this.state.playError && this.state.playError.length > 0;
             return (
                 <Modal.Body>
-                    <canvas className="play-canvas" width={viewWidth} height={viewHeight}
-                            ref={cvs => this._canvas = cvs} />
+                    <Collapse in={showError}>
+                        <div>
+                            <Alert bsStyle="danger">{this.state.playError}</Alert>
+                        </div>
+                    </Collapse>
+                    <Collapse in={this.state.playReady}>
+                        <div>
+                            <canvas className="play-canvas" width={viewWidth} height={viewHeight}
+                                ref={cvs => this._canvas = cvs} />
+                        </div>
+                    </Collapse>
                 </Modal.Body>
             );
         }
