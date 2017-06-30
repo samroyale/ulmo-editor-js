@@ -100,7 +100,7 @@ const TileSetCanvas = React.createClass({
   },
 
   loadTileSet(tilesetId) {
-    var p = tileSetService.loadTileSet(tilesetId, function() {});
+    var p = tileSetService.loadTileSet(tilesetId);
     return p.then(data => {
       if (data.tileSet) {
         this._tileSet = data.tileSet;
@@ -229,7 +229,7 @@ const TilePalette = React.createClass({
       }
     }, data => {
       this.tileSetLoadErr(tsid, data)
-    });
+    }).done();
   },
 
   tileSetLoadErr(tsid, data) {
@@ -254,7 +254,7 @@ const TilePalette = React.createClass({
           showModal: true
         });
       }
-    }, this.tileSetsLoadErr);
+    }, this.tileSetsLoadErr).done();
   },
 
   tileSetsLoadErr(data) {

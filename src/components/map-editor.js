@@ -93,8 +93,9 @@ const MapEditor = React.createClass({
     var p = this._mapCanvas.loadMap(mid);
     p.then(
       data => this.mapLoaded(data, false),
-      data => this.mapLoadErr(mid, data)
-    );
+      data => this.mapLoadErr(mid, data),
+      percent => this.updateProgress(percent)
+    ).done();
   },
 
   newMap: function(event) {
@@ -115,7 +116,7 @@ const MapEditor = React.createClass({
     var p = this._mapCanvas.newMap(rows, cols);
     p.then(
       data => this.mapLoaded(data, true)
-    );
+    ).done();
   },
 
   resizeMap: function(event) {
@@ -128,7 +129,7 @@ const MapEditor = React.createClass({
     var p = this._mapCanvas.resizeMap(left, right, top, bottom);
     p.then(
       data => this.mapLoaded(data, true)
-    );
+    ).done();
   },
 
   mapLoaded: function(data, dirty) {
@@ -172,7 +173,7 @@ const MapEditor = React.createClass({
           showModal: "OPEN"
         });
       }
-    }, this.mapsLoadErr);
+    }, this.mapsLoadErr).done();
   },
 
   mapsLoadErr: function(data) {
@@ -209,7 +210,7 @@ const MapEditor = React.createClass({
     p.then(
       data => this.mapSaved(data),
       data => this.mapSaveErr(data)
-    );
+    ).done();
   },
 
   saveMapAs: function(mapName) {
@@ -217,7 +218,7 @@ const MapEditor = React.createClass({
     p.then(
       data => this.mapSaved(data),
       data => this.mapSaveErr(data)
-    );
+    ).done();
   },
 
   mapSaved: function(data) {
@@ -312,7 +313,6 @@ const MapEditor = React.createClass({
               tilePosition={this.state.currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
               onMapUpdated={this.mapUpdated}
-              onProgress={this.updateProgress}
               ref={comp => this._mapCanvas = comp} />
           <MapTileInfo
               tilePosition={this.state.currentTilePosition}

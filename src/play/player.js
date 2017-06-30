@@ -186,6 +186,7 @@ export class Player {
             this._baseRect = this._initBaseRect(px, frame.width);
             this._zIndex = this._updateZIndex();
             this._canvas = frame;
+            return data;
         });
     }
 

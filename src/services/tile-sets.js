@@ -103,13 +103,13 @@ class TileSetService {
     p.then(
       data => deferred.resolve({ tileSets: data }),
       xhr => deferred.reject(this.handleError(xhr))
-    );
+    ).done();
     return deferred.promise;
   }
 
-  loadTileSetByName(name, progressCallback) {
+  loadTileSetByName(name) {
     if (this.nameToIdMappings[name]) {
-      return this.loadTileSet(this.nameToIdMappings[name], progressCallback);
+      return this.loadTileSet(this.nameToIdMappings[name]);
     }
     var deferred = Q.defer();
     var tileSetUrl = tileSetsApi + "/tileset?name=" + name;
@@ -117,14 +117,14 @@ class TileSetService {
     p.then(data => {
       this.cache[data.id] = deferred;
       this.nameToIdMappings[name] = data.id;
-      this.initTileSet(data, deferred, progressCallback);
+      this.initTileSet(data, deferred);
     }, xhr => {
       deferred.reject(this.handleError(xhr, name));
-    });
+    }).done();
     return deferred.promise;
   }
 
-  loadTileSet(tileSetId, progressCallback) {
+  loadTileSet(tileSetId) {
     if (this.cache[tileSetId]) {
       return this.cache[tileSetId].promise;
     }
@@ -134,10 +134,10 @@ class TileSetService {
     p.then(data => {
       this.cache[tileSetId] = deferred;
       this.nameToIdMappings[data.name] = tileSetId;
-      this.initTileSet(data, deferred, progressCallback);
+      this.initTileSet(data, deferred);
     }, xhr => {
       deferred.reject(this.handleError(xhr, tileSetId));
-    });
+    }).done();
     return deferred.promise;
   }
 
@@ -150,20 +150,20 @@ class TileSetService {
     return { err: xhr.statusText, status: xhr.status, id: id };
   }
 
-  initTileSet(tileSetDef, deferred, progressCallback) {
+  initTileSet(tileSetDef, deferred) {
     var tilesImageUrl = tilesImgPath + "/" + tileSetDef.image;
     loadImage(tilesImageUrl, data => {
       if (data.err) {
         deferred.reject({ err: data.err, id: tileSetDef.name });
         return;
       }
-      deferred.resolve({ tileSet: this.buildTileSet(tileSetDef, data.img, progressCallback) });
+      deferred.resolve({ tileSet: this.buildTileSet(tileSetDef, data.img, deferred) });
     });
   }
 
-  buildTileSet(tileSetDef, tileSetImage, progressCallback) {
+  buildTileSet(tileSetDef, tileSetImage, deferred) {
     var tiles = this.initTiles(tileSetDef, tileSetImage);
-    progressCallback(100);
+    deferred.notify(100);
     return new TileSet(tileSetDef.id, tileSetDef.name, tiles);
   }
 

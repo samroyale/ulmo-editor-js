@@ -70,7 +70,7 @@ export const PlayMapModal = React.createClass({
                     playReady: false,
                     playError: data.err
                 });
-            });
+            }).done();
         }
     },
 
