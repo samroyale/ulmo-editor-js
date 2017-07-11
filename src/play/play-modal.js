@@ -75,7 +75,7 @@ export const PlayMapModal = React.createClass({
     },
 
     playReady() {
-        this._player.show();
+        this._player.draw();
         this._renderView();
         var onEachFrameFunc = this.assignOnEachFrame();
         onEachFrameFunc(this.playMain());

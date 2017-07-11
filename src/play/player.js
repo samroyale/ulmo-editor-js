@@ -1,26 +1,15 @@
-import Q from 'q';
-import { tileSize, spritesImgPath } from '../config';
-import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
+import { tileSize } from '../config';
+import { SpriteFrames } from './sprites';
+import { Rect } from '../utils';
+import {
+    upKey, downKey, leftKey, rightKey,
+    up, down, left, right,
+    directions,
+    movement,
+    spritesImgPath
+} from './play-config';
 
-const upKey = 38, downKey = 40, leftKey = 37, rightKey = 39;
-
-const up = 1, down = 2, left = 4, right = 8;
-
-const directions = [up, down, left, right];
-
-const movement = new Map([
-    [up, [up, 0, -2]],
-    [down, [down, 0, 2]],
-    [left, [left, -2, 0]],
-    [right, [right, 2, 0]],
-    [up + left, [up, -2, -2]],
-    [up + right, [up, 2, -2]],
-    [down + left, [down, -2, 2]],
-    [down + right, [down, 2, 2]]
-]);
-
-const baseRectHeight = 18,
-      baseRectExtension = 2;
+const baseRectHeight = 18, baseRectExtension = 2;
 
 const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
 
@@ -87,75 +76,6 @@ export class Keys {
     //     // do nothing
     // }
 };
-
-/* =============================================================================
- * CLASS: SPRITE FRAMES
- * =============================================================================
- */
-class SpriteFrames {
-    constructor(imageUrl, directions, frameCount, frameTicks) {
-        this._imageUrl = imageUrl;
-        this._frameCount = frameCount;
-        this._frameTicks = frameTicks;
-        this._direction = down;
-        this._frameIndex = 0;
-        this._tick = 0;
-    }
-
-    load() {
-        let deferred = Q.defer();
-        loadImage(this._imageUrl, data => {
-            if (data.err) {
-                deferred.reject({ err: data.err });
-                return;
-            }
-            this._processFrames(data.img, directions);
-            deferred.resolve({ currentFrame: this.currentFrame() });
-        });
-        return deferred.promise;
-    }
-    
-    _processFrames(img, directions) {
-        this._frames = new Map();
-        let spriteWidth = img.width / this._frameCount;
-        let spriteHeight = img.height / directions.length;
-        for (let i = 0; i < directions.length; i++) {
-            let frames = [];
-            for (let j = 0; j < this._frameCount; j++) {
-                let frameCanvas = document.createElement('canvas');
-                frameCanvas.width = spriteWidth * 2;
-                frameCanvas.height = spriteHeight * 2;
-                let frameCtx = getDrawingContext(frameCanvas);
-                frameCtx.drawImage(img,
-                    j * spriteWidth, i * spriteHeight, spriteWidth, spriteHeight,
-                    0, 0, spriteWidth * 2, spriteHeight * 2);
-                frames.push(frameCanvas);
-            }
-            this._frames.set(directions[i], frames);
-        }
-    }
-
-    getDirection() {
-        return this._direction;
-    }
-
-    advanceFrame(direction) {
-        this._direction = direction;
-        this._tick = (this._tick + 1) % this._frameTicks;
-        if (this._tick === 0) {
-            this._frameIndex = (this._frameIndex + 1) % this._frameCount;
-        }
-        return this.currentFrame();
-    }
-
-    currentFrame() {
-        return this._frames.get(this._direction)[this._frameIndex];
-    }
-
-    copyFrame() {
-        return copyCanvas(this.currentFrame());
-    }
-}
 
 /* =============================================================================
  * CLASS: PLAYER
@@ -310,7 +230,7 @@ export class Player {
         this._showInternal(mapCtx);
     }
 
-    show() {
+    draw() {
         this._showInternal(this._mapCtx());
     }
 
@@ -338,10 +258,10 @@ export class Player {
         if (masks.length > 0) {
             this._masked = true;
             this._canvas = this._frames.copyFrame();
+            var ctx = this._canvas.getContext('2d');
             masks.forEach(mask => {
                 var px = mask.x * tileSize - this._rect.left;
                 var py = mask.y * tileSize - this._rect.top;
-                var ctx = this._canvas.getContext('2d');
                 mask.tileMasks.forEach(tileMask => {
                     ctx.drawImage(tileMask, px, py);
                 });

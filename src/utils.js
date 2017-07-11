@@ -109,6 +109,10 @@ export class Rect {
     return new Rect(this.left + mx, this.top + my, this.width, this.height);
   }
 
+  copy() {
+    return this.move(0, 0);
+  }
+
   moveInPlace(mx, my) {
     this.left += mx;
     this.top += my;
