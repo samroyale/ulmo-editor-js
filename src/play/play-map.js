@@ -1,5 +1,5 @@
 import { tileSize, viewWidth, viewHeight } from '../config';
-import { drawTile, initTile } from '../utils';
+import { drawTile, initTile, Rect } from '../utils';
 
 const minShuffle = {
     index1: 0,
@@ -217,13 +217,15 @@ class PlayMap {
     }
 
     viewMap(playerRect, viewCtx) {
-        var tlx = Math.max(0, playerRect.left + (playerRect.width / 2) - (viewWidth / 2));
-        var tly = Math.max(0, playerRect.top + (playerRect.height / 2) - (viewHeight / 2));
+        let tlx = Math.max(0, playerRect.left + (playerRect.width / 2) - (viewWidth / 2));
+        let tly = Math.max(0, playerRect.top + (playerRect.height / 2) - (viewHeight / 2));
         tlx = Math.min(tlx, this.mapCanvas.width - viewWidth);
         tly = Math.min(tly, this.mapCanvas.height - viewHeight);
-        viewCtx.drawImage(this.mapCanvas,
-            tlx < 0 ? tlx / 2 : tlx, tly < 0 ? tly / 2 : tly, viewWidth, viewHeight,
-            0, 0, viewWidth, viewHeight);
+        // needed to center maps smaller than the view
+        // tlx = tlx < 0 ? tlx / 2 : tlx;
+        // tly = tly < 0 ? tly / 2 : tly;
+        viewCtx.drawImage(this.mapCanvas,  tlx, tly, viewWidth, viewHeight, 0, 0, viewWidth, viewHeight);
+        return new Rect(tlx, tly, viewWidth, viewHeight);
     }
 
     getMapCanvas() {

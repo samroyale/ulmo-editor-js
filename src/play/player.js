@@ -115,10 +115,6 @@ export class Player {
         return new Rect(baseRectLeft, baseRectTop, baseRectWidth, baseRectHeight);
     }
 
-    viewMap(viewCtx) {
-        this._playMap.viewMap(this._rect, viewCtx);
-    }
-    
     move(direction, mx, my) {
         // check requested movement falls within map boundary
         var newRect = this._rect.move(mx, my);
@@ -220,25 +216,28 @@ export class Player {
 
     _moveInternal(direction, level, rect) {
         var mapCtx = this._mapCtx();
-        this._restoreBackground(mapCtx); // must happen before _rect updated
         // update rects
         // console.log(this._baseRect + " : " + this._rect);
         this._level = level;
         this._rect = rect;
         // draw player in new position
         this._canvas = this._frames.advanceFrame(direction);
-        this._showInternal(mapCtx);
+        // this._showInternal(mapCtx);
     }
 
-    draw() {
-        this._showInternal(this._mapCtx());
+    renderToView(viewCtx) {
+        let viewRect = this._playMap.viewMap(this._rect, viewCtx);
+        // console.log('viewRect: ' + viewRect);
+        this._drawInternal(viewCtx, viewRect);
     }
 
-    _showInternal(ctx) {
+    _drawInternal(ctx, viewRect) {
         this._applyMasksFromMap();
-        this._background = ctx.getImageData(this._rect.left, this._rect.top,
-            this._rect.width, this._rect.height);
-        ctx.drawImage(this._canvas, this._rect.left, this._rect.top);
+        this._render(ctx, viewRect);
+    }
+
+    _render(ctx, viewRect) {
+        ctx.drawImage(this._canvas, this._rect.left - viewRect.left, this._rect.top - viewRect.top);
     }
 
     _applyMasksFromMap() {
@@ -271,10 +270,6 @@ export class Player {
 
     _mapCtx() {
         return this._playMap.getMapCanvas().getContext('2d');
-    }
-
-    _restoreBackground(ctx) {
-        ctx.putImageData(this._background, this._rect.left, this._rect.top);
     }
 
     _updateZIndex() {

@@ -75,7 +75,6 @@ export const PlayMapModal = React.createClass({
     },
 
     playReady() {
-        this._player.draw();
         this._renderView();
         var onEachFrameFunc = this.assignOnEachFrame();
         onEachFrameFunc(this.playMain());
@@ -113,7 +112,7 @@ export const PlayMapModal = React.createClass({
     },
 
     _renderView: function() {
-        this._player.viewMap(this._canvas.getContext('2d'));
+        this._player.renderToView(this._canvas.getContext('2d'));
     },
 
     /*
