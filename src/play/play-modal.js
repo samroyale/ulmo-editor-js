@@ -2,6 +2,7 @@ import React from 'react';
 import { Alert, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
+import { SpriteGroup } from './sprites';
 import PlayMap from './play-map';
 import './play-modal.css';
 
@@ -13,11 +14,12 @@ const fps = 60;
  */
 export const PlayMapModal = React.createClass({
     _canvas: null,
+    _player: null,
+    _visibleSprites: null,
+    _keys: null,
+
     _requestId: null, // only set if using requestAnimationFrame
     _intervalId: null, // only set if using setInterval
-    _player: null,
-    _keys: null,
-    _keyBits: 0,
 
     getInitialState: function() {
         return {
@@ -75,6 +77,8 @@ export const PlayMapModal = React.createClass({
     },
 
     playReady() {
+        this._visibleSprites = new SpriteGroup();
+        this._visibleSprites.add(this._player);
         this._renderView();
         var onEachFrameFunc = this.assignOnEachFrame();
         onEachFrameFunc(this.playMain());
@@ -112,7 +116,9 @@ export const PlayMapModal = React.createClass({
     },
 
     _renderView: function() {
-        this._player.renderToView(this._canvas.getContext('2d'));
+        let viewCtx = this._canvas.getContext('2d');
+        let viewRect = this._player.drawMapView(viewCtx);
+        this._visibleSprites.draw(viewCtx, viewRect);
     },
 
     /*
@@ -138,18 +144,10 @@ export const PlayMapModal = React.createClass({
     //         this._renderView();
     //     };
     // },
-
+    
     _playUpdate: function() {
-        // TODO: most of the keys stuff should be in Player - the move function should take a keys argument
-        var keyBits = this._keys.processKeysDown();
-        if (keyBits === this._keyBits && this._player.applyDeferredMovement()) {
-            return;
-        }
-        this._keyBits = keyBits;
-        var movement = this._keys.getMovement(keyBits);
-        if (movement) {
-            this._player.move(movement[0], movement[1], movement[2]);
-        }
+        this._player.update(this._keys);
+        // updating of other sprites should go here
     },
 
     keyDown: function(e) {

@@ -1,11 +1,12 @@
 import { tileSize } from '../config';
-import { SpriteFrames } from './sprites';
+import { SpriteFrames, Shadow } from './sprites';
 import { Rect } from '../utils';
 import {
     upKey, downKey, leftKey, rightKey,
     up, down, left, right,
     directions,
     movement,
+    fall_unit,
     spritesImgPath
 } from './play-config';
 
@@ -89,8 +90,8 @@ export class Player {
         this._level = this._playMap.getValidLevel(tx, ty);
         this._canvas = null;
         this._deferredMovement = null;
-        this._background = null;
         this._masked = false;
+        this._keyBits = 0;
         this._frames = new SpriteFrames(playerFramesUrl, directions, 4, 6);
     }
 
@@ -115,7 +116,23 @@ export class Player {
         return new Rect(baseRectLeft, baseRectTop, baseRectWidth, baseRectHeight);
     }
 
-    move(direction, mx, my) {
+    update(keys) {
+        if (this._falling) {
+            this._continueFalling();
+            return;
+        }
+        let keyBits = keys.processKeysDown();
+        if (keyBits === this._keyBits && this.applyDeferredMovement()) {
+            return;
+        }
+        this._keyBits = keyBits;
+        let movement = keys.getMovement(keyBits);
+        if (movement) {
+            this._move(movement[0], movement[1], movement[2]);
+        }
+    }
+
+    _move(direction, mx, my) {
         // check requested movement falls within map boundary
         var newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
@@ -225,13 +242,44 @@ export class Player {
         // this._showInternal(mapCtx);
     }
 
-    renderToView(viewCtx) {
-        let viewRect = this._playMap.viewMap(this._rect, viewCtx);
-        // console.log('viewRect: ' + viewRect);
-        this._drawInternal(viewCtx, viewRect);
+    /**
+     * Continues falling + detects if falling is complete.
+     */
+    _continueFalling() {
+        this._applyMovement(this._level, this._direction, 0, fall_unit);
+        if (this._falling % tileSize === 0) {
+            this._level -= 1;
+        }
+        this._falling -= fall_unit;
+        if (this._falling > 0) {
+            return;
+        }
+        // falling is complete - swap back to moving frames
+        // this._clearMasks() ??
+        this._frames = this._movingFrames.setState(this._frames);
+        this._canvas = this._frames.currentFrame();
+        this._applyMasksFromMap(); //??
+        this._shadow.removeOnNextTick();
     }
 
-    _drawInternal(ctx, viewRect) {
+    /**
+     * Starts falling by switching frames and adding a shadow to game sprites.
+     */
+    _startFalling(gameSprites, downLevel) {
+        console.log('down: ' + downLevel);
+        this.falling = downLevel * tileSize;
+        // this._clearMasks() ??
+        this._frames = this._fallingFrames.setState(this._frames);
+        this._shadow = new Shadow(); // better to have shadow already created?
+        this._shadow.setPosition(this, downLevel);
+        gameSprites.add(this._shadow);
+    }
+
+    drawMapView(viewCtx) {
+        return this._playMap.viewMap(this._rect, viewCtx);
+    }
+
+    draw(ctx, viewRect) {
         this._applyMasksFromMap();
         this._render(ctx, viewRect);
     }

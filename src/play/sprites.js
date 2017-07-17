@@ -90,15 +90,29 @@ export class SpriteGroup {
         this._sprites.splice(index, 1);
     }
 
-    update() {
+    update(viewRect) {
         this._sprites.forEach(sprite => {
             sprite.update();
         });
     }
 
-    draw() {
+    draw(ctx, viewRect) {
         this._sprites.forEach(sprite => {
-            sprite.draw();
+            sprite.draw(ctx, viewRect);
         });
+    }
+}
+
+/* =============================================================================
+ * CLASS: SHADOW
+ * =============================================================================
+ */
+export class Shadow {
+    constructor() {
+        // placeholder
+    }
+
+    setPosition(player, downLevel) {
+        // placeholder
     }
 }

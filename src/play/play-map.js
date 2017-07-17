@@ -311,10 +311,10 @@ class PlayMap {
     }
 
     getMasksForUpright(spriteRect, spriteLevel, spriteZ) {
-        return this.getMasks(spriteRect, spriteLevel, spriteZ, true);
+        return this.getMasks(spriteRect, spriteZ, spriteLevel, true);
     }
 
-    getMasks(spriteRect, spriteZ, spriteLevel, spriteUpright) {
+    getMasks(spriteRect, spriteLevel, spriteZ, spriteUpright) {
         var spriteTiles = this._getSpanTiles(spriteRect);
         var masks = [];
         spriteTiles.forEach(tile => {
