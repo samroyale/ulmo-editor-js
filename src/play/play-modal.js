@@ -64,9 +64,11 @@ export const PlayMapModal = React.createClass({
         }
         if (this.state.rpgMap && !this._player) {
             this._keys = new Keys();
-            var playMap = new PlayMap(this.state.rpgMap);
-            this._player = new Player(playMap, this.props.tilePosition.x, this.props.tilePosition.y);
-            var p = this._player.load();
+            let playMap = new PlayMap(this.state.rpgMap);
+            let tx = this.props.tilePosition.x, ty = this.props.tilePosition.y;
+            let level = playMap.getValidLevel(tx, ty);
+            this._player = new Player(playMap, level, tx, ty);
+            let p = this._player.load();
             p.then(this.playReady, data => {
                 this.setState({
                     playReady: false,
@@ -80,7 +82,7 @@ export const PlayMapModal = React.createClass({
         this._visibleSprites = new SpriteGroup();
         this._visibleSprites.add(this._player);
         this._renderView();
-        var onEachFrameFunc = this.assignOnEachFrame();
+        let onEachFrameFunc = this.assignOnEachFrame();
         onEachFrameFunc(this.playMain());
         this.setState({
             playReady: true,

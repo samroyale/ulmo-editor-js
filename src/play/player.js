@@ -1,5 +1,5 @@
 import { tileSize } from '../config';
-import { SpriteFrames, Shadow } from './sprites';
+import { Sprite, MovingFrames, SingleFrame } from './sprites';
 import { Rect } from '../utils';
 import {
     upKey, downKey, leftKey, rightKey,
@@ -13,6 +13,8 @@ import {
 const baseRectHeight = 18, baseRectExtension = 2;
 
 const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
+const playerFallingFramesUrl = spritesImgPath + '/ulmo-falling.png';
+const shadowFramesUrl = spritesImgPath + '/shadow.png';
 
 /* =============================================================================
  * CLASS: KEYS
@@ -82,33 +84,16 @@ export class Keys {
  * CLASS: PLAYER
  * =============================================================================
  */
-export class Player {
-    constructor(playMap, tx, ty) {
-        this._playMap = playMap;
-        this._tx = tx;
-        this._ty = ty;
-        this._level = this._playMap.getValidLevel(tx, ty);
-        this._canvas = null;
+export class Player extends Sprite {
+    constructor(playMap, level, tx, ty) {
+        super(playMap, level, tx, ty, true);
         this._deferredMovement = null;
-        this._masked = false;
         this._keyBits = 0;
-        this._frames = new SpriteFrames(playerFramesUrl, directions, 4, 6);
     }
 
     load() {
-        let p = this._frames.load();
-        return p.then(data => {
-            let frame = data.currentFrame;
-            let marginX = (tileSize - frame.width) / 2;
-            let marginY = (tileSize * 2 - frame.height) / 2;
-            let px = this._tx * tileSize + marginX;
-            let py = (this._ty - 1) * tileSize + marginY;
-            this._rect = new Rect(px, py, frame.width, frame.height);
-            this._baseRect = this._initBaseRect(px, frame.width);
-            this._zIndex = this._updateZIndex();
-            this._canvas = frame;
-            return data;
-        });
+        let frames = new MovingFrames(playerFramesUrl, directions, 4, 6);
+        return this.loadFrames(frames);
     }
 
     _initBaseRect(baseRectLeft, baseRectWidth) {
@@ -232,14 +217,12 @@ export class Player {
     }
 
     _moveInternal(direction, level, rect) {
-        var mapCtx = this._mapCtx();
         // update rects
         // console.log(this._baseRect + " : " + this._rect);
         this._level = level;
         this._rect = rect;
-        // draw player in new position
+        // update sprite frames
         this._canvas = this._frames.advanceFrame(direction);
-        // this._showInternal(mapCtx);
     }
 
     /**
@@ -267,10 +250,10 @@ export class Player {
      */
     _startFalling(gameSprites, downLevel) {
         console.log('down: ' + downLevel);
-        this.falling = downLevel * tileSize;
+        this._falling = downLevel * tileSize;
         // this._clearMasks() ??
         this._frames = this._fallingFrames.setState(this._frames);
-        this._shadow = new Shadow(); // better to have shadow already created?
+        this._shadow = new Shadow(this._playMap); // better to have shadow already created?
         this._shadow.setPosition(this, downLevel);
         gameSprites.add(this._shadow);
     }
@@ -279,48 +262,30 @@ export class Player {
         return this._playMap.viewMap(this._rect, viewCtx);
     }
 
-    draw(ctx, viewRect) {
-        this._applyMasksFromMap();
-        this._render(ctx, viewRect);
-    }
-
-    _render(ctx, viewRect) {
-        ctx.drawImage(this._canvas, this._rect.left - viewRect.left, this._rect.top - viewRect.top);
-    }
-
-    _applyMasksFromMap() {
-        if (this._masked) {
-            // console.log('clear masks');
-            this._masked = false;
-            this._canvas = this._frames.currentFrame();
-        }
-        // console.log('get and apply masks');
-        this._zIndex = this._updateZIndex();
-        var masks = this._playMap.getMasksForUpright(this._rect, this._zIndex, this._level);
-        this._applyMasks(masks);
-    }
-
-    // masks is a list of lists + x, y values
-    _applyMasks(masks) {
-        if (masks.length > 0) {
-            this._masked = true;
-            this._canvas = this._frames.copyFrame();
-            var ctx = this._canvas.getContext('2d');
-            masks.forEach(mask => {
-                var px = mask.x * tileSize - this._rect.left;
-                var py = mask.y * tileSize - this._rect.top;
-                mask.tileMasks.forEach(tileMask => {
-                    ctx.drawImage(tileMask, px, py);
-                });
-            });
-        }
-    }
-
-    _mapCtx() {
-        return this._playMap.getMapCanvas().getContext('2d');
-    }
-
-    _updateZIndex() {
-        return Math.floor(this._rect.bottom + this._level * tileSize);
+    getRect() {
+        return this._rect;
     }
 };
+
+/* =============================================================================
+ * CLASS: SHADOW
+ * =============================================================================
+ */
+export class Shadow extends Sprite {
+    constructor(playMap) {
+        super(playMap, null, null, null, false);
+    }
+
+    load() {
+        let frames = new SingleFrame(shadowFramesUrl);
+        return this.loadFrames(frames);
+    }
+
+    setPosition(player, downLevel) {
+        let playerRect = player.getRect();
+        let px = playerRect.left;
+        let py = playerRect.top + downLevel * tileSize + playerRect.height - this._canvas.height;
+        super.setPosition(player.level - downLevel, px, py);
+    }
+}
+
