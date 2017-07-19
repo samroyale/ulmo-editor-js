@@ -89,13 +89,7 @@ export class Shadow extends Sprite {
         this._canvas = frames.currentFrame();
     }
 
-    // load() {
-    //     let frames = new SingleFrame(shadowFramesUrl);
-    //     return this.loadFrames(frames);
-    // }
-
     setPosition(playerRect, playerLevel, downLevel) {
-        console.log('playerRect: ' + playerRect);
         let px = playerRect.left;
         let py = playerRect.top + downLevel * tileSize + playerRect.height - this._canvas.height;
         super.setPosition(playerLevel - downLevel, px, py);
@@ -268,16 +262,10 @@ export class Player extends Sprite {
     _startFalling(gameSprites, downLevel) {
         console.log('down: ' + downLevel);
         this._falling = downLevel * tileSize;
-        // this._clearMasks() ??
-        this._frames = this._fallingFrames;
-        this._shadow = new Shadow(this._playMap, this._shadowFrames); // better to have shadow already created?
+        this._frames = this._fallingFrames.withFrameIndex(this._frames.getFrameIndex());
+        this._shadow = new Shadow(this._playMap, this._shadowFrames);
         this._shadow.setPosition(this._rect, this._level, downLevel);
         gameSprites.add(this._shadow);
-        // let p = this._shadow.load();
-        // p.then(() => {
-        //     this._shadow.setPosition(this, downLevel);
-        //     gameSprites.add(this._shadow);
-        // });
     }
 
     /**
@@ -293,11 +281,8 @@ export class Player extends Sprite {
             return;
         }
         // falling is complete - swap back to moving frames
-        // this._clearMasks() ??
-        //this._frames = this._movingFrames.setState(this._frames); // TODO
         this._frames = this._movingFrames;
         this._canvas = this._frames.currentFrame();
-        // this._applyMasksFromMap(); //??
         this._shadow.removeOnNextTick();
     }
 

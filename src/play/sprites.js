@@ -73,6 +73,15 @@ export class MovingFrames {
     copyFrame() {
         return copyCanvas(this.currentFrame());
     }
+
+    withFrameIndex(frameIndex) {
+        this._frameIndex = frameIndex;
+        return this;
+    }
+
+    getFrameIndex() {
+        return this._frameIndex;
+    }
 }
 
 /* =============================================================================
