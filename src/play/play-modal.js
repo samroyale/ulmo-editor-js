@@ -148,8 +148,9 @@ export const PlayMapModal = React.createClass({
     // },
     
     _playUpdate: function() {
-        this._player.update(this._keys);
+        this._player.handleInput(this._keys.processKeysDown());
         // updating of other sprites should go here
+        this._visibleSprites.update(null, this._visibleSprites); // TODO: need view rect
     },
 
     keyDown: function(e) {

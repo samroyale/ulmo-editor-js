@@ -1,3 +1,4 @@
+import Q from 'q';
 import { tileSize } from '../config';
 import { Sprite, MovingFrames, SingleFrame } from './sprites';
 import { Rect } from '../utils';
@@ -6,7 +7,7 @@ import {
     up, down, left, right,
     directions,
     movement,
-    fall_unit,
+    fallUnit,
     spritesImgPath
 } from './play-config';
 
@@ -64,10 +65,6 @@ export class Keys {
         return keyBits;
     }
 
-    getMovement(keyBits) {
-        return movement.get(keyBits);
-    }
-
     _flush() {
         if (this._keysUp.length === 0) {
             return;
@@ -81,19 +78,50 @@ export class Keys {
 };
 
 /* =============================================================================
+ * CLASS: SHADOW
+ * =============================================================================
+ */
+export class Shadow extends Sprite {
+    constructor(playMap, frames) {
+        super(playMap, null, null, null, false);
+        // frames is pre-loaded by player
+        this._frames = frames;
+        this._canvas = frames.currentFrame();
+    }
+
+    // load() {
+    //     let frames = new SingleFrame(shadowFramesUrl);
+    //     return this.loadFrames(frames);
+    // }
+
+    setPosition(playerRect, playerLevel, downLevel) {
+        console.log('playerRect: ' + playerRect);
+        let px = playerRect.left;
+        let py = playerRect.top + downLevel * tileSize + playerRect.height - this._canvas.height;
+        super.setPosition(playerLevel - downLevel, px, py);
+    }
+}
+
+/* =============================================================================
  * CLASS: PLAYER
  * =============================================================================
  */
 export class Player extends Sprite {
     constructor(playMap, level, tx, ty) {
         super(playMap, level, tx, ty, true);
+        this._movingFrames = new MovingFrames(playerFramesUrl, directions, 4, 6);
+        this._fallingFrames = new MovingFrames(playerFallingFramesUrl, [down], 4, 0);
+        this._shadowFrames = new SingleFrame(shadowFramesUrl);
         this._deferredMovement = null;
         this._keyBits = 0;
     }
 
     load() {
-        let frames = new MovingFrames(playerFramesUrl, directions, 4, 6);
-        return this.loadFrames(frames);
+        return Q.all([
+            this.loadFrames(this._movingFrames),
+            this._fallingFrames.load(),
+            this._shadowFrames.load()
+        ]);
     }
 
     _initBaseRect(baseRectLeft, baseRectWidth) {
@@ -101,19 +129,17 @@ export class Player extends Sprite {
         return new Rect(baseRectLeft, baseRectTop, baseRectWidth, baseRectHeight);
     }
 
-    update(keys) {
+    handleInput(keyBits) {
         if (this._falling) {
-            this._continueFalling();
             return;
         }
-        let keyBits = keys.processKeysDown();
         if (keyBits === this._keyBits && this.applyDeferredMovement()) {
             return;
         }
         this._keyBits = keyBits;
-        let movement = keys.getMovement(keyBits);
-        if (movement) {
-            this._move(movement[0], movement[1], movement[2]);
+        let moves = movement.get(keyBits);
+        if (moves) {
+            this._move(moves[0], moves[1], moves[2]);
         }
     }
 
@@ -225,24 +251,15 @@ export class Player extends Sprite {
         this._canvas = this._frames.advanceFrame(direction);
     }
 
-    /**
-     * Continues falling + detects if falling is complete.
-     */
-    _continueFalling() {
-        this._applyMovement(this._level, this._direction, 0, fall_unit);
-        if (this._falling % tileSize === 0) {
-            this._level -= 1;
-        }
-        this._falling -= fall_unit;
-        if (this._falling > 0) {
+    update(gameSprites) {
+        if (this._falling) {
+            this._continueFalling();
             return;
         }
-        // falling is complete - swap back to moving frames
-        // this._clearMasks() ??
-        this._frames = this._movingFrames.setState(this._frames);
-        this._canvas = this._frames.currentFrame();
-        this._applyMasksFromMap(); //??
-        this._shadow.removeOnNextTick();
+        let event = this._playMap.getEvent(this._level, this._baseRect);
+        if (event && event.eventType === 'falling') {
+            this._startFalling(gameSprites, event.downLevel);
+        }
     }
 
     /**
@@ -252,40 +269,39 @@ export class Player extends Sprite {
         console.log('down: ' + downLevel);
         this._falling = downLevel * tileSize;
         // this._clearMasks() ??
-        this._frames = this._fallingFrames.setState(this._frames);
-        this._shadow = new Shadow(this._playMap); // better to have shadow already created?
-        this._shadow.setPosition(this, downLevel);
+        this._frames = this._fallingFrames;
+        this._shadow = new Shadow(this._playMap, this._shadowFrames); // better to have shadow already created?
+        this._shadow.setPosition(this._rect, this._level, downLevel);
         gameSprites.add(this._shadow);
+        // let p = this._shadow.load();
+        // p.then(() => {
+        //     this._shadow.setPosition(this, downLevel);
+        //     gameSprites.add(this._shadow);
+        // });
+    }
+
+    /**
+     * Continues falling + detects if falling is complete.
+     */
+    _continueFalling() {
+        this._applyMovement(down, this._level, 0, fallUnit);
+        if (this._falling % tileSize === 0) {
+            this._level -= 1;
+        }
+        this._falling -= fallUnit;
+        if (this._falling > 0) {
+            return;
+        }
+        // falling is complete - swap back to moving frames
+        // this._clearMasks() ??
+        //this._frames = this._movingFrames.setState(this._frames); // TODO
+        this._frames = this._movingFrames;
+        this._canvas = this._frames.currentFrame();
+        // this._applyMasksFromMap(); //??
+        this._shadow.removeOnNextTick();
     }
 
     drawMapView(viewCtx) {
         return this._playMap.viewMap(this._rect, viewCtx);
     }
-
-    getRect() {
-        return this._rect;
-    }
 };
-
-/* =============================================================================
- * CLASS: SHADOW
- * =============================================================================
- */
-export class Shadow extends Sprite {
-    constructor(playMap) {
-        super(playMap, null, null, null, false);
-    }
-
-    load() {
-        let frames = new SingleFrame(shadowFramesUrl);
-        return this.loadFrames(frames);
-    }
-
-    setPosition(player, downLevel) {
-        let playerRect = player.getRect();
-        let px = playerRect.left;
-        let py = playerRect.top + downLevel * tileSize + playerRect.height - this._canvas.height;
-        super.setPosition(player.level - downLevel, px, py);
-    }
-}
-

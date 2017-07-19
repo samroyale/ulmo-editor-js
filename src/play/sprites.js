@@ -66,6 +66,7 @@ export class MovingFrames {
     }
 
     currentFrame() {
+        console.log(this._direction + ' ' + this._frameIndex);
         return this._frames.get(this._direction)[this._frameIndex];
     }
 
@@ -143,9 +144,9 @@ export class SpriteGroup {
         this._sprites.splice(index, 1);
     }
 
-    update(viewRect) {
+    update(viewRect, gameSprites, visibleSprites) {
         this._sprites.forEach(sprite => {
-            sprite.update();
+            sprite.update(gameSprites);
         });
     }
 
@@ -170,6 +171,7 @@ export class Sprite {
         this._canvas = null;
         this._baseRect = null;
         this._masked = false;
+        this._toRemove = false;
     }
 
     loadFrames(spriteFrames) {
@@ -182,15 +184,16 @@ export class Sprite {
                 let marginY = (tileSize * 2 - this._canvas.height) / 2;
                 let px = this._tx * tileSize + marginX;
                 let py = (this._ty - 1) * tileSize + marginY;
-                this._setPosition(this._level, px, py);
+                this.setPosition(this._level, px, py);
             }
             return data;
         });
     }
 
-
-    _setPosition(frame, px, py) {
+    setPosition(level, px, py) {
+        this._level = level;
         this._rect = new Rect(px, py, this._canvas.width, this._canvas.height);
+        console.log('_rect: ' + this._rect);
         this._baseRect = this._initBaseRect(px, this._rect.width);
         this._zIndex = this._updateZIndex();
     }
@@ -198,9 +201,11 @@ export class Sprite {
     _initBaseRect(baseRectLeft, baseRectWidth) {
         // leave as null by default
     }
-    
-    update() {
-        // do nothing
+
+    update(gameSprites) {
+        if (this._toRemove) {
+            gameSprites.remove(this);
+        }
     }
 
     draw(ctx, viewRect) {
@@ -220,7 +225,7 @@ export class Sprite {
         }
         // console.log('get and apply masks');
         this._zIndex = this._updateZIndex();
-        var masks = this._playMap.getMasksForUpright(this._rect, this._zIndex, this._level, this._upright);
+        var masks = this._playMap.getMasks(this._rect, this._level, this._zIndex, this._upright);
         this._applyMasks(masks);
     }
 
@@ -242,5 +247,10 @@ export class Sprite {
     
     _updateZIndex() {
         return Math.floor(this._rect.bottom + this._level * tileSize);
+    }
+
+
+    removeOnNextTick() {
+        this._toRemove = true;
     }
 }

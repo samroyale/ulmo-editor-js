@@ -100,11 +100,14 @@ class PlayTile {
         this.specialLevels.set(Math.ceil(level), level);
     }
 
-    addDownLevel(level) {
+    addDownLevel(levelStr) {
         if (!this.downLevels) {
             this.downLevels = new Map();
         }
-        this.downLevels.set(level, level);
+        let levels = levelStr.substr(1).split('-');
+        let level = Number.parseFloat(levels[0]);
+        let downLevel = Number.parseFloat(levels[1]);
+        this.downLevels.set(level, downLevel);
     }
 
     addMask(tileIndex, level, flat, y) {
@@ -311,7 +314,7 @@ class PlayMap {
     }
 
     getMasksForUpright(spriteRect, spriteLevel, spriteZ) {
-        return this.getMasks(spriteRect, spriteZ, spriteLevel, true);
+        return this.getMasks(spriteRect, spriteLevel, spriteZ, true);
     }
 
     getMasks(spriteRect, spriteLevel, spriteZ, spriteUpright) {
@@ -329,6 +332,25 @@ class PlayMap {
             }
         });
         return masks;
+    }
+    
+    getEvent(level, baseRect) {
+        //let downLevels = [];
+        let spanTiles = this._getSpanTiles(baseRect);
+        let falling = spanTiles.every(tile => {
+            let downLevel = tile.getDownLevel(level);
+            if (downLevel) {
+                return true;
+            }
+            return false;
+        });
+        if (falling) {
+            return {
+                eventType: 'falling',
+                downLevel: spanTiles[0].getDownLevel(level)
+            }
+        }
+        return null;
     }
 
     _getSpanTiles(rect) {
