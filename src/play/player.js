@@ -124,6 +124,11 @@ export class Player extends Sprite {
     }
 
     handleInput(keyBits) {
+        this._handleInputInternal(keyBits);
+        return this._playMap.determineViewRect(this._rect);
+    }
+
+    _handleInputInternal(keyBits) {
         if (this._falling) {
             return;
         }
@@ -245,27 +250,27 @@ export class Player extends Sprite {
         this._canvas = this._frames.advanceFrame(direction);
     }
 
-    update(gameSprites) {
+    update(viewRect, mapSprites) {
         if (this._falling) {
             this._continueFalling();
             return;
         }
         let event = this._playMap.getEvent(this._level, this._baseRect);
         if (event && event.eventType === 'falling') {
-            this._startFalling(gameSprites, event.downLevel);
+            this._startFalling(mapSprites, event.downLevel);
         }
     }
 
     /**
      * Starts falling by switching frames and adding a shadow to game sprites.
      */
-    _startFalling(gameSprites, downLevel) {
+    _startFalling(mapSprites, downLevel) {
         console.log('down: ' + downLevel);
         this._falling = downLevel * tileSize;
         this._frames = this._fallingFrames.withFrameIndex(this._frames.getFrameIndex());
         this._shadow = new Shadow(this._playMap, this._shadowFrames);
         this._shadow.setPosition(this._rect, this._level, downLevel);
-        gameSprites.add(this._shadow);
+        mapSprites.add(this._shadow);
     }
 
     /**
@@ -286,7 +291,7 @@ export class Player extends Sprite {
         this._shadow.removeOnNextTick();
     }
 
-    drawMapView(viewCtx) {
-        return this._playMap.viewMap(this._rect, viewCtx);
+    drawMapView(viewCtx, viewRect) {
+        return this._playMap.drawView(viewCtx, viewRect);
     }
 };

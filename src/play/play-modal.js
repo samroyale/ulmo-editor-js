@@ -15,7 +15,7 @@ const fps = 60;
 export const PlayMapModal = React.createClass({
     _canvas: null,
     _player: null,
-    _visibleSprites: null,
+    _mapSprites: null,
     _keys: null,
 
     _requestId: null, // only set if using requestAnimationFrame
@@ -79,9 +79,8 @@ export const PlayMapModal = React.createClass({
     },
 
     playReady() {
-        this._visibleSprites = new SpriteGroup();
-        this._visibleSprites.add(this._player);
-        this._renderView();
+        this._mapSprites = new SpriteGroup();
+        this._mapSprites.add(this._player);
         let onEachFrameFunc = this.assignOnEachFrame();
         onEachFrameFunc(this.playMain());
         this.setState({
@@ -112,15 +111,14 @@ export const PlayMapModal = React.createClass({
      */
     playMain: function() {
         return () => {
-            this._playUpdate();
-            this._renderView();
+            // update stuff
+            let viewRect = this._player.handleInput(this._keys.processKeysDown());
+            this._mapSprites.update(viewRect, this._mapSprites);
+            // render the view
+            let viewCtx = this._canvas.getContext('2d');
+            this._player.drawMapView(viewCtx, viewRect);
+            this._mapSprites.draw(viewCtx, viewRect);
         };
-    },
-
-    _renderView: function() {
-        let viewCtx = this._canvas.getContext('2d');
-        let viewRect = this._player.drawMapView(viewCtx);
-        this._visibleSprites.draw(viewCtx, viewRect);
     },
 
     /*
@@ -147,12 +145,6 @@ export const PlayMapModal = React.createClass({
     //     };
     // },
     
-    _playUpdate: function() {
-        this._player.handleInput(this._keys.processKeysDown());
-        // updating of other sprites should go here
-        this._visibleSprites.update(null, this._visibleSprites); // TODO: need view rect
-    },
-
     keyDown: function(e) {
         this._keys.keyDown(e.keyCode);
     },

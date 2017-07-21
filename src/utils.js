@@ -133,6 +133,13 @@ export class Rect {
     };
   }
 
+  intersectsWith(rect) {
+    return ((rect.left >= this.left && rect.left < this.right) ||
+        (rect.right > this.left && rect.right <= this.right)) &&
+        ((rect.top >= this.top && rect.top < this.bottom) ||
+        (rect.bottom > this.top && rect.bottom <= this.bottom));
+  }
+
   toString() {
     return 'Rect [left: ' + this.left + ', top: ' + this.top + ', width: ' + this.width + ', height: ' + this.height + ']';
   }

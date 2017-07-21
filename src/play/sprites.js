@@ -149,20 +149,18 @@ export class SpriteGroup {
     }
 
     remove(sprite) {
-        let index = this._sprites.indexOf(sprite);
-        this._sprites.splice(index, 1);
+        this._sprites.splice(this._sprites.indexOf(sprite), 1);
     }
 
-    update(viewRect, gameSprites, visibleSprites) {
-        this._sprites.forEach(sprite => {
-            sprite.update(gameSprites);
-        });
+    update(viewRect, mapSprites) {
+        this._sprites.forEach(sprite => sprite.update(viewRect, mapSprites));
     }
 
     draw(ctx, viewRect) {
-        this._sprites.forEach(sprite => {
-            sprite.draw(ctx, viewRect);
-        });
+        // TODO: z order!
+        this._sprites
+            .filter(sprite => sprite.isInView(viewRect))
+            .forEach(sprite => sprite.draw(ctx, viewRect));
     }
 }
 
@@ -173,12 +171,14 @@ export class SpriteGroup {
 export class Sprite {
     constructor(playMap, level, tx, ty, upright) {
         this._playMap = playMap;
-        this._upright = true;
         this._level = level;
         this._tx = tx;
         this._ty = ty;
+        this._upright = upright;
         this._canvas = null;
+        this._rect = null;
         this._baseRect = null;
+        this._zIndex = null;
         this._masked = false;
         this._toRemove = false;
     }
@@ -202,7 +202,6 @@ export class Sprite {
     setPosition(level, px, py) {
         this._level = level;
         this._rect = new Rect(px, py, this._canvas.width, this._canvas.height);
-        console.log('_rect: ' + this._rect);
         this._baseRect = this._initBaseRect(px, this._rect.width);
         this._zIndex = this._updateZIndex();
     }
@@ -211,15 +210,21 @@ export class Sprite {
         // leave as null by default
     }
 
-    update(gameSprites) {
+    update(viewRect, mapSprites) {
         if (this._toRemove) {
-            gameSprites.remove(this);
+            mapSprites.remove(this);
+            return;
         }
+        // TODO: apply movement
     }
 
     draw(ctx, viewRect) {
         this._applyMasksFromMap();
         this._render(ctx, viewRect);
+    }
+
+    isInView(viewRect) {
+        return viewRect.intersectsWith(this._rect);
     }
 
     _render(ctx, viewRect) {
@@ -257,7 +262,6 @@ export class Sprite {
     _updateZIndex() {
         return Math.floor(this._rect.bottom + this._level * tileSize);
     }
-
 
     removeOnNextTick() {
         this._toRemove = true;

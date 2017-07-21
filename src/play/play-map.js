@@ -219,7 +219,7 @@ class PlayMap {
         return mapCanvas;
     }
 
-    viewMap(playerRect, viewCtx) {
+    determineViewRect(playerRect) {
         let tlx = Math.max(0, playerRect.left + (playerRect.width / 2) - (viewWidth / 2));
         let tly = Math.max(0, playerRect.top + (playerRect.height / 2) - (viewHeight / 2));
         tlx = Math.min(tlx, this.mapCanvas.width - viewWidth);
@@ -227,12 +227,13 @@ class PlayMap {
         // needed to center maps smaller than the view
         // tlx = tlx < 0 ? tlx / 2 : tlx;
         // tly = tly < 0 ? tly / 2 : tly;
-        viewCtx.drawImage(this.mapCanvas,  tlx, tly, viewWidth, viewHeight, 0, 0, viewWidth, viewHeight);
         return new Rect(tlx, tly, viewWidth, viewHeight);
     }
-
-    getMapCanvas() {
-        return this.mapCanvas;
+    
+    drawView(viewCtx, viewRect) {
+        viewCtx.drawImage(this.mapCanvas,
+            viewRect.left, viewRect.top, viewWidth, viewHeight,
+            0, 0, viewWidth, viewHeight);
     }
 
     getValidLevel(tx, ty) {
