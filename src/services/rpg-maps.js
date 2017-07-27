@@ -471,7 +471,7 @@ class RpgMapService {
       console.log(data.err);
       if (data.code === 11000) {
         return {
-          err: "Map name already in use: " + mapDef.name,
+          err: "Name already in use [" + mapDef.name + "]",
           status: xhr.status
         };
       }

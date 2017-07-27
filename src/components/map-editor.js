@@ -66,6 +66,13 @@ const MapEditor = React.createClass({
     this.setState({ showWarningModal: false });
   },
 
+  closeErrorModal: function() {
+    this.setState({
+      saveError: null,
+      showErrorModal: false
+    });
+  },
+
   showWarningModal: function(callback) {
     this.setState({
       showWarningModal: true,
@@ -228,7 +235,7 @@ const MapEditor = React.createClass({
       this.setState({
         mapId: data.mapId,
         mapDirty: false,
-        saveError: null,
+        saveError: null
       });
     }
   },
@@ -237,6 +244,9 @@ const MapEditor = React.createClass({
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({ saveError: data.err });
+      if (this.state.showModal !== "SAVE") {
+        this.setState({ showErrorModal: true });
+      }
       return;
     }
     console.log("Something went wrong...");
@@ -351,6 +361,11 @@ const MapEditor = React.createClass({
             showModal={this.state.showWarningModal}
             onContinue={this.state.continue}
             onClose={this.closeWarningModal} />
+
+        <ErrorModal
+            showModal={this.state.showErrorModal}
+            error={this.state.saveError}
+            onClose={this.closeErrorModal} />
       </div>
     );
   }
@@ -694,14 +709,14 @@ const SaveAsModal = React.createClass({
   render: function() {
     var showError = this.props.error && this.props.error.length > 0;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} bsSize="small">
+      <Modal show={this.props.showModal} onHide={this.props.onClose}>
         <Modal.Header closeButton>
           <Modal.Title>Save As</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Collapse in={showError}>
             <div>
-              <Alert bsStyle="warning">{this.props.error}</Alert>
+              <Alert bsStyle="danger">Could not save map: {this.props.error}</Alert>
             </div>
           </Collapse>
           <form onSubmit={this.handleSubmit}>
@@ -760,6 +775,26 @@ function WarningModal(props) {
         <Button onClick={props.onClose}>Cancel</Button>
       </Modal.Footer>
     </Modal>
+  );
+}
+
+/* =============================================================================
+ * COMPONENT: ERROR MODAL
+ * =============================================================================
+ */
+function ErrorModal(props) {
+  return (
+      <Modal show={props.showModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Save Error</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Alert bsStyle="danger">Could not save map: {props.error}</Alert>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={props.onClose}>Close</Button>
+        </Modal.Footer>
+      </Modal>
   );
 }
 
