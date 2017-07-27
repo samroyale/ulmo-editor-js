@@ -11,9 +11,8 @@ var mongoose = require('mongoose');
 // define our app using express
 var app = express();
 // configure app to use bodyParser - this will let us get the data from a POST
-app.use(bodyParser.urlencoded({ extended: true }));
-//app.use(bodyParser.json());
-app.use(bodyParser.json({limit: '1mb'}));
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
 
 var mongoUri = process.env.MONGODB_URI || 'mongodb://localhost/ulmo';
 mongoose.connect(mongoUri, function (err, res) {
