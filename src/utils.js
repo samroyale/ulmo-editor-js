@@ -1,5 +1,10 @@
 import { tileSize } from './config';
 
+export function errorMessage(message, data) {
+  var errorInfo = data.status ? data.status + ": " + data.err : data.err;
+  return message + " [" + errorInfo + "]";
+}
+
 export function getDrawingContext(canvas) {
   var context = canvas.getContext('2d');
   context.imageSmoothingEnabled = false;

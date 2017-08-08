@@ -4,7 +4,7 @@ import { Panel, Modal, Grid, Row, Col, ButtonToolbar, Button, DropdownButton, Dr
 import MapCanvas from './map-canvas';
 import RpgMapService from '../services/rpg-maps';
 import { tileSize } from '../config';
-import { loadImage, getDrawingContext } from '../utils';
+import { errorMessage, loadImage, getDrawingContext } from '../utils';
 import './map-editor.css';
 
 const rpgMapService = new RpgMapService();
@@ -28,14 +28,15 @@ const MapEditor = React.createClass({
       showModal: null,
       showProgressModal: false,
       showWarningModal: false,
+      showErrorModal: false,
+      errorModalTitle: null,
       progressTitle: null,
       progressPercent: 0,
       continue: null,
       mapDirty: false,
       maps: [],
       mapId: null,
-      loadError: null,
-      saveError: null,
+      serviceError: null,
       currentTilePosition: null,
       currentTile: null,
       tileMode: null,
@@ -46,7 +47,8 @@ const MapEditor = React.createClass({
   closeModal: function() {
     this.setState({
       showModal: null,
-      showProgressModal: false
+      showProgressModal: false,
+      serviceError: null
     });
   },
 
@@ -68,7 +70,7 @@ const MapEditor = React.createClass({
 
   closeErrorModal: function() {
     this.setState({
-      saveError: null,
+      serviceError: null,
       showErrorModal: false
     });
   },
@@ -99,8 +101,7 @@ const MapEditor = React.createClass({
     this.showProgressModal("Loading map...");
     var p = this._mapCanvas.loadMap(mid);
     p.then(
-      data => this.mapLoaded(data, false),
-      data => this.mapLoadErr(mid, data),
+      data => this.mapLoaded(data, false), this.mapLoadErr,
       percent => this.updateProgress(percent)
     ).done();
   },
@@ -146,7 +147,7 @@ const MapEditor = React.createClass({
       this.setState({
         mapId: data.map.getId(),
         mapDirty: dirty,
-        loadError: null
+        serviceError: null
       });
     }
     // oldMap is present only on resize
@@ -157,13 +158,12 @@ const MapEditor = React.createClass({
     this.setState({ changeHistory: [] });
   },
 
-  mapLoadErr: function(mid, data) {
+  mapLoadErr: function(data) {
     this.closeProgressModal();
     if (data.err) {
       // console.log("Error [" + data.err + "]");
-      var info = data.status ? data.status + ": " + data.err : data.err;
       this.setState({
-        loadError: "Could not load map " + mid + " [" + info + "]",
+        serviceError: errorMessage("Could not load map", data)
       });
       return;
     }
@@ -176,7 +176,7 @@ const MapEditor = React.createClass({
       if (data.maps) {
         this.setState({
           maps: data.maps,
-          loadError: null,
+          serviceError: null,
           showModal: "OPEN"
         });
       }
@@ -187,9 +187,9 @@ const MapEditor = React.createClass({
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({
-        maps: [],
-        loadError: "Could not load maps [" + data.status + ": " + data.err + "]",
-        showModal: "OPEN"
+        serviceError: errorMessage("Could not load maps", data),
+        showErrorModal: true,
+        errorModalTitle: "Open Map"
       });
       return;
     }
@@ -214,18 +214,12 @@ const MapEditor = React.createClass({
       return;
     }
     var p = this._mapCanvas.saveMap();
-    p.then(
-      data => this.mapSaved(data),
-      data => this.mapSaveErr(data)
-    ).done();
+    p.then(this.mapSaved, this.mapSaveErr).done();
   },
 
   saveMapAs: function(mapName) {
     var p = this._mapCanvas.saveMapAs(mapName);
-    p.then(
-      data => this.mapSaved(data),
-      data => this.mapSaveErr(data)
-    ).done();
+    p.then(this.mapSaved, this.mapSaveErr).done();
   },
 
   mapSaved: function(data) {
@@ -235,7 +229,7 @@ const MapEditor = React.createClass({
       this.setState({
         mapId: data.mapId,
         mapDirty: false,
-        saveError: null
+        serviceError: null
       });
     }
   },
@@ -243,9 +237,14 @@ const MapEditor = React.createClass({
   mapSaveErr: function(data) {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
-      this.setState({ saveError: data.err });
+      this.setState({
+        serviceError: errorMessage("Could not save map", data)
+      });
       if (this.state.showModal !== "SAVE") {
-        this.setState({ showErrorModal: true });
+        this.setState({
+          showErrorModal: true,
+          errorModalTitle: "Save Map"
+        });
       }
       return;
     }
@@ -281,7 +280,7 @@ const MapEditor = React.createClass({
       this._mapCanvas.restoreMap(lastChange.map);
       return;
     }
-    console.log("Could not undo (unknown change)");
+    console.log("Could not undo [unknown change]");
   },
 
   updateCurrentTile: function(tilePosition, tile) {
@@ -334,7 +333,7 @@ const MapEditor = React.createClass({
             maps={this.state.maps}
             onMapSelected={this.mapSelected}
             onClose={this.closeModal}
-            error={this.state.loadError} />
+            error={this.state.serviceError} />
 
         <NewMapModal
             showModal={this.state.showModal === "NEW"}
@@ -350,7 +349,7 @@ const MapEditor = React.createClass({
             showModal={this.state.showModal === "SAVE"}
             onSaveAs={this.saveMapAs}
             onClose={this.closeModal}
-            error={this.state.saveError} />
+            error={this.state.serviceError} />
 
         <ProgressModal
             showModal={this.state.showProgressModal}
@@ -364,7 +363,8 @@ const MapEditor = React.createClass({
 
         <ErrorModal
             showModal={this.state.showErrorModal}
-            error={this.state.saveError}
+            title={this.state.errorModalTitle}
+            error={this.state.serviceError}
             onClose={this.closeErrorModal} />
       </div>
     );
@@ -784,17 +784,17 @@ function WarningModal(props) {
  */
 function ErrorModal(props) {
   return (
-      <Modal show={props.showModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Save Error</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert bsStyle="danger">Could not save map: {props.error}</Alert>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={props.onClose}>Close</Button>
-        </Modal.Footer>
-      </Modal>
+    <Modal show={props.showModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>{props.title}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Alert bsStyle="danger">{props.error}</Alert>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onClose}>Close</Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 

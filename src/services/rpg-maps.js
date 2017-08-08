@@ -176,6 +176,33 @@ class MapTile {
 }
 
 /* =============================================================================
+ * CLASS: SPRITE
+ * -----------------------------------------------------------------------------
+ * The relationship between tiles is MapTile ->* MaskTile -> Tile
+ * =============================================================================
+ */
+class Sprite {
+  constructor(type, level, location) {
+    this._type = type;
+    this._level = level
+    // location is an array of xy values
+    this._location = location;
+  }
+
+  getType() {
+    return this._type;
+  }
+
+  getLevel() {
+    return this._level;
+  }
+
+  getLocation() {
+    return this._location;
+  }
+}
+
+/* =============================================================================
  * CLASS: RPG MAP
  * -----------------------------------------------------------------------------
  * The model representing a map of tiles. There is a contract here that any
@@ -185,10 +212,11 @@ class MapTile {
  * =============================================================================
  */
 class RpgMap {
-  constructor(id, name, mapTiles) {
+  constructor(id, name, mapTiles, sprites) {
     this._id = id;
     this._name = name;
     this._mapTiles = mapTiles;
+    this._sprites = sprites;
   }
 
   getId() {
@@ -213,6 +241,14 @@ class RpgMap {
 
   putMapTile(x, y, mapTile) {
     this._mapTiles[x][y] = mapTile;
+  }
+
+  getSprites() {
+    return this._sprites;
+  }
+
+  setSprites(sprites) {
+    this._sprites = sprites;
   }
 
   getCols() {
@@ -561,8 +597,9 @@ class RpgMapService {
   buildRpgMap(tileSets, rpgMapDef, deferred) {
     // console.log("buildRpgMap: " + tileSetMappings.size);
     var mapTiles = this.initMapTiles(tileSets, rpgMapDef);
+    var sprites = this.initSprites(rpgMapDef);
     deferred.notify(100);
-    return new RpgMap(rpgMapDef.id, rpgMapDef.name, mapTiles);
+    return new RpgMap(rpgMapDef.id, rpgMapDef.name, mapTiles, sprites);
   }
 
   initMapTiles(tileSets, rpgMapDef) {
@@ -592,6 +629,12 @@ class RpgMapService {
       }
     }
     return tiles;
+  }
+
+  initSprites(rpgMapDef) {
+    return rpgMapDef.sprites.map(spriteDef =>
+      new Sprite(spriteDef.type, spriteDef.level, spriteDef.location)
+    )
   }
 
   /*

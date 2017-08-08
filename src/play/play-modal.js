@@ -1,8 +1,9 @@
+import Q from 'q';
 import React from 'react';
 import { Alert, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
-import { SpriteGroup } from './sprites';
+import { SpriteGroup, Rock } from './sprites';
 import PlayMap from './play-map';
 import './play-modal.css';
 
@@ -68,19 +69,20 @@ export const PlayMapModal = React.createClass({
             let tx = this.props.tilePosition.x, ty = this.props.tilePosition.y;
             let level = playMap.getValidLevel(tx, ty);
             this._player = new Player(playMap, level, tx, ty);
-            let p = this._player.load();
-            p.then(this.playReady, data => {
-                this.setState({
-                    playReady: false,
-                    playError: data.err
-                });
-            }).done();
+            let sprites = this._toGameSprites(this.state.rpgMap.getSprites());
+            sprites.push(this._player);
+            let spritePromises = sprites.map(sprite => sprite.load());
+            let p = Q.all(spritePromises);
+            p.then(
+                () => this.playReady(sprites),
+                data => this.setState({ playReady: false, playError: data.err })
+            ).done();
         }
     },
 
-    playReady() {
+    playReady(sprites) {
         this._mapSprites = new SpriteGroup();
-        this._mapSprites.add(this._player);
+        this._mapSprites.addAll(sprites);
         let onEachFrameFunc = this.assignOnEachFrame();
         onEachFrameFunc(this.playMain());
         this.setState({
@@ -89,6 +91,19 @@ export const PlayMapModal = React.createClass({
         });
     },
 
+    _toGameSprites(sprites) {
+        if (!sprites) {
+            return;
+        }
+        let gameSprites = [];
+        sprites.forEach(sprite => {
+            if (sprite.getType() === 'rock') {
+                gameSprites.push(new Rock(this._player.getPlayMap(), sprite.getLevel(), sprite.getLocation()));
+            }
+        });
+        return gameSprites;
+    },
+    
     assignOnEachFrame() {
         if (window.requestAnimationFrame) {
             console.log('Using requestAnimationFrame');

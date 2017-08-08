@@ -186,6 +186,7 @@ router.route('/maps')
     rpgMap.rows = req.body.rows;
     rpgMap.cols = req.body.cols;
     rpgMap.mapTiles = req.body.mapTiles;
+    rpgMap.sprites = req.body.sprites;
 
     // save the RpgMap and check for errors
     rpgMap.save(function(err, savedMap) {
@@ -237,7 +238,8 @@ router.route('/maps/:map_id')
         name: rpgMap.name,
         rows: rpgMap.rows,
         cols: rpgMap.cols,
-        mapTiles: rpgMap.mapTiles
+        mapTiles: rpgMap.mapTiles,
+        sprites: rpgMap.sprites
       });
     });
   })
@@ -258,6 +260,7 @@ router.route('/maps/:map_id')
       rpgMap.rows = req.body.rows;
       rpgMap.cols = req.body.cols;
       rpgMap.mapTiles = req.body.mapTiles;
+      rpgMap.sprites = req.body.sprites;
 
       // save the RpgMap
       rpgMap.save(function(err, savedMap) {

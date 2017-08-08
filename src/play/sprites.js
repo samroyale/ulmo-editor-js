@@ -1,7 +1,9 @@
 import Q from 'q';
 import { tileSize } from '../config';
 import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
-import { down } from './play-config';
+import { down, spritesImgPath } from './play-config';
+
+const rockFramesUrl = spritesImgPath + '/rock.png';
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -66,7 +68,7 @@ export class MovingFrames {
     }
 
     currentFrame() {
-        console.log(this._direction + ' ' + this._frameIndex);
+        // console.log(this._direction + ' ' + this._frameIndex);
         return this._frames.get(this._direction)[this._frameIndex];
     }
 
@@ -148,6 +150,10 @@ export class SpriteGroup {
         this._sprites.push(sprite);
     }
 
+    addAll(sprites) {
+        sprites.forEach(sprite => this._sprites.push(sprite));
+    }
+
     remove(sprite) {
         this._sprites.splice(this._sprites.indexOf(sprite), 1);
     }
@@ -183,16 +189,18 @@ export class Sprite {
         this._toRemove = false;
     }
 
-    loadFrames(spriteFrames) {
+    loadFrames(spriteFrames, marginY) {
         this._frames = spriteFrames;
         let p = this._frames.load();
         return p.then(data => {
             this._canvas = data.currentFrame;
             if (this._level && this._tx && this._ty) {
                 let marginX = (tileSize - this._canvas.width) / 2;
-                let marginY = (tileSize * 2 - this._canvas.height) / 2;
+                if (!marginY) {
+                    marginY = this._canvas.height / -2;
+                }
                 let px = this._tx * tileSize + marginX;
-                let py = (this._ty - 1) * tileSize + marginY;
+                let py = this._ty * tileSize + marginY;
                 this.setPosition(this._level, px, py);
             }
             return data;
@@ -265,5 +273,20 @@ export class Sprite {
 
     removeOnNextTick() {
         this._toRemove = true;
+    }
+}
+
+/* =============================================================================
+ * CLASS: ROCK
+ * =============================================================================
+ */
+export class Rock extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], true);
+        this._frames = new SingleFrame(rockFramesUrl);
+    }
+
+    load() {
+        return this.loadFrames(this._frames, -8);
     }
 }

@@ -294,4 +294,8 @@ export class Player extends Sprite {
     drawMapView(viewCtx, viewRect) {
         return this._playMap.drawView(viewCtx, viewRect);
     }
+
+    getPlayMap() {
+        return this._playMap;
+    }
 };

@@ -3,7 +3,7 @@ import { Panel, Modal, ButtonToolbar, Button, Collapse, Alert } from 'react-boot
 import TileSetService from '../services/tile-sets';
 import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
-import { initTile, initTileHighlight } from '../utils';
+import { errorMessage, initTile, initTileHighlight } from '../utils';
 import './tile-palette.css';
 
 const emptyTile = initTile("white");
@@ -207,7 +207,7 @@ const TilePalette = React.createClass({
       showModal: false,
       tileSets: [],
       tileSetId: null,
-      loadError: null,
+      serviceError: null,
       currentTilePosition: null,
       currentTile: null
     };
@@ -224,20 +224,17 @@ const TilePalette = React.createClass({
         this.closeModal();
         this.setState({
           tileSetId: data.tileSet.getId(),
-          loadError: null
+          serviceError: null
         });
       }
-    }, data => {
-      this.tileSetLoadErr(tsid, data)
-    }).done();
+    }, this.tileSetLoadErr).done();
   },
 
-  tileSetLoadErr(tsid, data) {
+  tileSetLoadErr(data) {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
-      var info = data.status ? data.status + ": " + data.err : data.err;
       this.setState({
-        loadError: "Could not load tileset " + tsid + " [" + info + "]",
+        serviceError: errorMessage("Could not load tileset", data)
       });
       return;
     }
@@ -250,7 +247,7 @@ const TilePalette = React.createClass({
       if (data.tileSets) {
         this.setState({
           tileSets: data.tileSets,
-          loadError: null,
+          serviceError: null,
           showModal: true
         });
       }
@@ -262,7 +259,7 @@ const TilePalette = React.createClass({
       // console.log("Error [" + data.err + "]");
       this.setState({
         tileSets: [],
-        loadError: "Could not load tilesets [" + data.status + ": " + data.err + "]",
+        serviceError: errorMessage("Could not load tilesets", data),
         showModal: true
       });
       return;
@@ -297,7 +294,7 @@ const TilePalette = React.createClass({
             tileSets={this.state.tileSets}
             onTileSetSelected={this.tileSetSelected}
             onClose={this.closeModal}
-            error={this.state.loadError} />
+            error={this.state.serviceError} />
       </div>
     );
   }
