@@ -4,6 +4,9 @@ import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
 import { down, spritesImgPath } from './play-config';
 
 const rockFramesUrl = spritesImgPath + '/rock.png';
+const keyFramesUrl = spritesImgPath + '/key-frames.png';
+const flameFramesUrl = spritesImgPath + '/flame-frames.png';
+const coinFramesUrl = spritesImgPath + '/coin-frames.png';
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -87,6 +90,68 @@ export class MovingFrames {
 }
 
 /* =============================================================================
+ * CLASS: STATIC FRAMES
+ * =============================================================================
+ */
+export class StaticFrames {
+    constructor(imageUrl, frameCount, frameTicks) {
+        this._imageUrl = imageUrl;
+        this._frameCount = frameCount;
+        this._frameTicks = frameTicks;
+        this._frames = null;
+        this._frameIndex = 0;
+        this._tick = 0;
+    }
+
+    load() {
+        let deferred = Q.defer();
+        loadImage(this._imageUrl, data => {
+            if (data.err) {
+                deferred.reject({ err: data.err });
+                return;
+            }
+            this._processFrames(data.img, this._directions);
+            deferred.resolve({ currentFrame: this.currentFrame() });
+        });
+        return deferred.promise;
+    }
+
+    _processFrames(img, directions) {
+        let spriteWidth = img.width / this._frameCount;
+        let spriteHeight = img.height;
+        let frames = [];
+        for (let i = 0; i < this._frameCount; i++) {
+            let frameCanvas = document.createElement('canvas');
+            frameCanvas.width = spriteWidth * 2;
+            frameCanvas.height = spriteHeight * 2;
+            let frameCtx = getDrawingContext(frameCanvas);
+            frameCtx.drawImage(img,
+                i * spriteWidth, 0, spriteWidth, spriteHeight,
+                0, 0, spriteWidth * 2, spriteHeight * 2);
+            frames.push(frameCanvas);
+        }
+        this._frames = frames;
+    }
+
+    advanceFrame() {
+        this._tick = (this._tick + 1) % this._frameTicks;
+        if (this._tick === 0) {
+            this._frameIndex = (this._frameIndex + 1) % this._frameCount;
+        }
+        return this.currentFrame();
+    }
+
+    currentFrame() {
+        // console.log(this._direction + ' ' + this._frameIndex);
+        return this._frames[this._frameIndex];
+    }
+
+    copyFrame() {
+        return copyCanvas(this.currentFrame());
+    }
+}
+
+/* =============================================================================
  * CLASS: SINGLE FRAME
  * =============================================================================
  */
@@ -124,7 +189,7 @@ export class SingleFrame {
         return null;
     }
 
-    advanceFrame(direction) {
+    advanceFrame() {
         return this.currentFrame();
     }
 
@@ -166,6 +231,7 @@ export class SpriteGroup {
         // TODO: z order!
         this._sprites
             .filter(sprite => sprite.isInView(viewRect))
+            .sort((spriteA, spriteB) => spriteA.getZIndex() - spriteB.getZIndex())
             .forEach(sprite => sprite.draw(ctx, viewRect));
     }
 }
@@ -224,6 +290,7 @@ export class Sprite {
             return;
         }
         // TODO: apply movement
+        this._canvas = this._frames.advanceFrame();
     }
 
     draw(ctx, viewRect) {
@@ -271,6 +338,10 @@ export class Sprite {
         return Math.floor(this._rect.bottom + this._level * tileSize);
     }
 
+    getZIndex() {
+        return this._zIndex;
+    }
+
     removeOnNextTick() {
         this._toRemove = true;
     }
@@ -288,5 +359,50 @@ export class Rock extends Sprite {
 
     load() {
         return this.loadFrames(this._frames, -8);
+    }
+}
+
+/* =============================================================================
+ * CLASS: KEY
+ * =============================================================================
+ */
+export class Key extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], true);
+        this._frames = new StaticFrames(keyFramesUrl, 6, 6);
+    }
+
+    load() {
+        return this.loadFrames(this._frames, 4);
+    }
+}
+
+/* =============================================================================
+ * CLASS: FLAMES
+ * =============================================================================
+ */
+export class Flames extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], true);
+        this._frames = new StaticFrames(flameFramesUrl, 4, 6);
+    }
+
+    load() {
+        return this.loadFrames(this._frames, 4);
+    }
+}
+
+/* =============================================================================
+ * CLASS: COIN
+ * =============================================================================
+ */
+export class Coin extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], true);
+        this._frames = new StaticFrames(coinFramesUrl, 4, 6);
+    }
+
+    load() {
+        return this.loadFrames(this._frames, 4);
     }
 }

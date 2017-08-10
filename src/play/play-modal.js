@@ -3,11 +3,18 @@ import React from 'react';
 import { Alert, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
-import { SpriteGroup, Rock } from './sprites';
+import { SpriteGroup, Coin, Flames, Key, Rock } from './sprites';
 import PlayMap from './play-map';
 import './play-modal.css';
 
 const fps = 60;
+
+export const spriteProvider = new Map([
+    ['flames', (playMap, sprite) => new Flames(playMap, sprite.getLevel(), sprite.getLocation())],
+    ['key', (playMap, sprite) => new Key(playMap, sprite.getLevel(), sprite.getLocation())],
+    ['rock', (playMap, sprite) => new Rock(playMap, sprite.getLevel(), sprite.getLocation())],
+    ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())]
+]);
 
 /* =============================================================================
  * COMPONENT: PLAY MAP MODAL
@@ -96,9 +103,11 @@ export const PlayMapModal = React.createClass({
             return;
         }
         let gameSprites = [];
+        // let playMap = this._player.getPlayMap();
         sprites.forEach(sprite => {
-            if (sprite.getType() === 'rock') {
-                gameSprites.push(new Rock(this._player.getPlayMap(), sprite.getLevel(), sprite.getLocation()));
+            let func = spriteProvider.get(sprite.getType());
+            if (func) {
+                gameSprites.push(func(this._player.getPlayMap(), sprite));
             }
         });
         return gameSprites;

@@ -200,6 +200,14 @@ class Sprite {
   getLocation() {
     return this._location;
   }
+
+  getDto() {
+    return {
+      type: this._type,
+      level: this._level,
+      location: this._location
+    }
+  }
 }
 
 /* =============================================================================
@@ -407,7 +415,14 @@ class RpgMap {
         }
       }
     }
-    return { name: name, rows: rows, cols: cols, mapTiles: mapTiles };
+    var sprites = this._sprites.map(sprite => sprite.getDto());
+    return {
+      name: name,
+      rows: rows,
+      cols: cols,
+      mapTiles: mapTiles,
+      sprites: sprites
+    };
   }
 }
 
@@ -511,7 +526,12 @@ class RpgMapService {
           status: xhr.status
         };
       }
-      return { err: data.err, status: xhr.status };
+      if (data.err) {
+        return { err: data.err, status: xhr.status };
+      }
+      if (data.message) {
+        return { err: data.message, status: xhr.status };
+      }
     }
     return { err: xhr.statusText, status: xhr.status };
   }
