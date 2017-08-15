@@ -150,8 +150,8 @@ export class Player extends Sprite {
         }
 
         // check requested movement is valid
-        var newBaseRect = this._baseRect.move(mx, my);
-        var [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        let newBaseRect = this._baseRect.move(mx, my);
+        let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
             this._applyRectMovement(direction, level, newBaseRect, newRect);
             return;
@@ -183,7 +183,7 @@ export class Player extends Sprite {
 
     _shuffleX(direction) {
         // see if we can shuffle horizontally
-        var [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
+        let [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
         if (valid) {
             this._deferMovement(direction, level, shuffle, 0);
         }

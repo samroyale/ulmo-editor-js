@@ -3,7 +3,7 @@ import React from 'react';
 import { Alert, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
-import { SpriteGroup, Coin, Flames, Key, Rock } from './sprites';
+import { SpriteGroup, Beetle, Coin, Flames, Key, Rock } from './sprites';
 import PlayMap from './play-map';
 import './play-modal.css';
 
@@ -13,7 +13,8 @@ export const spriteProvider = new Map([
     ['flames', (playMap, sprite) => new Flames(playMap, sprite.getLevel(), sprite.getLocation())],
     ['key', (playMap, sprite) => new Key(playMap, sprite.getLevel(), sprite.getLocation())],
     ['rock', (playMap, sprite) => new Rock(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())]
+    ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())],
+    ['beetle', (playMap, sprite) => new Beetle(playMap, sprite.getLevel(), sprite.getLocation())]
 ]);
 
 /* =============================================================================

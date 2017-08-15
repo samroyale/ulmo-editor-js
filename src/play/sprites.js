@@ -1,12 +1,19 @@
 import Q from 'q';
 import { tileSize } from '../config';
 import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
-import { down, spritesImgPath } from './play-config';
+import {
+    up, down, left, right,
+    directions,
+    movement,
+    noMovement,
+    spritesImgPath
+} from './play-config';
 
 const rockFramesUrl = spritesImgPath + '/rock.png';
 const keyFramesUrl = spritesImgPath + '/key-frames.png';
 const flameFramesUrl = spritesImgPath + '/flame-frames.png';
 const coinFramesUrl = spritesImgPath + '/coin-frames.png';
+const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -190,7 +197,7 @@ export class SingleFrame {
     }
 
     advanceFrame() {
-        return this.currentFrame();
+        return this._frame;
     }
 
     currentFrame() {
@@ -198,7 +205,7 @@ export class SingleFrame {
     }
 
     copyFrame() {
-        return copyCanvas(this.currentFrame());
+        return copyCanvas(this._frame);
     }
 }
 
@@ -289,8 +296,19 @@ export class Sprite {
             mapSprites.remove(this);
             return;
         }
-        // TODO: apply movement
+        let moves = this._getMovement();
+        // TODO: could advanceFrame be deferred to the draw stage?
+        if (moves) {
+            // this._baseRect.moveInPlace(mx, my); TODO
+            this._rect.moveInPlace(moves[1], moves[2]);
+            this._canvas = this._frames.advanceFrame(moves[0]);
+            return;
+        }
         this._canvas = this._frames.advanceFrame();
+    }
+    
+    _getMovement() {
+        return null;
     }
 
     draw(ctx, viewRect) {
@@ -404,5 +422,49 @@ export class Coin extends Sprite {
 
     load() {
         return this.loadFrames(this._frames, 4);
+    }
+}
+
+/* =============================================================================
+ * CLASS: BEETLE
+ * =============================================================================
+ */
+export class Beetle extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], false);
+        this._frames = new MovingFrames(beetleFramesUrl, directions, 2, 12);
+        this._positions = location.map(l => [l[0] * tileSize, l[1] * tileSize]);
+        this._position = this._positions[0];
+        this._positionIndex = 0;
+    }
+
+    _getMovement() {
+        let currentPosition = this._rect.getTopLeft();
+        let x = this._position[0] - currentPosition.x;
+        let y = this._position[1] - currentPosition.y;
+        if (x === 0 && y === 0) {
+            this._positionIndex = (this._positionIndex + 1) % this._positions.length;
+            this._position = this._positions[this._positionIndex];
+            x = this._position[0] - currentPosition.x;
+            y = this._position[1] - currentPosition.y;
+        }
+        if (x < 0) {
+            return movement.get(left);
+        }
+        if (x > 0) {
+            return movement.get(right);
+        }
+        if (y < 0) {
+            return movement.get(up);
+        }
+        if (y > 0) {
+            return movement.get(down);
+        }
+        // otherwise there is nowhere to move to
+        return null;
+    }
+
+    load() {
+        return this.loadFrames(this._frames, 0);
     }
 }

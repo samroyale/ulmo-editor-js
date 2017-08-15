@@ -124,7 +124,7 @@ export class Rect {
     this._update();
   }
 
-  getTopleft() {
+  getTopLeft() {
     return {
       x: this.left,
       y: this.top
