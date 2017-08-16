@@ -5,7 +5,6 @@ import {
     up, down, left, right,
     directions,
     movement,
-    noMovement,
     spritesImgPath
 } from './play-config';
 
@@ -17,6 +16,8 @@ const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
+ * -----------------------------------------------------------------------------
+ * Sprite frames handler that is aware of directional movement
  * =============================================================================
  */
 export class MovingFrames {
@@ -98,6 +99,8 @@ export class MovingFrames {
 
 /* =============================================================================
  * CLASS: STATIC FRAMES
+ * -----------------------------------------------------------------------------
+ * Frames handler for static animated sprites
  * =============================================================================
  */
 export class StaticFrames {
@@ -155,6 +158,11 @@ export class StaticFrames {
 
     copyFrame() {
         return copyCanvas(this.currentFrame());
+    }
+
+    withFrameIndex(frameIndex) {
+        this._frameIndex = frameIndex;
+        return this;
     }
 }
 

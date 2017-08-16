@@ -1,6 +1,6 @@
 import Q from 'q';
 import { tileSize } from '../config';
-import { Sprite, MovingFrames, SingleFrame } from './sprites';
+import { Sprite, MovingFrames, StaticFrames, SingleFrame } from './sprites';
 import { Rect } from '../utils';
 import {
     upKey, downKey, leftKey, rightKey,
@@ -104,7 +104,7 @@ export class Player extends Sprite {
     constructor(playMap, level, tx, ty) {
         super(playMap, level, tx, ty, true);
         this._movingFrames = new MovingFrames(playerFramesUrl, directions, 4, 6);
-        this._fallingFrames = new MovingFrames(playerFallingFramesUrl, [down], 4, 0);
+        this._fallingFrames = new StaticFrames(playerFallingFramesUrl, 4, 0);
         this._shadowFrames = new SingleFrame(shadowFramesUrl);
         this._deferredMovement = null;
         this._keyBits = 0;

@@ -15,8 +15,6 @@ export const movement = new Map([
     [down + right, [down, 2, 2]]
 ]);
 
-export const noMovement = [0, 0, 0];
-
 export const fallUnit = 4;
 
 export const spritesImgPath = "/img/sprites";
