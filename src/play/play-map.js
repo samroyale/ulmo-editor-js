@@ -105,8 +105,8 @@ class PlayTile {
             this.downLevels = new Map();
         }
         let levels = levelStr.substr(1).split('-');
-        let level = Number.parseFloat(levels[0]);
-        let downLevel = Number.parseFloat(levels[1]);
+        let level = Number.parseInt(levels[0], 10);
+        let downLevel = Number.parseInt(levels[1], 10);
         this.downLevels.set(level, downLevel);
     }
 

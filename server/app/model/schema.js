@@ -1,7 +1,6 @@
 // app/model/schema.js
 
 var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
 
 function xyValidator(value) {
   return value.length === 2;
@@ -25,7 +24,11 @@ var tileSetSchema = new mongoose.Schema({
 });
 
 var maskTileSchema = new mongoose.Schema({
-  tileSet: {type: String, required: true},
+  tileSet: {
+    type: String,
+    required: true,
+    enum: ['dungeon', 'earth', 'grass', 'objects', 'water', 'wood']
+  },
   tile: {type: String, required: true},
   maskLevel: String
 }, {_id: false});
@@ -37,8 +40,12 @@ var mapTileSchema = new mongoose.Schema({
 }, {_id: false});
 
 var spriteSchema = new mongoose.Schema({
-  type: {type: String, required: true},
-  level: {type: [Number], required: true},
+  type: {
+    type: String,
+    required: true,
+    enum: ['rock', 'flames', 'coin', 'key', 'blades', 'checkpoint', 'door', 'beetle', 'wasp', 'chest']
+  },
+  level: {type: Number, required: true},
   location: {type: [[Number]], required: true, validate: xyArrayValidator}
 }, {_id: false});
 
@@ -50,9 +57,9 @@ var rpgMapSchema = new mongoose.Schema({
   sprites: [spriteSchema]
 });
 
-/*movieSchema.statics.findByTitle = function(title, callback) {
-  return this.find({ title: new RegExp(title, 'i') }, callback);
-}*/
+tileSetSchema.statics.findByName = function(name, callback) {
+  return this.findOne({name: name}, callback);
+};
 
 module.exports = {
   TileSet: mongoose.model('TileSet', tileSetSchema),

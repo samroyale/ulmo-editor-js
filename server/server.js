@@ -52,7 +52,7 @@ router.route('/tilesets/tileset')
     if (!req.query.name) {
       res.status(400).send({ err: 'Tileset name not specified' });
     }
-    TileSet.findOne({name: req.query.name}, function (err, tileSet) {
+    TileSet.findByName(req.query.name, function (err, tileSet) {
       if (err) {
         console.log(err.toString());
         res.status(500).send(err);
