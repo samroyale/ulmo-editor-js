@@ -9,7 +9,7 @@ var instance = null;
  * CLASS: TILE
  * =============================================================================
  * This class should be immutable since the same instance is used across
- * multiple maskTiles.
+ * multiple MaskTiles.
  * =============================================================================
  */
 class Tile {

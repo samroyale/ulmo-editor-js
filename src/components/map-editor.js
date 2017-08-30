@@ -36,6 +36,7 @@ const MapEditor = React.createClass({
       mapDirty: false,
       maps: [],
       mapId: null,
+      sprites: [],
       serviceError: null,
       currentTilePosition: null,
       currentTile: null,
@@ -291,6 +292,20 @@ const MapEditor = React.createClass({
     this.setState({ tileMode: mode });
   },
 
+  editSprites: function() {
+    if (this.isMapPresent()) {
+      this.setState({
+        showModal: "SPRITES",
+        sprites: this._mapCanvas.getSpritesFromMap()
+      });
+    }
+  },
+
+  applySpritesEdit: function(newSprites) {
+    this.closeModal();
+    this._mapCanvas.applySpritesEdit(newSprites)
+  },
+
   componentWillReceiveProps: function(nextProps) {
     // if selecting a tile for the first time, set the tile mode to INSERT
     if (!this.props.selectedTile && nextProps.selectedTile) {
@@ -313,6 +328,7 @@ const MapEditor = React.createClass({
               onSaveMap={this.saveMap}
               onShowSaveModal={this.showSaveModal}
               onModeChange={this.setTileControlMode}
+              onEditSprites={this.editSprites}
               onUndo={this.undo}
               noHistory={this.state.changeHistory.length === 0}
               onAdmin={this.props.onAdmin} />
@@ -350,6 +366,12 @@ const MapEditor = React.createClass({
             onSaveAs={this.saveMapAs}
             onClose={this.closeModal}
             error={this.state.serviceError} />
+
+        <SpritesModal
+            showModal={this.state.showModal === "SPRITES"}
+            sprites={this.state.sprites}
+            onSubmit={this.applySpritesEdit}
+            onClose={this.closeModal} />
 
         <ProgressModal
             showModal={this.state.showProgressModal}
@@ -390,6 +412,7 @@ function MapToolbar(props) {
         <MenuItem onClick={props.onShowSaveModal}>Save as</MenuItem>
         <MenuItem onClick={props.onExport}>Export</MenuItem>
       </DropdownButton>
+      <Button onClick={props.onEditSprites} disabled={!props.mapPresent}>Sprites</Button>
       <Button onClick={props.onUndo} disabled={props.noHistory}>
         <div className="reverse"><Glyphicon glyph="repeat" /></div>
       </Button>
@@ -763,7 +786,7 @@ function WarningModal(props) {
     props.onContinue();
   };
   return (
-    <Modal show={props.showModal}>
+    <Modal show={props.showModal} onHide={props.onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Warning</Modal.Title>
       </Modal.Header>
@@ -784,7 +807,7 @@ function WarningModal(props) {
  */
 function ErrorModal(props) {
   return (
-    <Modal show={props.showModal}>
+    <Modal show={props.showModal} onHide={props.onClose}>
       <Modal.Header closeButton>
         <Modal.Title>{props.title}</Modal.Title>
       </Modal.Header>
@@ -819,5 +842,66 @@ function MapTileInfo(props) {
   }
   return (<p className="with-top-margin">-</p>);
 }
+
+/* =============================================================================
+ * COMPONENT: SPRITES MODAL
+ * =============================================================================
+ */
+const SpritesModal = React.createClass({
+  getInitialState: function() {
+    return {
+      sprites: [],
+    };
+  },
+
+  handleSubmit: function(e) {
+    this.props.onSubmit(this.state.sprites);
+  },
+
+  delete: function(evt) {
+    console.log(evt.currentTarget.id);
+  },
+
+  componentWillMount: function() {
+    this.populateStateFromProps(this.props);
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    this.populateStateFromProps(nextProps);
+  },
+
+  populateStateFromProps: function(props) {
+    if (props.showModal) {
+      this.setState({ sprites: props.sprites.slice() });
+    }
+  },
+
+  sprites: function() {
+    return this.state.sprites.map((s, i) => {
+      return (
+        <li key={i}>{s.getType()} :: {s.getLevel()} :: {s.getLocation().map((l, j) => {
+          return <inline key={j}>[{l[0]},{l[1]}] </inline>;
+        })} <Button id={'btn' + i} onClick={this.delete}>x</Button></li>
+      );
+    })
+  },
+
+  render: function() {
+    return (
+      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Sprites</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ul>{this.sprites()}</ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
+          <Button onClick={this.props.onClose}>Cancel</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+});
 
 export default MapEditor;

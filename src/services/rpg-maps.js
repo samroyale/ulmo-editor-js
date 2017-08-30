@@ -256,7 +256,9 @@ class RpgMap {
   }
 
   setSprites(sprites) {
+    var oldSprites = this._sprites;
     this._sprites = sprites;
+    return oldSprites;
   }
 
   getCols() {
@@ -405,7 +407,8 @@ class RpgMap {
   }
 
   getDtoWithName(name) {
-    var rows = this.getRows(), cols = this.getCols();
+    var rows = this.getRows();
+    var cols = this.getCols();
     var mapTiles = [];
     for (var x = 0; x < cols; x++) {
       for (var y = 0; y < rows; y++) {

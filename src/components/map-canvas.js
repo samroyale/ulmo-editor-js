@@ -186,6 +186,14 @@ const MapCanvas = React.createClass({
     // console.log(this.props.tilePosition);
     this.showModal("PLAY");
   },
+  
+  applySpritesEdit: function(newSprites) {
+    return this._rpgMap.setSprites(newSprites);
+  },
+
+  getSpritesFromMap: function() {
+    return this._rpgMap.getSprites();
+  },
 
   applyLevelsEdit: function(newLevels) {
     // levels edit applies to all selected tiles
