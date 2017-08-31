@@ -74,9 +74,8 @@ export const PlayMapModal = React.createClass({
         if (this.state.rpgMap && !this._player) {
             this._keys = new Keys();
             let playMap = new PlayMap(this.state.rpgMap);
-            let tx = this.props.tilePosition.x, ty = this.props.tilePosition.y;
-            let level = playMap.getValidLevel(tx, ty);
-            this._player = new Player(playMap, level, tx, ty);
+            this._player = new Player(playMap, this.props.level,
+                this.props.tilePosition.x, this.props.tilePosition.y);
             let sprites = this._toGameSprites(this.state.rpgMap.getSprites());
             sprites.push(this._player);
             let spritePromises = sprites.map(sprite => sprite.load());
@@ -104,7 +103,6 @@ export const PlayMapModal = React.createClass({
             return;
         }
         let gameSprites = [];
-        // let playMap = this._player.getPlayMap();
         sprites.forEach(sprite => {
             let func = spriteProvider.get(sprite.getType());
             if (func) {

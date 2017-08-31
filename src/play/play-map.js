@@ -52,12 +52,11 @@ class PlayTile {
         this.specialLevels = null;
         this.downLevels = null;
         mapTile.getLevels().forEach(level => {
-            var firstChar = level[0];
-            if (firstChar === 'S') {
+            if (level.startsWith('S')) {
                 this.addSpecialLevel(level);
                 return;
             }
-            if (firstChar === 'D') {
+            if (level.startsWith('D')) {
                 this.addDownLevel(level);
                 return;
             }
@@ -69,8 +68,7 @@ class PlayTile {
         mapTile.getMaskTiles().forEach((maskTile, i) => {
             var maskLevel = maskTile.getMaskLevel();
             if (maskLevel) {
-                var firstChar = maskLevel[0];
-                if (firstChar === 'V') {
+                if (maskLevel.startsWith('V')) {
                     this.addMask(i, Number.parseInt(maskLevel.substr(1), 10), false, y);
                     return;
                 }
@@ -180,10 +178,6 @@ class PlayTile {
         });
         return activeMasks;
     }
-
-    getALevel() {
-        return this.levels[0];
-    }
 }
 
 /* =============================================================================
@@ -234,10 +228,6 @@ class PlayMap {
         viewCtx.drawImage(this.mapCanvas,
             viewRect.left, viewRect.top, viewWidth, viewHeight,
             0, 0, viewWidth, viewHeight);
-    }
-
-    getValidLevel(tx, ty) {
-        return this.tiles[tx][ty].getALevel();
     }
 
     isMapBoundaryBreached(rect) {

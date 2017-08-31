@@ -31,7 +31,8 @@ const MapCanvas = React.createClass({
       overlayPosition: {x: 0, y: 0},
       showModal: null,
       editableTile: null,
-      startPosition: null
+      startPosition: null,
+      playLevel: null
     };
   },
 
@@ -182,8 +183,17 @@ const MapCanvas = React.createClass({
     this.showModal("MASKS");
   },
 
-  playMap: function() {
-    // console.log(this.props.tilePosition);
+  playMap: function(level) {
+    if (level.startsWith('S')) {
+      this.setState({ playLevel: parseInt(level.slice(1), 10) });
+    }
+    else if (level.startsWith('D')) {
+      let levels = level.slice(1).split('-');
+      this.setState({ playLevel: parseInt(levels[0], 10) });
+    }
+    else {
+      this.setState({ playLevel: parseInt(level, 10) });
+    }
     this.showModal("PLAY");
   },
   
@@ -198,7 +208,7 @@ const MapCanvas = React.createClass({
   applyLevelsEdit: function(newLevels) {
     // levels edit applies to all selected tiles
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      return this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice(0));
+      return this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice());
     });
     this.closeModal();
   },
@@ -281,7 +291,6 @@ const MapCanvas = React.createClass({
     }
     var multipleSelected = this.multipleTilesSelected();
     var pasteInvalid = this._clipboard === null || multipleSelected;
-    var playInvalid = this.currentTile().getLevels().length === 0 || multipleSelected;
     return [
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
@@ -296,8 +305,27 @@ const MapCanvas = React.createClass({
         {label: 'Copy', onClick: this.copyTiles},
         {label: 'Paste', onClick: this.pasteTiles, disabled: pasteInvalid}
       ]},
-      {label: 'PLAY!', onClick: this.playMap, disabled: playInvalid},
+      this.playButtonMetadata(multipleSelected)
     ];
+  },
+
+  playButtonMetadata: function(multipleSelected) {
+    var availableLevels = this.currentTile().getLevels();
+    if (multipleSelected || availableLevels.length === 0) {
+      return {label: 'PLAY!', onClick: this.playMap, disabled: true};
+    }
+    if (availableLevels.length === 1) {
+      return {label: 'PLAY!', onClick: () => this.playMap(availableLevels[0])};
+    }
+    return {
+      label: 'PLAY!',
+      menuItems: availableLevels.map(level => {
+        return {
+          label: 'Level: ' + level,
+          onClick: () => this.playMap(level),
+        };
+      })
+    }
   },
 
   multipleTilesSelected: function() {
@@ -443,6 +471,7 @@ const MapCanvas = React.createClass({
         <PlayMapModal
             showModal={this.state.showModal === "PLAY"}
             tilePosition={this.props.tilePosition}
+            level={this.state.playLevel}
             rpgMap={this._rpgMap}
             onClose={this.closeModal} />
       </div>

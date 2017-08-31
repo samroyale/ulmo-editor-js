@@ -64,7 +64,7 @@ export const EditLevelsModal = React.createClass({
     if (this.state.levels.includes(this.state.levelVal)) {
       return;
     }
-    var newLevels = this.state.levels.slice(0);
+    var newLevels = this.state.levels.slice();
     newLevels.push(this.state.levelVal);
     this.setState({
       levelVal: "",
@@ -104,7 +104,7 @@ export const EditLevelsModal = React.createClass({
       return [];
     }
     // return a copy of the levels array
-    return props.editableTile.getLevels().slice(0);
+    return props.editableTile.getLevels().slice();
   },
 
   levelsControl: function() {
@@ -199,7 +199,7 @@ export const EditImagesModal = React.createClass({
 
   moveTile: function(evt, func) {
     var buttonId = evt.currentTarget.id;
-    var newMaskTiles = this.state.maskTiles.slice(0);
+    var newMaskTiles = this.state.maskTiles.slice();
     var index = newMaskTiles.length - parseInt(buttonId.slice(3), 10) - 1;
     var maskTile = newMaskTiles[index];
     func(newMaskTiles, maskTile, index);
@@ -271,9 +271,9 @@ export const EditImagesModal = React.createClass({
   },
 
   componentDidUpdate: function(oldProps, oldState) {
-    var maskTiles = this.state.maskTiles.slice(0).reverse(); // copy + reverse the array
+    var maskTiles = this.state.maskTiles.slice().reverse(); // copy + reverse the array
     maskTiles.forEach((maskTile, i) => {
-      var item = this.refs["item" + i];
+      var item = this.refs['item' + i];
       if (item) {
         item.drawToCanvas(maskTile);
       }
@@ -289,10 +289,10 @@ export const EditImagesModal = React.createClass({
   tilePosition: function(tileIndex, lastIndex) {
     var position = [];
     if (tileIndex === 0) {
-      position.push("first")
+      position.push('first');
     }
     if (tileIndex === lastIndex) {
-      position.push("last")
+      position.push('last');
     }
     return position;
   },
@@ -302,8 +302,8 @@ export const EditImagesModal = React.createClass({
       var tilePosition = this.tilePosition(i, this.state.maskTiles.length - 1);
       return (
         <TileImageItem key={i}
-          ref={"item" + i}
-          buttonId={"btn" + i}
+          ref={'item' + i}
+          buttonId={'btn' + i}
           position={tilePosition}
           onMoveTop={this.moveTop}
           onMoveUp={this.moveUp}
@@ -360,8 +360,8 @@ const TileImageItem = React.createClass({
   },
 
   render: function() {
-    var disabledFirst = this.props.position.includes("first");
-    var disabledLast = this.props.position.includes("last");
+    var disabledFirst = this.props.position.includes('first');
+    var disabledLast = this.props.position.includes('last');
     return (
       <ListGroupItem>
         <Grid>
@@ -417,7 +417,7 @@ export const EditMasksModal = React.createClass({
 
   handleSubmit: function() {
     this.state.maskTiles.forEach((maskTile, i) => {
-      var item = this.refs["item" + i];
+      var item = this.refs['item' + i];
       maskTile.setMaskLevel(this.getMaskLevel(item));
     });
     this.props.onSubmit(this.state.maskTiles.reverse());
@@ -458,7 +458,7 @@ export const EditMasksModal = React.createClass({
 
   componentDidUpdate: function(oldProps, oldState) {
     this.state.maskTiles.forEach((maskTile, i) => {
-      var item = this.refs["item" + i];
+      var item = this.refs['item' + i];
       if (item) {
         item.drawToCanvas(maskTile);
       }
@@ -479,7 +479,7 @@ export const EditMasksModal = React.createClass({
         maskLevel = '';
       }
       return (
-        <TileMaskItem key={i} index={i} ref={"item" + i} level={maskLevel} vertical={maskVertical} />
+        <TileMaskItem key={i} index={i} ref={'item' + i} level={maskLevel} vertical={maskVertical} />
       );
     });
   },

@@ -860,6 +860,11 @@ const SpritesModal = React.createClass({
 
   delete: function(evt) {
     console.log(evt.currentTarget.id);
+    var buttonId = evt.currentTarget.id;
+    var index = parseInt(buttonId.slice(3), 10);
+    var newSprites = this.state.sprites;
+    newSprites.splice(index, 1);
+    this.setState({ sprites: newSprites });
   },
 
   componentWillMount: function() {
