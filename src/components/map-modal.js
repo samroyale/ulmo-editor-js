@@ -323,15 +323,19 @@ export const EditImagesModal = React.createClass({
         <Modal.Body>
           <Grid>
             <Row>
-              <Col className="edit-tiles-col" lg={4}>
+              <Col className="tile-images-col" lg={4}>
                 <Panel className="tile-images-panel" header="Images">
                   <ListGroup fill>{this.tileItems()}</ListGroup>
                 </Panel>
               </Col>
               <Col className="edit-tiles-col" lg={2}>
                 <Panel className="tile-preview-panel" header="Preview">
-                  <canvas className="tiles tile-preview" width={tileSize * 2} height={tileSize * 2}
-                      ref={cvs => this._previewCanvas = cvs} />
+                  <ListGroup fill>
+                    <ListGroupItem className="tile-list-item">
+                      <canvas className="tile-preview" width={tileSize * 2} height={tileSize * 2}
+                              ref={cvs => this._previewCanvas = cvs} />
+                    </ListGroupItem>
+                  </ListGroup>
                 </Panel>
               </Col>
             </Row>
@@ -363,16 +367,16 @@ const TileImageItem = React.createClass({
     var disabledFirst = this.props.position.includes('first');
     var disabledLast = this.props.position.includes('last');
     return (
-      <ListGroupItem>
+      <ListGroupItem className="tile-list-item">
         <Grid>
           <Row>
-            <Col className="edit-tiles-item-col" lg={1}>
+            <Col className="tile-canvas-col" lg={1}>
               <div className="tile-canvas-container">
                 <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
                     ref={cvs => this._canvas = cvs} />
               </div>
             </Col>
-            <Col className="edit-tiles-item-col" lg={2}>
+            <Col className="tile-controls-col" lg={2}>
               <ButtonToolbar className="tile-controls">
                 <ButtonGroup>
                   <Button id={this.props.buttonId} onClick={this.props.onMoveTop} disabled={disabledFirst}>
@@ -551,10 +555,10 @@ const TileMaskItem = React.createClass({
 
   render: function() {
     return (
-      <ListGroupItem>
+      <ListGroupItem className="tile-list-item">
         <Grid>
           <Row>
-            <Col className="edit-tiles-item-col" lg={1}>
+            <Col className="tile-canvas-col" lg={1}>
               <div className="tile-canvas-container">
                 <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
                     ref={cvs => this._canvas = cvs} />

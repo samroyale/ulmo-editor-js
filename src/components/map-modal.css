@@ -3,19 +3,42 @@ div.tile-levels-modal {
 }
 
 div.tile-images-modal {
-  width: 600px;
+  width: 536px;
 }
 
 div.tile-masks-modal {
-  width: 444px;
+  width: 420px;
 }
 
 div.edit-tiles-col {
   padding-left: 0px;
 }
 
+div.tile-images-col {
+  padding-left: 0px;
+  width: 348px;
+}
+
 div.edit-tiles-item-col {
   padding-left: 5px;
+}
+
+div.tile-canvas-col {
+  padding-left: 5px;
+  width: 84px;
+}
+
+div.tile-controls-col {
+  padding-left: 5px;
+  width: 177px;
+}
+
+span.tile-list-item {
+  padding: 4px 10px;
+}
+
+li.tile-list-item {
+  padding: 9px;
 }
 
 button.with-bottom-margin {
@@ -28,12 +51,12 @@ div.tile-images-panel {
 
 div.tile-preview-panel {
   margin-bottom: 0;
-  width: 178px;
+  width: 156px;
 }
 
 div.tile-masks-panel {
   margin-bottom: 0;
-  width: 412px;
+  width: 388px;
 }
 
 div.tile-canvas-container {
@@ -44,7 +67,7 @@ canvas.tiles {
   background-color: #0f0;
 }
 
-div.tile-preview {
+canvas.tile-preview {
   background-color: #0f0;
   display: block;
   margin-left: auto;
@@ -56,5 +79,5 @@ div.tile-controls {
 }
 
 div.tile-checkbox {
-  padding: 16px 10px 0;
+  padding: 16px 6px 0;
 }
