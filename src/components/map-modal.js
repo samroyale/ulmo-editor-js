@@ -1,11 +1,10 @@
 import React from 'react';
 import { Modal, Grid, Row, Col, Panel, ListGroup, ListGroupItem, ButtonToolbar,
-    ButtonGroup, Button, Glyphicon, FormGroup, ControlLabel, FormControl,
-    Checkbox } from 'react-bootstrap';
+    ButtonGroup, Button, Glyphicon, FormGroup, FormControl,
+    Checkbox, Well } from 'react-bootstrap';
 import { tileSize } from '../config';
 import { getDrawingContext, drawTile } from '../utils';
 import './map-modal.css';
-
 
 /* =============================================================================
  * COMPONENT: EDIT LEVELS MODAL
@@ -48,18 +47,6 @@ export const EditLevelsModal = React.createClass({
     return true;
   },
 
-  handleLevelsChange: function(event) {
-    var indices = [];
-    var selected = event.target.selectedOptions;
-    for (var i = 0; i < selected.length; i++) {
-      indices.push(selected.item(i).index);
-    }
-    this.setState({
-      selectedIndices: indices,
-      deleteDisabled: indices.length === 0
-    });
-  },
-
   addLevel: function() {
     if (this.state.levels.includes(this.state.levelVal)) {
       return;
@@ -68,19 +55,20 @@ export const EditLevelsModal = React.createClass({
     newLevels.push(this.state.levelVal);
     this.setState({
       levelVal: "",
+      levels: newLevels,
+      addDisabled: true
+    });
+  },
+
+  delete: function(evt) {
+    var buttonId = evt.currentTarget.id;
+    var index = parseInt(buttonId.slice(3), 10);
+    var newLevels = this.state.levels.slice();
+    newLevels.splice(index, 1);
+    this.setState({
+      levelVal: "",
       levels: newLevels
     });
-  },
-
-  deleteLevels: function() {
-    var newLevels = this.state.levels.filter((level, i) => {
-      return !this.state.selectedIndices.includes(i);
-    });
-    this.setState({ levels: newLevels });
-  },
-
-  clearLevels: function() {
-    this.setState({ levels: [] });
   },
 
   componentWillMount: function() {
@@ -107,18 +95,16 @@ export const EditLevelsModal = React.createClass({
     return props.editableTile.getLevels().slice();
   },
 
-  levelsControl: function() {
-    var levelOptions = this.state.levels.map((level, i) => {
-      return (<option key={i} value={level}>{level}</option>);
-    });
-    var selectedLevels = this.state.levels.filter((level, i) => {
-      return this.state.selectedIndices.includes(i);
-    });
-    return (
-      <FormControl componentClass="select" onChange={this.handleLevelsChange} value={selectedLevels} multiple>
-        {levelOptions}
-      </FormControl>
-    );
+  levels: function() {
+    return this.state.levels.map((level, i) => {
+      return (
+        <LevelItem
+            key={i}
+            buttonId={'btn' + i}
+            level={level}
+            onDelete={this.delete} />
+      );
+    })
   },
 
   render: function() {
@@ -128,48 +114,30 @@ export const EditLevelsModal = React.createClass({
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <form>
-            <Grid>
-              <Row>
-                <Col className="edit-tiles-col" lg={3}>
-                  <FormGroup controlId="levelGroup">
-                    <ControlLabel>New level</ControlLabel>
-                    <FormControl type="text" placeholder="level"
-                        value={this.state.levelVal} onChange={this.handleLevelChange} />
-                  </FormGroup>
-                </Col>
-                <Col className="edit-tiles-col" lg={1}>
-                  <FormGroup controlId="addGroup">
-                    <ControlLabel>&nbsp;</ControlLabel>
-                    <ButtonToolbar>
-                      <Button className="with-bottom-margin" disabled={this.state.addDisabled}
-                          onClick={this.addLevel} block>Add</Button>
-                    </ButtonToolbar>
-                  </FormGroup>
-                </Col>
-              </Row>
-              <Row>
-                <Col className="edit-tiles-col" lg={3}>
-                  <FormGroup controlId="levelsGroup">
-                    <ControlLabel>Levels</ControlLabel>
-                    {this.levelsControl()}
-                  </FormGroup>
-                </Col>
-                <Col className="edit-tiles-col" lg={1}>
-                  <FormGroup controlId="controlsGroup">
-                    <ControlLabel>&nbsp;</ControlLabel>
-                    <ButtonToolbar>
-                      <Button className="with-bottom-margin" disabled={this.state.deleteDisabled}
-                          onClick={this.deleteLevels} block>Delete</Button>
-                    </ButtonToolbar>
-                    <ButtonToolbar>
-                      <Button className="with-bottom-margin" onClick={this.clearLevels} block>Clear</Button>
-                    </ButtonToolbar>
-                  </FormGroup>
-                </Col>
-              </Row>
-            </Grid>
-          </form>
+          <Panel className="edit-levels-panel" header="Levels">
+            <ListGroup fill>
+              {this.levels()}
+              <ListGroupItem>
+                <Grid>
+                  <Row>
+                    <Col className="edit-level-col" lg={1}>
+                      <FormControl type="text"
+                                   placeholder="level"
+                                   value={this.state.levelVal}
+                                   onChange={this.handleLevelChange} />
+                    </Col>
+                    <Col className="edit-tiles-col" lg={1}>
+                      <ButtonToolbar className="sprite-controls">
+                        <Button onClick={this.addLevel} disabled={this.state.addDisabled}>
+                          <Glyphicon glyph="plus" />
+                        </Button>
+                      </ButtonToolbar>
+                    </Col>
+                  </Row>
+                </Grid>
+              </ListGroupItem>
+            </ListGroup>
+          </Panel>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
@@ -179,6 +147,31 @@ export const EditLevelsModal = React.createClass({
     );
   }
 });
+
+/* =============================================================================
+ * COMPONENT: LEVEL ITEM
+ * =============================================================================
+ */
+function LevelItem(props) {
+  return (
+    <ListGroupItem>
+      <Grid>
+        <Row>
+          <Col className="edit-level-col" lg={1}>
+            <Well className="level-well" bsSize="small">level: {props.level}</Well>
+          </Col>
+          <Col className="edit-tiles-col" lg={1}>
+            <ButtonToolbar className="sprite-controls">
+              <Button id={props.buttonId} onClick={props.onDelete}>
+                <Glyphicon glyph="trash" />
+              </Button>
+            </ButtonToolbar>
+          </Col>
+        </Row>
+      </Grid>
+    </ListGroupItem>
+  );
+}
 
 /* =============================================================================
  * COMPONENT: EDIT IMAGES MODAL

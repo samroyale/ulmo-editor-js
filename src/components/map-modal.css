@@ -1,5 +1,5 @@
 div.tile-levels-modal {
-  width: 412px;
+  width: 224px;
 }
 
 div.tile-images-modal {
@@ -8,6 +8,20 @@ div.tile-images-modal {
 
 div.tile-masks-modal {
   width: 420px;
+}
+
+div.edit-levels-panel {
+  margin-bottom: 0;
+}
+
+div.edit-level-col {
+  padding-left: 0;
+  width: 120px;
+}
+
+div.level-well {
+  margin-bottom: 0;
+  padding: 6px;
 }
 
 div.edit-tiles-col {

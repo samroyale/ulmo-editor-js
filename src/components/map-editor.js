@@ -946,31 +946,31 @@ const SpriteItem = React.createClass({
 
   render: function() {
     return (
-        <ListGroupItem className="sprite-list-item">
-          <Grid>
-            <Row>
-              <Col className="sprite-type-col" lg={1}>
-                <Well className="sprite-well" bsSize="small"><b>{this.typeLabel()}</b></Well>
-              </Col>
-              <Col className="sprite-level-col" lg={1}>
-                <Well className="sprite-well" bsSize="small">level: {this.props.level}</Well>
-              </Col>
-              <Col className="edit-sprite-col" lg={3}>
-                <Well className="sprite-well" bsSize="small"><div className="sprite-location">{this.props.location}</div></Well>
-              </Col>
-              <Col className="edit-sprite-col" lg={2}>
-                <ButtonToolbar className="sprite-controls">
-                  <Button id={this.props.buttonId} onClick={this.props.onEdit}>
-                    <Glyphicon glyph="edit" />
-                  </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onDelete}>
-                    <Glyphicon glyph="trash" />
-                  </Button>
-                </ButtonToolbar>
-              </Col>
-            </Row>
-          </Grid>
-        </ListGroupItem>
+      <ListGroupItem className="sprite-list-item">
+        <Grid>
+          <Row>
+            <Col className="sprite-type-col" lg={1}>
+              <Well className="sprite-well" bsSize="small"><b>{this.typeLabel()}</b></Well>
+            </Col>
+            <Col className="sprite-level-col" lg={1}>
+              <Well className="sprite-well" bsSize="small">level: {this.props.level}</Well>
+            </Col>
+            <Col className="edit-sprite-col" lg={3}>
+              <Well className="sprite-well" bsSize="small"><div className="sprite-location">{this.props.location}</div></Well>
+            </Col>
+            <Col className="edit-sprite-col" lg={2}>
+              <ButtonToolbar className="sprite-controls">
+                <Button id={this.props.buttonId} onClick={this.props.onEdit}>
+                  <Glyphicon glyph="edit" />
+                </Button>
+                <Button id={this.props.buttonId} onClick={this.props.onDelete}>
+                  <Glyphicon glyph="trash" />
+                </Button>
+              </ButtonToolbar>
+            </Col>
+          </Row>
+        </Grid>
+      </ListGroupItem>
     );
   }
 });
