@@ -1,0 +1,41 @@
+div.sprites-modal {
+  width: 648px;
+}
+
+div.sprites-panel {
+  margin-bottom: 0;
+}
+
+div.sprite-type-col {
+  padding-left: 0;
+  width: 120px;
+}
+
+div.sprite-level-col {
+  padding-left: 0;
+  width: 84px;
+}
+
+div.edit-sprite-col {
+  padding-left: 0;
+}
+
+div.sprite-well {
+  margin-bottom: 0;
+  padding: 6px;
+}
+
+div.sprite-location {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+div.sprite-controls-col {
+  padding-left: 8px;
+  width: 188px;
+}
+
+span.sprite-list-item {
+  padding: 8px 16px;
+}

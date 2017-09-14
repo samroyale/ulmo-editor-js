@@ -661,10 +661,17 @@ class RpgMapService {
   }
 
   /*
-   * So map canvas doesn't need to know anything about clipboards.
+   * So map canvas doesn't need to know about clipboards.
    */
   emptyClipboard() {
     return new Clipboard();
+  }
+
+  /*
+   * So sprites modal doesn't need to know about sprites.
+   */
+  newSprite(type, level, location) {
+    return new Sprite(type, level, location);
   }
 }
 

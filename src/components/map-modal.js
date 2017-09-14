@@ -279,7 +279,7 @@ export const EditImagesModal = React.createClass({
     }
   },
 
-  tilePosition: function(tileIndex, lastIndex) {
+  listPosition: function(tileIndex, lastIndex) {
     var position = [];
     if (tileIndex === 0) {
       position.push('first');
@@ -292,12 +292,12 @@ export const EditImagesModal = React.createClass({
 
   tileItems: function() {
     return this.state.maskTiles.map((maskTile, i) => {
-      var tilePosition = this.tilePosition(i, this.state.maskTiles.length - 1);
+      var listPosition = this.listPosition(i, this.state.maskTiles.length - 1);
       return (
         <TileImageItem key={i}
           ref={'item' + i}
           buttonId={'btn' + i}
-          position={tilePosition}
+          position={listPosition}
           onMoveTop={this.moveTop}
           onMoveUp={this.moveUp}
           onMoveDown={this.moveDown}

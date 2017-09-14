@@ -1,7 +1,8 @@
 import React from 'react';
 import { Panel, Modal, Grid, Row, Col, ButtonToolbar, Button, DropdownButton,
-    ListGroup, ListGroupItem, Dropdown, MenuItem, Collapse, Alert, Form, FormGroup,
-    FormControl, ControlLabel, ProgressBar, Glyphicon, Well} from 'react-bootstrap';
+    Dropdown, MenuItem, Collapse, Alert, Form, FormGroup, FormControl, ControlLabel,
+    ProgressBar, Glyphicon } from 'react-bootstrap';
+import SpritesModal from './sprites-modal';
 import MapCanvas from './map-canvas';
 import RpgMapService from '../services/rpg-maps';
 import { tileSize } from '../config';
@@ -843,136 +844,5 @@ function MapTileInfo(props) {
   }
   return (<p className="with-top-margin">-</p>);
 }
-
-/* =============================================================================
- * COMPONENT: SPRITES MODAL
- * =============================================================================
- */
-const SpritesModal = React.createClass({
-  getInitialState: function() {
-    return {
-      sprites: [],
-    };
-  },
-
-  handleSubmit: function(e) {
-    this.props.onSubmit(this.state.sprites);
-  },
-
-  delete: function(evt) {
-    console.log("DELETE: " + evt.currentTarget.id);
-    var buttonId = evt.currentTarget.id;
-    var index = parseInt(buttonId.slice(3), 10);
-    var newSprites = this.state.sprites;
-    newSprites.splice(index, 1);
-    this.setState({ sprites: newSprites });
-  },
-
-  edit: function(evt) {
-    console.log("EDIT: " + evt.currentTarget.id);
-  },
-
-  componentWillMount: function() {
-    this.populateStateFromProps(this.props);
-  },
-
-  componentWillReceiveProps: function(nextProps) {
-    this.populateStateFromProps(nextProps);
-  },
-
-  populateStateFromProps: function(props) {
-    if (props.showModal) {
-      this.setState({ sprites: props.sprites.slice() });
-    }
-  },
-
-  // sprites: function() {
-  //   return this.state.sprites.map((s, i) => {
-  //     return (
-  //       <li key={i}>{s.getType()} :: {s.getLevel()} :: {s.getLocation().map((l, j) => {
-  //         return <inline key={j}>[{l[0]},{l[1]}] </inline>;
-  //       })} <Button id={'btn' + i} onClick={this.delete}>x</Button></li>
-  //     );
-  //   })
-  // },
-
-  sprites: function() {
-    return this.state.sprites.map((sprite, i) => {
-      var location = sprite.getLocation()
-          .map(loc => '[' + loc[0] + ',' + loc[1] + ']')
-          .join(' ');
-      return (
-        <SpriteItem
-            key={i}
-            buttonId={'btn' + i}
-            type={sprite.getType()}
-            level={sprite.getLevel()}
-            location={location}
-            onEdit={this.edit}
-            onDelete={this.delete} />
-      );
-    })
-  },
-
-  render: function() {
-    return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="sprites-modal">
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Sprites</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Panel className="sprites-panel">
-            <ListGroup fill>{this.sprites()}</ListGroup>
-          </Panel>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
-          <Button onClick={this.props.onClose}>Cancel</Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  }
-});
-
-/* =============================================================================
- * COMPONENT: SPRITE ITEM
- * =============================================================================
- */
-const SpriteItem = React.createClass({
-
-  typeLabel: function() {
-    return this.props.type[0].toUpperCase() + this.props.type.slice(1);
-  },
-
-  render: function() {
-    return (
-      <ListGroupItem className="sprite-list-item">
-        <Grid>
-          <Row>
-            <Col className="sprite-type-col" lg={1}>
-              <Well className="sprite-well" bsSize="small"><b>{this.typeLabel()}</b></Well>
-            </Col>
-            <Col className="sprite-level-col" lg={1}>
-              <Well className="sprite-well" bsSize="small">level: {this.props.level}</Well>
-            </Col>
-            <Col className="edit-sprite-col" lg={3}>
-              <Well className="sprite-well" bsSize="small"><div className="sprite-location">{this.props.location}</div></Well>
-            </Col>
-            <Col className="edit-sprite-col" lg={2}>
-              <ButtonToolbar className="sprite-controls">
-                <Button id={this.props.buttonId} onClick={this.props.onEdit}>
-                  <Glyphicon glyph="edit" />
-                </Button>
-                <Button id={this.props.buttonId} onClick={this.props.onDelete}>
-                  <Glyphicon glyph="trash" />
-                </Button>
-              </ButtonToolbar>
-            </Col>
-          </Row>
-        </Grid>
-      </ListGroupItem>
-    );
-  }
-});
 
 export default MapEditor;
