@@ -283,6 +283,10 @@ const MapEditor = React.createClass({
       this._mapCanvas.restoreMap(lastChange.map);
       return;
     }
+    if (lastChange.sprites) {
+      this._mapCanvas.restoreSprites(lastChange.sprites);
+      return;
+    }
     console.log("Could not undo [unknown change]");
   },
 
@@ -305,7 +309,9 @@ const MapEditor = React.createClass({
 
   applySpritesEdit: function(newSprites) {
     this.closeModal();
-    this._mapCanvas.applySpritesEdit(newSprites)
+    var oldSprites = this._mapCanvas.applySpritesEdit(newSprites);
+    this.mapUpdated();
+    this.addToChangeHistory({ sprites: oldSprites })
   },
 
   componentWillReceiveProps: function(nextProps) {

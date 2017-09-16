@@ -1,9 +1,13 @@
 div.sprites-modal {
-  width: 648px;
+  width: 678px;
+}
+
+div.sprite-edit-modal {
+  width: 422px;
 }
 
 div.sprites-panel {
-  margin-bottom: 0;
+  margin: 0 15px;
 }
 
 div.sprite-type-col {
@@ -31,7 +35,21 @@ div.sprite-location {
   white-space: nowrap;
 }
 
-div.sprite-controls-col {
+div.location-panel {
+  margin-bottom: 0;
+}
+
+div.location-coord-col {
+  padding-left: 0;
+  padding-right: 5px;
+  width: 50px;
+}
+
+div.add-location-col {
+  padding-left: 187px;
+}
+
+div.location-controls-col {
   padding-left: 8px;
   width: 188px;
 }

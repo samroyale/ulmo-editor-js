@@ -8,6 +8,8 @@ const rpgMapService = new RpgMapService();
 
 const spriteTypes = ['flames', 'rock', 'key', 'door', 'chest', 'coin', 'checkpoint', 'blades', 'beetle', 'wasp'];
 
+const numRegex = /[^0-9]/g;
+
 /* =============================================================================
  * COMPONENT: SPRITES MODAL
  * =============================================================================
@@ -25,8 +27,7 @@ const SpritesModal = React.createClass({
     this.props.onSubmit(this.state.sprites);
   },
 
-  delete: function(evt) {
-    console.log("DELETE: " + evt.currentTarget.id);
+  deleteSprite: function(evt) {
     var buttonId = evt.currentTarget.id;
     var index = parseInt(buttonId.slice(3), 10);
     var newSprites = this.state.sprites;
@@ -34,8 +35,14 @@ const SpritesModal = React.createClass({
     this.setState({ sprites: newSprites });
   },
 
-  edit: function(evt) {
-    console.log("EDIT: " + evt.currentTarget.id);
+  addSprite: function() {
+    this.setState({
+      editableSprite: null,
+      showEditModal: true
+    });
+  },
+
+  editSprite: function(evt) {
     var buttonId = evt.currentTarget.id;
     var index = parseInt(buttonId.slice(3), 10);
     this.setState({
@@ -43,11 +50,10 @@ const SpritesModal = React.createClass({
       showEditModal: true
     });
   },
-  
+
   applySpriteEdit: function(newSprite) {
     var newSprites = this.state.sprites.slice();
     if (this.state.editableSprite) {
-      console.log('EDIT: ' + newSprite);
       var index = this.state.sprites.indexOf(this.state.editableSprite);
       if (index > -1) {
         newSprites.splice(index, 1, newSprite);
@@ -58,7 +64,6 @@ const SpritesModal = React.createClass({
         return;
       }
     }
-    console.log('NEW: ' + newSprite);
     newSprites.push(newSprite);
     this.setState({
       sprites: newSprites,
@@ -92,8 +97,8 @@ const SpritesModal = React.createClass({
           key={i}
           buttonId={'btn' + i}
           sprite={sprite}
-          onEdit={this.edit}
-          onDelete={this.delete} />
+          onEdit={this.editSprite}
+          onDelete={this.deleteSprite} />
     ));
   },
 
@@ -106,7 +111,14 @@ const SpritesModal = React.createClass({
         </Modal.Header>
         <Modal.Body>
           <Panel className="sprites-panel">
-            <ListGroup fill>{this.sprites()}</ListGroup>
+            <ListGroup fill>
+              {this.sprites()}
+              <ListGroupItem className="sprite-list-item">
+                <ButtonToolbar>
+                  <Button onClick={this.addSprite}>Add Sprite</Button>
+                </ButtonToolbar>
+              </ListGroupItem>
+            </ListGroup>
           </Panel>
         </Modal.Body>
         <Modal.Footer>
@@ -180,13 +192,13 @@ const SpriteItem = React.createClass({
  */
 const SpriteEditModal = React.createClass({
 
-  _regex: /[^0-9]/g,
-
   getInitialState: function() {
     return {
-      typeVal: null,
-      levelVal: null,
-      locations: []
+      sprite: null,
+      typeVal: '',
+      levelVal: '',
+      locations: [],
+      okDisabled: true
     }
   },
 
@@ -199,11 +211,31 @@ const SpriteEditModal = React.createClass({
   },
 
   handleTypeChange: function(event) {
-    this.setState({ typeVal: event.target.value });
+    this.setTypeVal(event.target.value);
+  },
+
+  setTypeVal: function(newTypeVal) {
+    var spriteValid = this.isSpriteValid(newTypeVal, this.state.levelVal, this.state.locations);
+    this.setState({
+      typeVal: newTypeVal,
+      okDisabled: !spriteValid
+    });
   },
 
   handleLevelChange: function(event) {
-    this.setLevelVal(event.target.value.replace(this._regex, ''));
+    this.setLevelVal(event.target.value.replace(numRegex, ''));
+  },
+
+  setLevelVal: function(newLevelVal) {
+    var spriteValid = this.isSpriteValid(this.state.typeVal, newLevelVal, this.state.locations);
+    this.setState({
+      levelVal: newLevelVal,
+      okDisabled: !spriteValid
+    });
+  },
+
+  isSpriteValid: function(type, level, locations) {
+    return spriteTypes.includes(type) && level.length > 0 && locations.length > 0;
   },
 
   moveItem: function(evt, func) {
@@ -212,7 +244,11 @@ const SpriteEditModal = React.createClass({
     var newLocations = this.state.locations.slice();
     var location = newLocations[index];
     func(newLocations, location, index);
-    this.setState({ locations: newLocations });
+    var spriteValid = this.isSpriteValid(this.state.typeVal, this.state.levelVal, newLocations);
+    this.setState({
+      locations: newLocations,
+      okDisabled: !spriteValid
+    });
   },
 
   moveTop: function(evt) {
@@ -257,8 +293,14 @@ const SpriteEditModal = React.createClass({
     });
   },
 
-  setLevelVal: function(newLevelVal) {
-    this.setState({ levelVal: newLevelVal });
+  addLocation: function(x, y) {
+    var newLocations = this.state.locations.slice();
+    newLocations.push([x, y]);
+    var spriteValid = this.isSpriteValid(this.state.typeVal, this.state.levelVal, newLocations);
+    this.setState({
+      locations: newLocations,
+      okDisabled: !spriteValid
+    });
   },
 
   componentWillMount: function() {
@@ -272,9 +314,11 @@ const SpriteEditModal = React.createClass({
   populateStateFromProps: function(props) {
     if (props.sprite) {
       this.setState({
+        sprite: props.sprite,
         typeVal: props.sprite.getType(),
         levelVal: props.sprite.getLevel(),
-        locations: props.sprite.getLocation().slice()
+        locations: props.sprite.getLocation().slice(),
+        okDisabled: false
       });
       return;
     }
@@ -286,7 +330,15 @@ const SpriteEditModal = React.createClass({
   },
 
   modalTitle: function() {
-    return this.state.typeVal ? 'Edit Sprite' : 'New Sprite';
+    return this.state.sprite ? 'Edit Sprite' : 'Add Sprite';
+  },
+
+  spriteOptions: function() {
+    if (this.state.sprite) {
+      return spriteTypes.map((type, i) => <option key={i} value={type}>{this.typeText(type)}</option>);
+    }
+    var typesWithSelect = ['- Select -'].concat(spriteTypes);
+    return typesWithSelect.map((type, i) => <option key={i} value={type}>{this.typeText(type)}</option>);
   },
 
   typeControl: function() {
@@ -294,7 +346,7 @@ const SpriteEditModal = React.createClass({
       <FormGroup controlId="spriteType">
         <ControlLabel>Type</ControlLabel>
         <FormControl componentClass="select" value={this.state.typeVal} placeholder="type" onChange={this.handleTypeChange}>
-          { spriteTypes.map((type, i) => <option key={i} value={type}>{this.typeText(type)}</option>) }
+          {this.spriteOptions()}
         </FormControl>
       </FormGroup>
     );
@@ -327,7 +379,7 @@ const SpriteEditModal = React.createClass({
     return this.state.locations.map((loc, i) => {
       var listPosition = this.listPosition(i, this.state.locations.length - 1);
       return (
-        <SpriteLocationItem key={i}
+        <LocationItem key={i}
             buttonId={'btn' + i}
             position={listPosition}
             locationX={loc[0]}
@@ -343,10 +395,14 @@ const SpriteEditModal = React.createClass({
 
   locationControl: function() {
     return (
-      <FormGroup controlId="spriteType">
+      <FormGroup className="location-panel" controlId="spriteType">
         <ControlLabel>Location</ControlLabel>
         <Panel className="location-panel">
-          <ListGroup fill>{this.locationItems()}</ListGroup>
+          <ListGroup fill>
+            {this.locationItems()}
+            <AddLocationItem
+                onAddLocation={this.addLocation} />
+          </ListGroup>
         </Panel>
       </FormGroup>
     );
@@ -354,7 +410,7 @@ const SpriteEditModal = React.createClass({
 
   render: function() {
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="sprites-edit-modal">
+      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="sprite-edit-modal">
         <Modal.Header closeButton>
           <Modal.Title>{this.modalTitle()}</Modal.Title>
         </Modal.Header>
@@ -370,7 +426,7 @@ const SpriteEditModal = React.createClass({
           </Grid>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
+          <Button onClick={this.handleSubmit} bsStyle="primary" disabled={this.state.okDisabled}>OK</Button>
           <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
@@ -382,39 +438,114 @@ const SpriteEditModal = React.createClass({
  * COMPONENT: SPRITE LOCATION ITEM
  * =============================================================================
  */
-const SpriteLocationItem = React.createClass({
+function LocationItem(props) {
+  var disabledFirst = props.position.includes('first');
+  var disabledLast = props.position.includes('last');
+  return (
+    <ListGroupItem className="sprite-list-item">
+      <Grid>
+        <Row>
+          <Col className="edit-sprite-col" lg={1}>
+            <Well className="sprite-well" bsSize="small">[{props.locationX}, {props.locationY}]</Well>
+          </Col>
+          <Col className="location-controls-col" lg={2}>
+            <ButtonToolbar>
+              <ButtonGroup>
+                <Button id={props.buttonId} onClick={props.onMoveTop} disabled={disabledFirst}>
+                  <Glyphicon glyph="triangle-top" />
+                </Button>
+                <Button id={props.buttonId} onClick={props.onMoveUp} disabled={disabledFirst}>
+                  <Glyphicon glyph="menu-up" />
+                </Button>
+                <Button id={props.buttonId} onClick={props.onMoveDown} disabled={disabledLast}>
+                  <Glyphicon glyph="menu-down" />
+                </Button>
+                <Button id={props.buttonId} onClick={props.onMoveBottom} disabled={disabledLast}>
+                  <Glyphicon glyph="triangle-bottom" />
+                </Button>
+              </ButtonGroup>
+            </ButtonToolbar>
+          </Col>
+          <Col className="edit-sprite-col" lg={1}>
+            <ButtonToolbar>
+              <Button id={props.buttonId} onClick={props.onDelete}>
+                <Glyphicon glyph="trash" />
+              </Button>
+            </ButtonToolbar>
+          </Col>
+        </Row>
+      </Grid>
+    </ListGroupItem>
+  );
+};
+
+/* =============================================================================
+ * COMPONENT: ADD LOCATION ITEM
+ * =============================================================================
+ */
+const AddLocationItem = React.createClass({
+
+  getInitialState: function() {
+    return {
+      xVal: '',
+      yVal: '',
+      addDisabled: true
+    }
+  },
+
+  handleXChange: function(event) {
+    this.setXVal(event.target.value.replace(numRegex, ''));
+  },
+
+  handleYChange: function(event) {
+    this.setYVal(event.target.value.replace(numRegex, ''));
+  },
+
+  setXVal: function(newXVal) {
+    var locationValid = this.isLocationValid(newXVal, this.state.yVal);
+    this.setState({
+      xVal: newXVal,
+      addDisabled: !locationValid
+    });
+  },
+
+  setYVal: function(newYVal) {
+    var locationValid = this.isLocationValid(this.state.xVal, newYVal);
+    this.setState({
+      yVal: newYVal,
+      addDisabled: !locationValid
+    });
+  },
+
+  isLocationValid: function(xVal, yVal) {
+    return xVal.length > 0 && yVal.length > 0;
+  },
+
+  addLocation: function() {
+    this.props.onAddLocation(this.state.xVal, this.state.yVal);
+  },
+
   render: function() {
-    var disabledFirst = this.props.position.includes('first');
-    var disabledLast = this.props.position.includes('last');
     return (
-      <ListGroupItem className="sprite-list-item">
+      <ListGroupItem>
         <Grid>
           <Row>
-            <Col className="edit-sprite-col" lg={1}>
-              <Well className="sprite-well" bsSize="small">[{this.props.locationX}, {this.props.locationY}]</Well>
+            <Col className="location-coord-col" lg={1}>
+              <FormControl type="text"
+                           placeholder="x"
+                           value={this.state.xVal}
+                           onChange={this.handleXChange} />
             </Col>
-            <Col className="sprite-controls-col" lg={2}>
-              <ButtonToolbar>
-                <ButtonGroup>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveTop} disabled={disabledFirst}>
-                    <Glyphicon glyph="triangle-top" />
-                  </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveUp} disabled={disabledFirst}>
-                    <Glyphicon glyph="menu-up" />
-                  </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveDown} disabled={disabledLast}>
-                    <Glyphicon glyph="menu-down" />
-                  </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveBottom} disabled={disabledLast}>
-                    <Glyphicon glyph="triangle-bottom" />
-                  </Button>
-                </ButtonGroup>
-              </ButtonToolbar>
+            <Col className="location-coord-col" lg={1}>
+              <FormControl type="text"
+                           placeholder="y"
+                           value={this.state.yVal}
+                           onChange={this.handleYChange} />
             </Col>
-            <Col className="edit-sprite-col" lg={1}>
-              <ButtonToolbar>
-                <Button id={this.props.buttonId} onClick={this.props.onDelete}>
-                  <Glyphicon glyph="trash" />
+            <Col className="add-location-col" lg={1}>
+              <ButtonToolbar className="sprite-controls">
+                <Button onClick={this.addLocation} disabled={this.state.addDisabled}>
+                  <Glyphicon glyph="plus" />
                 </Button>
               </ButtonToolbar>
             </Col>

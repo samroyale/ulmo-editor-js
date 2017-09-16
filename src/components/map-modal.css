@@ -1,5 +1,5 @@
 div.tile-levels-modal {
-  width: 224px;
+  width: 254px;
 }
 
 div.tile-images-modal {
@@ -7,11 +7,11 @@ div.tile-images-modal {
 }
 
 div.tile-masks-modal {
-  width: 420px;
+  width: 326px;
 }
 
 div.edit-levels-panel {
-  margin-bottom: 0;
+  margin: 0 15px;
 }
 
 div.edit-level-col {
@@ -34,21 +34,22 @@ div.tile-images-col {
 }
 
 div.edit-tiles-item-col {
-  padding-left: 5px;
+  padding-left: 0;
 }
 
 div.tile-canvas-col {
-  padding-left: 5px;
-  width: 84px;
+  padding-left: 0;
+  width: 85px;
 }
 
 div.tile-controls-col {
-  padding-left: 5px;
-  width: 177px;
+  padding-left: 0;
+  padding-right: 0;
+  width: 176px;
 }
 
 span.tile-list-item {
-  padding: 4px 10px;
+  padding: 4px 15px;
 }
 
 li.tile-list-item {
@@ -70,7 +71,6 @@ div.tile-preview-panel {
 
 div.tile-masks-panel {
   margin-bottom: 0;
-  width: 388px;
 }
 
 div.tile-canvas-container {

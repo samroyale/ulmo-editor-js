@@ -41,10 +41,7 @@ export const EditLevelsModal = React.createClass({
   },
 
   isLevelValid: function(levelVal) {
-    if (levelVal.length === 0) {
-      return false;
-    }
-    return true;
+    return levelVal.length > 0;
   },
 
   addLevel: function() {
@@ -557,7 +554,7 @@ const TileMaskItem = React.createClass({
                     ref={cvs => this._canvas = cvs} />
               </div>
             </Col>
-            <Col className="edit-tiles-item-col" lg={2}>
+            <Col className="edit-tiles-item-col" lg={1}>
               <div className="tile-controls">
                 <FormGroup controlId={"levelGroup" + this.props.index}>
                   <FormControl type="text" placeholder="level"

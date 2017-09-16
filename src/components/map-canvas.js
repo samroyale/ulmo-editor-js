@@ -196,7 +196,11 @@ const MapCanvas = React.createClass({
     }
     this.showModal("PLAY");
   },
-  
+
+  restoreSprites: function(sprites) {
+    this.applySpritesEdit(sprites);
+  },
+
   applySpritesEdit: function(newSprites) {
     return this._rpgMap.setSprites(newSprites);
   },
