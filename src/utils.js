@@ -1,8 +1,8 @@
 import { tileSize } from './config';
 
 function ParseLevelException(message) {
-  this.message = message;
   this.name = 'ParseLevelException';
+  this.message = message;
 }
 
 const strictParseInt = (int, errMessage) => {
@@ -145,8 +145,7 @@ export function parseLevel(levelStr) {
     let dropVal = strictParseInt(levels[1],
         'Drop component could not be parsed as an int: ' + levels[1]);
     if (dropVal < 1) {
-      throw new ParseLevelException(
-          'Drop component should be greater than zero');
+      throw new ParseLevelException('Drop component was not greater than zero');
     }
     return {
       type: 'down',

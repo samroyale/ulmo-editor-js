@@ -1,5 +1,5 @@
 import { tileSize, viewWidth, viewHeight } from '../config';
-import { drawTile, initTile, Rect } from '../utils';
+import { drawTile, initTile, parseLevel, Rect } from '../utils';
 
 const minShuffle = {
     index1: 0,
@@ -51,17 +51,19 @@ class PlayTile {
         this.levels = [];
         this.specialLevels = null;
         this.downLevels = null;
-        mapTile.getLevels().forEach(level => {
-            if (level.startsWith('S')) {
-                this.addSpecialLevel(level);
-                return;
-            }
-            if (level.startsWith('D')) {
-                this.addDownLevel(level);
-                return;
-            }
-            this.addLevel(level);
-        });
+        mapTile.getLevels()
+            .map(level => parseLevel(level))
+            .forEach(parsed => {
+                if (parsed.type === 'special') {
+                    this.addSpecialLevel(parsed);
+                    return;
+                }
+                if (parsed.type === 'down') {
+                    this.addDownLevel(parsed);
+                    return;
+                }
+                this.levels.push(parsed.level);
+            });
 
         // masks
         this.masks = null;
@@ -81,31 +83,23 @@ class PlayTile {
         this.horizontals = null;
     }
 
-    addLevel(levelStr) {
-        this.levels.push(Number.parseInt(levelStr, 10));
-    }
-
-    addSpecialLevel(levelStr) {
+    addSpecialLevel(parsed) {
         if (!this.specialLevels) {
             this.specialLevels = new Map();
         }
-        var level = Number.parseFloat(levelStr.substr(1))
-        if (Number.isInteger(level)) {
-            this.specialLevels.set(level, level);
+        if (parsed.high && parsed.low) {
+            this.specialLevels.set(parsed.high, parsed.level);
+            this.specialLevels.set(parsed.low, parsed.level);
             return;
         }
-        this.specialLevels.set(Math.floor(level), level);
-        this.specialLevels.set(Math.ceil(level), level);
+        this.specialLevels.set(parsed.level, parsed.level);
     }
 
-    addDownLevel(levelStr) {
+    addDownLevel(parsed) {
         if (!this.downLevels) {
             this.downLevels = new Map();
         }
-        let levels = levelStr.substr(1).split('-');
-        let level = Number.parseInt(levels[0], 10);
-        let downLevel = Number.parseInt(levels[1], 10);
-        this.downLevels.set(level, downLevel);
+        this.downLevels.set(parsed.level, parsed.drop);
     }
 
     addMask(tileIndex, level, flat, y) {
