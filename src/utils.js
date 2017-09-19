@@ -1,12 +1,33 @@
 import { tileSize } from './config';
 
+function ParseLevelException(message) {
+  this.message = message;
+  this.name = 'ParseLevelException';
+}
+
+const strictParseInt = (int, errMessage) => {
+  let num = Number.parseInt(int, 10);
+  if (isNaN(num)) {
+    throw new ParseLevelException(errMessage);
+  }
+  return num;
+};
+
+const strictParseFloat = (float, errMessage) => {
+  let num = Number.parseFloat(float);
+  if (isNaN(num)) {
+    throw new ParseLevelException(errMessage);
+  }
+  return num;
+};
+
 export function errorMessage(message, data) {
-  var errorInfo = data.status ? data.status + ": " + data.err : data.err;
+  let errorInfo = data.status ? data.status + ": " + data.err : data.err;
   return message + " [" + errorInfo + "]";
 }
 
 export function getDrawingContext(canvas) {
-  var context = canvas.getContext('2d');
+  let context = canvas.getContext('2d');
   context.imageSmoothingEnabled = false;
   context.webkitImageSmoothingEnabled = false;
   context.mozImageSmoothingEnabled = false;
@@ -14,10 +35,10 @@ export function getDrawingContext(canvas) {
 };
 
 export function drawTile(maskTiles, baseTileCanvas) {
-  var tileCanvas = document.createElement('canvas');
+  let tileCanvas = document.createElement('canvas');
   tileCanvas.width = tileSize;
   tileCanvas.height = tileSize;
-  var ctx = tileCanvas.getContext('2d');
+  let ctx = tileCanvas.getContext('2d');
   if (baseTileCanvas) {
     ctx.drawImage(baseTileCanvas, 0, 0);
   }
@@ -32,15 +53,15 @@ export function initTile(colour) {
 };
 
 export function initRect(colour, width, height) {
-  var canvas = initTransparentRect(width, height);
-  var ctx = canvas.getContext('2d');
+  let canvas = initTransparentRect(width, height);
+  let ctx = canvas.getContext('2d');
   ctx.fillStyle = colour;
   ctx.fillRect(0, 0, width, height);
   return canvas;
 }
 
 export function initTransparentRect(width, height) {
-  var canvas = document.createElement('canvas');
+  let canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   // canvas transparent by default?
@@ -49,10 +70,10 @@ export function initTransparentRect(width, height) {
 
 export function initHighlight(rows, cols) {
   // console.log(rows + ", " + cols);
-  var canvas = initTransparentRect(tileSize * cols, tileSize * rows);
+  let canvas = initTransparentRect(tileSize * cols, tileSize * rows);
   // canvas.width = tileSize * cols;
   // canvas.height = tileSize * rows;
-  var ctx = canvas.getContext('2d');
+  let ctx = canvas.getContext('2d');
   // transparent rect
   // ctx.beginPath();
   // ctx.rect(0, 0, canvas.width, canvas.height);
@@ -76,14 +97,14 @@ export function initTileHighlight() {
 };
 
 export function copyCanvas(canvas) {
-  var copy = initTransparentRect(canvas.width, canvas.height);
-  var ctx = copy.getContext('2d');
+  let copy = initTransparentRect(canvas.width, canvas.height);
+  let ctx = copy.getContext('2d');
   ctx.drawImage(canvas, 0, 0);
   return copy;
 };
 
 export function loadImage(imageUrl, callback) {
-  var image = new Image();
+  let image = new Image();
   image.onerror = () => {
     callback({
       err: imageUrl + ' failed to load'
@@ -94,6 +115,49 @@ export function loadImage(imageUrl, callback) {
   };
   //tileSetImage.crossOrigin = "Anonymous"; // CORS
   image.src = imageUrl;
+};
+
+export function parseLevel(levelStr) {
+  if (levelStr.startsWith('S')) {
+    let level = strictParseFloat(levelStr.substr(1),
+        'Special level could not be parsed as a float: ' + levelStr);
+    if (Number.isInteger(level)) {
+      return {
+        type: 'special',
+        level: level
+      }
+    }
+    return {
+      type: 'special',
+      level: level,
+      high: Math.ceil(level),
+      low: Math.floor(level)
+    }
+  }
+  if (levelStr.startsWith('D')) {
+    let levels = levelStr.substr(1).split('-');
+    if (levels.length !== 2) {
+      throw new ParseLevelException(
+          'Down level did not have a level and drop component separated by \'-\': ' + levelStr);
+    }
+    let levelVal = strictParseInt(levels[0],
+        'Level component could not be parsed as an int: ' + levels[0]);
+    let dropVal = strictParseInt(levels[1],
+        'Drop component could not be parsed as an int: ' + levels[1]);
+    if (dropVal < 1) {
+      throw new ParseLevelException(
+          'Drop component should be greater than zero');
+    }
+    return {
+      type: 'down',
+      level: levelVal,
+      drop: dropVal
+    }
+  }
+  return {
+    type: 'standard',
+    level: Number.parseInt(levelStr, 10)
+  };
 };
 
 export class Rect {

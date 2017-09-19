@@ -3,16 +3,19 @@ import { Modal, Grid, Row, Col, Panel, ListGroup, ListGroupItem, ButtonToolbar,
     ButtonGroup, Button, Glyphicon, FormGroup, FormControl,
     Checkbox, Well } from 'react-bootstrap';
 import { tileSize } from '../config';
-import { getDrawingContext, drawTile } from '../utils';
+import { getDrawingContext, drawTile, parseLevel } from '../utils';
 import './map-modal.css';
+
+// allows 'specials' eg. S1.5, S2 and 'drops' eg. D3-2
+const levelRegex = /[^\dSD\.\-]/g;
+
+const numRegex = /\D/g;
 
 /* =============================================================================
  * COMPONENT: EDIT LEVELS MODAL
  * =============================================================================
  */
 export const EditLevelsModal = React.createClass({
-  // allows 'specials' eg. S1.5, S2 and 'drops' eg. D3-2
-  _regex: /[^0-9SD\.\-]/g,
 
   getInitialState: function() {
     return {
@@ -29,7 +32,7 @@ export const EditLevelsModal = React.createClass({
   },
 
   handleLevelChange: function(event) {
-    this.setLevelVal(event.target.value.replace(this._regex, ''));
+    this.setLevelVal(event.target.value.replace(levelRegex, ''));
   },
 
   setLevelVal: function(newLevelVal) {
@@ -41,20 +44,44 @@ export const EditLevelsModal = React.createClass({
   },
 
   isLevelValid: function(levelVal) {
-    return levelVal.length > 0;
+    try {
+      parseLevel(levelVal);
+      return true;
+    }
+    catch (e) {
+      // console.log(e.message);
+    }
+    return false;
   },
 
   addLevel: function() {
-    if (this.state.levels.includes(this.state.levelVal)) {
-      return;
+    try {
+      let level = this.normalizeLevel(this.state.levelVal)
+      if (this.state.levels.includes(level)) {
+        return;
+      }
+      var newLevels = this.state.levels.slice();
+      newLevels.push(level);
+      this.setState({
+        levelVal: "",
+        levels: newLevels,
+        addDisabled: true
+      });
     }
-    var newLevels = this.state.levels.slice();
-    newLevels.push(this.state.levelVal);
-    this.setState({
-      levelVal: "",
-      levels: newLevels,
-      addDisabled: true
-    });
+    catch (e) {
+      console.log(e.name + ": " + e.message);
+    }
+  },
+
+  normalizeLevel(levelStr) {
+    let result = parseLevel(levelStr);
+    if (result.type === 'special') {
+      return 'S' + result.level;
+    }
+    if (result.type === 'down') {
+      return 'D' + result.level + '-' + result.drop;
+    }
+    return '' + result.level;
   },
 
   delete: function(evt) {
@@ -506,7 +533,6 @@ export const EditMasksModal = React.createClass({
  */
 const TileMaskItem = React.createClass({
   _canvas: null,
-  _regex: /\D/g,
 
   getInitialState: function() {
     return {
@@ -516,7 +542,7 @@ const TileMaskItem = React.createClass({
   },
 
   handleLevelChange: function(event) {
-    this.setState({ levelVal: event.target.value.replace(this._regex, '') });
+    this.setState({ levelVal: event.target.value.replace(numRegex, '') });
   },
 
   handleVerticalChange: function(event) {

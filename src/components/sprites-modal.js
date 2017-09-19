@@ -8,7 +8,7 @@ const rpgMapService = new RpgMapService();
 
 const spriteTypes = ['flames', 'rock', 'key', 'door', 'chest', 'coin', 'checkpoint', 'blades', 'beetle', 'wasp'];
 
-const numRegex = /[^0-9]/g;
+const numRegex = /\D/g;
 
 /* =============================================================================
  * COMPONENT: SPRITES MODAL
@@ -115,7 +115,7 @@ const SpritesModal = React.createClass({
               {this.sprites()}
               <ListGroupItem className="sprite-list-item">
                 <ButtonToolbar>
-                  <Button onClick={this.addSprite}>Add Sprite</Button>
+                  <Button onClick={this.addSprite}>Add Sprite <Glyphicon glyph="plus" /></Button>
                 </ButtonToolbar>
               </ListGroupItem>
             </ListGroup>
