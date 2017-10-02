@@ -512,11 +512,9 @@ export const EditMasksModal = React.createClass({
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <form>
-            <Panel className="tile-masks-panel" header="Masks">
-              <ListGroup fill>{this.tileItems()}</ListGroup>
-            </Panel>
-          </form>
+          <Panel className="tile-masks-panel" header="Masks">
+            <ListGroup fill>{this.tileItems()}</ListGroup>
+          </Panel>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
