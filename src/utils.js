@@ -159,6 +159,10 @@ export function parseLevel(levelStr) {
   };
 };
 
+/* =============================================================================
+ * CLASS: RECT
+ * =============================================================================
+ */
 export class Rect {
   constructor(x, y, width, height) {
     this.width = width;

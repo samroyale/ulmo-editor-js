@@ -3,7 +3,7 @@ import React from 'react';
 import { Alert, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
-import { SpriteGroup, Beetle, Coin, Flames, Key, Rock } from './sprites';
+import { SpriteGroup, Beetle, Coin, Flames, Key, Rock, Wasp } from './sprites';
 import PlayMap from './play-map';
 import './play-modal.css';
 
@@ -14,7 +14,8 @@ export const spriteProvider = new Map([
     ['key', (playMap, sprite) => new Key(playMap, sprite.getLevel(), sprite.getLocation())],
     ['rock', (playMap, sprite) => new Rock(playMap, sprite.getLevel(), sprite.getLocation())],
     ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['beetle', (playMap, sprite) => new Beetle(playMap, sprite.getLevel(), sprite.getLocation())]
+    ['beetle', (playMap, sprite) => new Beetle(playMap, sprite.getLevel(), sprite.getLocation())],
+    ['wasp', (playMap, sprite) => new Wasp(playMap, sprite.getLevel(), sprite.getLocation())]
 ]);
 
 /* =============================================================================
@@ -136,7 +137,7 @@ export const PlayMapModal = React.createClass({
         return () => {
             // update stuff
             let viewRect = this._player.handleInput(this._keys.processKeysDown());
-            this._mapSprites.update(viewRect, this._mapSprites);
+            this._mapSprites.update(viewRect, this._mapSprites, this._player);
             // render the view
             let viewCtx = this._canvas.getContext('2d');
             this._player.drawMapView(viewCtx, viewRect);

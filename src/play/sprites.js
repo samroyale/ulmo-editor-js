@@ -1,5 +1,5 @@
 import Q from 'q';
-import { tileSize } from '../config';
+import { tileSize, viewWidth, viewHeight } from '../config';
 import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
 import {
     up, down, left, right,
@@ -8,11 +8,27 @@ import {
     spritesImgPath
 } from './play-config';
 
+const zoomMovement = new Map([
+    [up, [up, 0, -4]],
+    [down, [down, 0, 4]],
+    [left, [left, -4, 0]],
+    [right, [right, 4, 0]]
+]);
+
+const staticMovement = new Map([
+    [up, [up, 0, 0]],
+    [down, [down, 0, 0]],
+    [left, [left, 0, 0]],
+    [right, [right, 0, 0]]
+]);
+
+
 const rockFramesUrl = spritesImgPath + '/rock.png';
 const keyFramesUrl = spritesImgPath + '/key-frames.png';
 const flameFramesUrl = spritesImgPath + '/flame-frames.png';
 const coinFramesUrl = spritesImgPath + '/coin-frames.png';
 const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
+const waspFramesUrl = spritesImgPath + '/wasp-frames.png';
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -70,7 +86,9 @@ export class MovingFrames {
     }
 
     advanceFrame(direction) {
-        this._direction = direction;
+        if (direction) {
+            this._direction = direction;
+        }
         this._tick = (this._tick + 1) % this._frameTicks;
         if (this._tick === 0) {
             this._frameIndex = (this._frameIndex + 1) % this._frameCount;
@@ -238,12 +256,11 @@ export class SpriteGroup {
         this._sprites.splice(this._sprites.indexOf(sprite), 1);
     }
 
-    update(viewRect, mapSprites) {
-        this._sprites.forEach(sprite => sprite.update(viewRect, mapSprites));
+    update(...args) {
+        this._sprites.forEach(sprite => sprite.update(...args));
     }
 
     draw(ctx, viewRect) {
-        // TODO: z order!
         this._sprites
             .filter(sprite => sprite.isInView(viewRect))
             .sort((spriteA, spriteB) => spriteA.getZIndex() - spriteB.getZIndex())
@@ -268,6 +285,7 @@ export class Sprite {
         this._zIndex = null;
         this._masked = false;
         this._toRemove = false;
+        this._inView = false;
     }
 
     loadFrames(spriteFrames, marginY) {
@@ -277,7 +295,7 @@ export class Sprite {
             this._canvas = data.currentFrame;
             if (this._level && this._tx && this._ty) {
                 let marginX = (tileSize - this._canvas.width) / 2;
-                if (!marginY) {
+                if (!Number.isInteger(marginY)) {
                     marginY = this._canvas.height / -2;
                 }
                 let px = this._tx * tileSize + marginX;
@@ -291,31 +309,36 @@ export class Sprite {
     setPosition(level, px, py) {
         this._level = level;
         this._rect = new Rect(px, py, this._canvas.width, this._canvas.height);
-        this._baseRect = this._initBaseRect(px, this._rect.width);
+        this._baseRect = this._initBaseRect(this._rect);
         this._zIndex = this._updateZIndex();
     }
 
-    _initBaseRect(baseRectLeft, baseRectWidth) {
+    _initBaseRect(spriteRect) {
         // leave as null by default
     }
 
-    update(viewRect, mapSprites) {
+    update(viewRect, mapSprites, player) {
         if (this._toRemove) {
             mapSprites.remove(this);
             return;
         }
-        let moves = this._getMovement();
+        let movement = this._getMovement(player);
         // TODO: could advanceFrame be deferred to the draw stage?
-        if (moves) {
-            // this._baseRect.moveInPlace(mx, my); TODO
-            this._rect.moveInPlace(moves[1], moves[2]);
-            this._canvas = this._frames.advanceFrame(moves[0]);
+        if (movement) {
+            let [direction, mx, my] = movement;
+            // if (this._baseRect) {
+            //     this._baseRect.moveInPlace(mx, my);
+            // }
+            this._rect.moveInPlace(mx, my);
+            this._inView = viewRect.intersectsWith(this._rect);
+            this._canvas = this._frames.advanceFrame(direction);
             return;
         }
+        this._inView = viewRect.intersectsWith(this._rect);
         this._canvas = this._frames.advanceFrame();
     }
     
-    _getMovement() {
+    _getMovement(player) {
         return null;
     }
 
@@ -325,7 +348,7 @@ export class Sprite {
     }
 
     isInView(viewRect) {
-        return viewRect.intersectsWith(this._rect);
+        return this._inView;
     }
 
     _render(ctx, viewRect) {
@@ -366,6 +389,14 @@ export class Sprite {
 
     getZIndex() {
         return this._zIndex;
+    }
+
+    getLevel() {
+        return this._level;
+    }
+
+    getBaseRect() {
+        return this._baseRect;
     }
 
     removeOnNextTick() {
@@ -446,6 +477,11 @@ export class Beetle extends Sprite {
         this._positionIndex = 0;
     }
 
+    _initBaseRect(spriteRect) {
+        // TODO: refine this
+        return new Rect(spriteRect.left, spriteRect.top, spriteRect.width, spriteRect.height);
+    }
+
     _getMovement() {
         let currentPosition = this._rect.getTopLeft();
         let x = this._position[0] - currentPosition.x;
@@ -469,6 +505,64 @@ export class Beetle extends Sprite {
             return movement.get(down);
         }
         // otherwise there is nowhere to move to
+        return null;
+    }
+
+    load() {
+        return this.loadFrames(this._frames, 0);
+    }
+}
+
+/* =============================================================================
+ * CLASS: WASP
+ * =============================================================================
+ */
+export class Wasp extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], false);
+        this._frames = new MovingFrames(waspFramesUrl, directions, 2, 4);
+        this._countdown = 12;
+        this._zooming = false;
+        this._direction = null; // this is also used to detect if the sprite has 'seen' the player
+    }
+
+    _initBaseRect(spriteRect) {
+        // TODO: refine this
+        let rect = new Rect(spriteRect.left, spriteRect.top, spriteRect.width, spriteRect.height);
+        this._upRect = new Rect(rect.left, rect.top - viewHeight, rect.width, viewHeight);
+        this._downRect = new Rect(rect.left, rect.bottom, rect.width, viewHeight);
+        this._leftRect = new Rect(rect.left - viewWidth, rect.top, viewWidth, rect.height);
+        this._rightRect = new Rect(rect.right, rect.top, viewWidth, rect.height);
+        return rect;
+    }
+
+    _getMovement(player) {
+        if (this._zooming) {
+            console.log("WASP ZOOMING");
+            return zoomMovement.get(this._direction);
+        }
+        if (this._inView && !this._direction && this._level === player.getLevel()) {
+            if (this._leftRect.intersectsWith(player.getBaseRect())) {
+                this._direction = left;
+            }
+            if (this._rightRect.intersectsWith(player.getBaseRect())) {
+                this._direction = right;
+            }
+            if (this._upRect.intersectsWith(player.getBaseRect())) {
+                this._direction = up;
+            }
+            if (this._downRect.intersectsWith(player.getBaseRect())) {
+                this._direction = down;
+            }
+            return staticMovement.get(this._direction);
+        }
+        if (this._direction) {
+            // the sprite has 'seen' the player - countdown begins
+            this._countdown -= 1;
+            if (this._countdown === 0) {
+                this._zooming = true;
+            }
+        }
         return null;
     }
 

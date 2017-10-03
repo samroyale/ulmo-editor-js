@@ -118,9 +118,10 @@ export class Player extends Sprite {
         ]);
     }
 
-    _initBaseRect(baseRectLeft, baseRectWidth) {
+    _initBaseRect(spriteRect) {
+        this._inView = true;
         let baseRectTop = this._rect.bottom + baseRectExtension - baseRectHeight;
-        return new Rect(baseRectLeft, baseRectTop, baseRectWidth, baseRectHeight);
+        return new Rect(spriteRect.left, baseRectTop, spriteRect.width, baseRectHeight);
     }
 
     handleInput(keyBits) {
