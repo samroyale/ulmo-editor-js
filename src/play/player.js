@@ -8,10 +8,10 @@ import {
     directions,
     movement,
     fallUnit,
-    spritesImgPath
+    spritesImgPath,
+    defaultBaseRectHeight,
+    baseRectExtension
 } from './play-config';
-
-const baseRectHeight = 18, baseRectExtension = 2;
 
 const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
 const playerFallingFramesUrl = spritesImgPath + '/ulmo-falling.png';
@@ -120,8 +120,8 @@ export class Player extends Sprite {
 
     _initBaseRect(spriteRect) {
         this._inView = true;
-        let baseRectTop = this._rect.bottom + baseRectExtension - baseRectHeight;
-        return new Rect(spriteRect.left, baseRectTop, spriteRect.width, baseRectHeight);
+        let baseRectTop = this._rect.bottom + baseRectExtension - defaultBaseRectHeight;
+        return new Rect(spriteRect.left, baseRectTop, spriteRect.width, defaultBaseRectHeight);
     }
 
     handleInput(keyBits) {

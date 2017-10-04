@@ -5,7 +5,10 @@ import {
     up, down, left, right,
     directions,
     movement,
-    spritesImgPath
+    spritesImgPath,
+    defaultBaseRectWidth,
+    defaultBaseRectHeight,
+    baseRectExtension
 } from './play-config';
 
 const zoomMovement = new Map([
@@ -29,9 +32,6 @@ const coinFramesUrl = spritesImgPath + '/coin-frames.png';
 const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
 const waspFramesUrl = spritesImgPath + '/wasp-frames.png';
 const doorFramesUrl = spritesImgPath + '/door-frames.png';
-
-const defaultBaseRectWidth = 16;
-const defaultBaseRectHeight = 18;
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -317,6 +317,7 @@ export class Sprite {
     }
 
     _initBaseRect(spriteRect) {
+        console.log('WTF');
         // leave as null by default
     }
 
@@ -472,7 +473,7 @@ export class Key extends Sprite {
         return this.loadFrames(this._frames, 4);
     }
 
-    _initBaseRect(spriteRect) {
+    _initBaseRect() {
         return this._defaultBaseRect();
     }
 }
@@ -491,7 +492,7 @@ export class Coin extends Sprite {
         return this.loadFrames(this._frames, 4);
     }
 
-    _initBaseRect(spriteRect) {
+    _initBaseRect() {
         return this._defaultBaseRect();
     }
 }
@@ -510,16 +511,16 @@ export class Door extends Sprite {
         return this.loadFrames(this._frames, -32);
     }
 
-    _initBaseRect(spriteRect) {
-        return this._defaultBaseRect();
-    }
+    // _initBaseRect(spriteRect) {
+    //     return this._defaultBaseRect();
+    // }
     /* Base rect extends beyond the bottom of the sprite image so player's base
      * rect can intersect with it and allow it to be opened.
      */
-    // _initBaseRect() {
-    //     let topLeft = this._baseRectTopLeft(8, defaultBaseRectHeight);
-    //     return new Rect(topLeft.x, topLeft.y + 2, 8, defaultBaseRectHeight);
-    // }
+    _initBaseRect() {
+        let topLeft = this._baseRectTopLeft(8, defaultBaseRectHeight);
+        return new Rect(topLeft.x, topLeft.y + baseRectExtension, 8, defaultBaseRectHeight);
+    }
 }
 
 /* =============================================================================
@@ -539,7 +540,7 @@ export class Beetle extends Sprite {
         return this.loadFrames(this._frames, 0);
     }
 
-    _initBaseRect(spriteRect) {
+    _initBaseRect() {
         let topLeft = this._baseRectTopLeft(24, 24);
         return new Rect(topLeft.x, topLeft.y, 24, 24);
     }
@@ -588,7 +589,7 @@ export class Wasp extends Sprite {
         return this.loadFrames(this._frames, 0);
     }
 
-    _initBaseRect(spriteRect) {
+    _initBaseRect() {
         let topLeft = this._baseRectTopLeft(18, 24);
         let rect = new Rect(topLeft.x, topLeft.y, 18, 24);
         this._upRect = new Rect(rect.left, rect.top - viewHeight, rect.width, viewHeight);

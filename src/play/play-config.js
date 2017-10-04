@@ -18,3 +18,9 @@ export const movement = new Map([
 export const fallUnit = 4;
 
 export const spritesImgPath = "/img/sprites";
+
+export const defaultBaseRectWidth = 16;
+export const defaultBaseRectHeight = 18;
+export const baseRectExtension = 2;
+
+
