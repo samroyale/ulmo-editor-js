@@ -182,6 +182,7 @@ class PlayMap {
     constructor(rpgMap) {
         this.cols = rpgMap.getCols();
         this.rows = rpgMap.getRows();
+        this.mapRect = new Rect(0, 0, this.cols * tileSize, this.rows * tileSize)
         this.mapCanvas = this.drawMap(rpgMap);
         var tiles = new Array(this.cols);
         for (var x = 0; x < this.cols; x++) {
@@ -195,8 +196,8 @@ class PlayMap {
 
     drawMap(rpgMap) {
         var mapCanvas = document.createElement('canvas');
-        mapCanvas.width = this.cols * tileSize;
-        mapCanvas.height = this.rows * tileSize;
+        mapCanvas.width = this.mapRect.width;
+        mapCanvas.height = this.mapRect.height;
         var ctx = mapCanvas.getContext('2d');
         for (var x = 0; x < this.cols; x++) {
             for (var y = 0; y < this.rows; y++) {

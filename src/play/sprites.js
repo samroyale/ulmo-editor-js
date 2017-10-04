@@ -22,13 +22,15 @@ const staticMovement = new Map([
     [right, [right, 0, 0]]
 ]);
 
-
 const rockFramesUrl = spritesImgPath + '/rock.png';
 const keyFramesUrl = spritesImgPath + '/key-frames.png';
 const flameFramesUrl = spritesImgPath + '/flame-frames.png';
 const coinFramesUrl = spritesImgPath + '/coin-frames.png';
 const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
 const waspFramesUrl = spritesImgPath + '/wasp-frames.png';
+
+const defaultBaseRectWidth = 16;
+const defaultBaseRectHeight = 18;
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -317,25 +319,42 @@ export class Sprite {
         // leave as null by default
     }
 
+    _baseRectTopLeft(baseRectWidth, baseRectHeight) {
+        return {
+            x: this._rect.left + (this._rect.width - baseRectWidth) / 2,
+            y: this._rect.bottom - baseRectHeight
+        };
+    }
+
+    _defaultBaseRect() {
+        let topLeft = this._baseRectTopLeft(defaultBaseRectWidth, defaultBaseRectHeight);
+        return new Rect(topLeft.x, topLeft.y, defaultBaseRectWidth, defaultBaseRectWidth);
+    }
+
     update(viewRect, mapSprites, player) {
         if (this._toRemove) {
             mapSprites.remove(this);
             return;
         }
         let movement = this._getMovement(player);
-        // TODO: could advanceFrame be deferred to the draw stage?
         if (movement) {
             let [direction, mx, my] = movement;
-            // if (this._baseRect) {
-            //     this._baseRect.moveInPlace(mx, my);
-            // }
+            if (this._baseRect) {
+                this._baseRect.moveInPlace(mx, my);
+            }
             this._rect.moveInPlace(mx, my);
             this._inView = viewRect.intersectsWith(this._rect);
-            this._canvas = this._frames.advanceFrame(direction);
-            return;
+            if (this._inView) {
+                this._canvas = this._frames.advanceFrame(direction);
+                return;
+            }
         }
         this._inView = viewRect.intersectsWith(this._rect);
-        this._canvas = this._frames.advanceFrame();
+        if (this._inView) {
+            this._canvas = this._frames.advanceFrame();
+            return;
+        }
+        this._processMapExit();
     }
     
     _getMovement(player) {
@@ -349,6 +368,10 @@ export class Sprite {
 
     isInView(viewRect) {
         return this._inView;
+    }
+
+    _processMapExit() {
+        // do nothing by default
     }
 
     _render(ctx, viewRect) {
@@ -420,6 +443,21 @@ export class Rock extends Sprite {
 }
 
 /* =============================================================================
+ * CLASS: FLAMES
+ * =============================================================================
+ */
+export class Flames extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], true);
+        this._frames = new StaticFrames(flameFramesUrl, 4, 6);
+    }
+
+    load() {
+        return this.loadFrames(this._frames, 4);
+    }
+}
+
+/* =============================================================================
  * CLASS: KEY
  * =============================================================================
  */
@@ -432,20 +470,9 @@ export class Key extends Sprite {
     load() {
         return this.loadFrames(this._frames, 4);
     }
-}
 
-/* =============================================================================
- * CLASS: FLAMES
- * =============================================================================
- */
-export class Flames extends Sprite {
-    constructor(playMap, level, location) {
-        super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(flameFramesUrl, 4, 6);
-    }
-
-    load() {
-        return this.loadFrames(this._frames, 4);
+    _initBaseRect(spriteRect) {
+        return this._defaultBaseRect();
     }
 }
 
@@ -462,6 +489,10 @@ export class Coin extends Sprite {
     load() {
         return this.loadFrames(this._frames, 4);
     }
+
+    _initBaseRect(spriteRect) {
+        return this._defaultBaseRect();
+    }
 }
 
 /* =============================================================================
@@ -477,9 +508,13 @@ export class Beetle extends Sprite {
         this._positionIndex = 0;
     }
 
+    load() {
+        return this.loadFrames(this._frames, 0);
+    }
+
     _initBaseRect(spriteRect) {
-        // TODO: refine this
-        return new Rect(spriteRect.left, spriteRect.top, spriteRect.width, spriteRect.height);
+        let topLeft = this._baseRectTopLeft(24, 24);
+        return new Rect(topLeft.x, topLeft.y, 24, 24);
     }
 
     _getMovement() {
@@ -507,10 +542,6 @@ export class Beetle extends Sprite {
         // otherwise there is nowhere to move to
         return null;
     }
-
-    load() {
-        return this.loadFrames(this._frames, 0);
-    }
 }
 
 /* =============================================================================
@@ -526,9 +557,13 @@ export class Wasp extends Sprite {
         this._direction = null; // this is also used to detect if the sprite has 'seen' the player
     }
 
+    load() {
+        return this.loadFrames(this._frames, 0);
+    }
+
     _initBaseRect(spriteRect) {
-        // TODO: refine this
-        let rect = new Rect(spriteRect.left, spriteRect.top, spriteRect.width, spriteRect.height);
+        let topLeft = this._baseRectTopLeft(18, 24);
+        let rect = new Rect(topLeft.x, topLeft.y, 18, 24);
         this._upRect = new Rect(rect.left, rect.top - viewHeight, rect.width, viewHeight);
         this._downRect = new Rect(rect.left, rect.bottom, rect.width, viewHeight);
         this._leftRect = new Rect(rect.left - viewWidth, rect.top, viewWidth, rect.height);
@@ -538,7 +573,7 @@ export class Wasp extends Sprite {
 
     _getMovement(player) {
         if (this._zooming) {
-            console.log("WASP ZOOMING");
+            console.log("wasp zoomin");
             return zoomMovement.get(this._direction);
         }
         if (this._inView && !this._direction && this._level === player.getLevel()) {
@@ -566,7 +601,12 @@ export class Wasp extends Sprite {
         return null;
     }
 
-    load() {
-        return this.loadFrames(this._frames, 0);
+    _processMapExit() {
+        if (this._playMap.mapRect.intersectsWith(this._rect)) {
+            // still on the map
+            return;
+        }
+        console.log("remove wasp");
+        this.removeOnNextTick();
     }
 }
