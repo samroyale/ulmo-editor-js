@@ -28,6 +28,7 @@ const flameFramesUrl = spritesImgPath + '/flame-frames.png';
 const coinFramesUrl = spritesImgPath + '/coin-frames.png';
 const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
 const waspFramesUrl = spritesImgPath + '/wasp-frames.png';
+const doorFramesUrl = spritesImgPath + '/door-frames.png';
 
 const defaultBaseRectWidth = 16;
 const defaultBaseRectHeight = 18;
@@ -493,6 +494,32 @@ export class Coin extends Sprite {
     _initBaseRect(spriteRect) {
         return this._defaultBaseRect();
     }
+}
+
+/* =============================================================================
+ * CLASS: DOOR
+ * =============================================================================
+ */
+export class Door extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], true);
+        this._frames = new StaticFrames(doorFramesUrl, 10, 0);
+    }
+
+    load() {
+        return this.loadFrames(this._frames, -32);
+    }
+
+    _initBaseRect(spriteRect) {
+        return this._defaultBaseRect();
+    }
+    /* Base rect extends beyond the bottom of the sprite image so player's base
+     * rect can intersect with it and allow it to be opened.
+     */
+    // _initBaseRect() {
+    //     let topLeft = this._baseRectTopLeft(8, defaultBaseRectHeight);
+    //     return new Rect(topLeft.x, topLeft.y + 2, 8, defaultBaseRectHeight);
+    // }
 }
 
 /* =============================================================================
