@@ -33,6 +33,7 @@ const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
 const waspFramesUrl = spritesImgPath + '/wasp-frames.png';
 const doorFramesUrl = spritesImgPath + '/door-frames.png';
 const bladesFramesUrl = spritesImgPath + '/blades-frames.png';
+const checkpointFramesUrl = spritesImgPath + '/check-frames.png';
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -510,6 +511,25 @@ export class Coin extends Sprite {
 }
 
 /* =============================================================================
+ * CLASS: CHECKPOINT
+ * =============================================================================
+ */
+export class Checkpoint extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], true);
+        this._frames = new StaticFrames(checkpointFramesUrl, 4, 12);
+    }
+
+    load() {
+        return this.loadFrames(this._frames, -6);
+    }
+
+    _initBaseRect() {
+        return this._defaultBaseRect();
+    }
+}
+
+/* =============================================================================
  * CLASS: DOOR
  * =============================================================================
  */
@@ -610,7 +630,6 @@ export class Wasp extends Sprite {
 
     _getMovement(player) {
         if (this._zooming) {
-            console.log("wasp zoomin");
             return zoomMovement.get(this._direction);
         }
         if (this._inView && !this._direction && this._level === player.getLevel()) {
@@ -643,7 +662,6 @@ export class Wasp extends Sprite {
             // still on the map
             return;
         }
-        console.log("remove wasp");
         this.removeOnNextTick();
     }
 }
