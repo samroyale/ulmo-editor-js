@@ -32,6 +32,7 @@ const coinFramesUrl = spritesImgPath + '/coin-frames.png';
 const beetleFramesUrl = spritesImgPath + '/beetle-frames.png';
 const waspFramesUrl = spritesImgPath + '/wasp-frames.png';
 const doorFramesUrl = spritesImgPath + '/door-frames.png';
+const bladesFramesUrl = spritesImgPath + '/blades-frames.png';
 
 /* =============================================================================
  * CLASS: MOVING FRAMES
@@ -108,10 +109,10 @@ export class MovingFrames {
         return copyCanvas(this.currentFrame());
     }
 
-    withFrameIndex(frameIndex) {
-        this._frameIndex = frameIndex;
-        return this;
-    }
+    // withFrameIndex(frameIndex) {
+    //     this._frameIndex = frameIndex;
+    //     return this;
+    // }
 
     getFrameIndex() {
         return this._frameIndex;
@@ -165,9 +166,11 @@ export class StaticFrames {
     }
 
     advanceFrame() {
-        this._tick = (this._tick + 1) % this._frameTicks;
-        if (this._tick === 0) {
-            this._frameIndex = (this._frameIndex + 1) % this._frameCount;
+        if (this._frameTicks) {
+            this._tick = (this._tick + 1) % this._frameTicks;
+            if (this._tick === 0) {
+                this._frameIndex = (this._frameIndex + 1) % this._frameCount;
+            }
         }
         return this.currentFrame();
     }
@@ -181,8 +184,18 @@ export class StaticFrames {
         return copyCanvas(this.currentFrame());
     }
 
+    getFrameIndex() {
+        return this._frameIndex;
+    }
+
     withFrameIndex(frameIndex) {
         this._frameIndex = frameIndex;
+        return this;
+    }
+
+    // can be used to stop/start the frame sequence by passing 0 or >0
+    withFrameTicks(frameTicks) {
+        this._frameTicks = frameTicks;
         return this;
     }
 }
@@ -287,8 +300,8 @@ export class Sprite {
         this._baseRect = null;
         this._zIndex = null;
         this._masked = false;
-        this._toRemove = false;
         this._inView = false;
+        this._toRemove = false;
     }
 
     loadFrames(spriteFrames, marginY) {
@@ -317,7 +330,6 @@ export class Sprite {
     }
 
     _initBaseRect(spriteRect) {
-        console.log('WTF');
         // leave as null by default
     }
 
@@ -511,9 +523,6 @@ export class Door extends Sprite {
         return this.loadFrames(this._frames, -32);
     }
 
-    // _initBaseRect(spriteRect) {
-    //     return this._defaultBaseRect();
-    // }
     /* Base rect extends beyond the bottom of the sprite image so player's base
      * rect can intersect with it and allow it to be opened.
      */
@@ -636,5 +645,61 @@ export class Wasp extends Sprite {
         }
         console.log("remove wasp");
         this.removeOnNextTick();
+    }
+}
+
+/* =============================================================================
+ * CLASS: BLADES
+ * =============================================================================
+ */
+export class Blades extends Sprite {
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0][0], location[0][1], false);
+        this._frames = new StaticFrames(bladesFramesUrl, 10, 0);
+        this._deactivate();
+    }
+
+    load() {
+        return this.loadFrames(this._frames, -28);
+    }
+
+    _initBaseRect() {
+        return new Rect(this._tx * tileSize, this._ty * tileSize, tileSize, tileSize);
+    }
+
+    _getMovement(player) {
+        if (this._active) {
+            let frameIndex = this._frames.getFrameIndex();
+            if (frameIndex === 0) {
+                this._deactivate(this._level);
+            }
+            // if (frameIndex === 2) {
+            //     // todo: sound effect
+            // }
+            return;
+        }
+        this._countdown -= 1;
+        if (this._countdown === 0) {
+            this._activate();
+        }
+    }
+
+    _deactivate(level) {
+        this._countdown = 30;
+        this._active = false;
+        if (level) {
+            this._getMapTile().addNewLevel(level)
+            this._frames = this._frames.withFrameTicks(0);
+        }
+    }
+
+    _activate() {
+        this._active = true;
+        this._getMapTile().rollback();
+        this._frames = this._frames.withFrameIndex(1).withFrameTicks(6);
+    }
+
+    _getMapTile() {
+        return this._playMap.getTileAt(this._tx, this._ty);
     }
 }

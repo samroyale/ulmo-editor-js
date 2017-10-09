@@ -81,6 +81,7 @@ class PlayTile {
         // other stuff
         this.verticals = null;
         this.horizontals = null;
+        this.oldLevels = null;
     }
 
     addSpecialLevel(parsed) {
@@ -171,6 +172,17 @@ class PlayTile {
             }
         });
         return activeMasks;
+    }
+
+    addNewLevel(level) {
+        this.oldLevels = this.levels.slice();
+        this.levels.push(level);
+    }
+
+    rollback() {
+        if (this.oldLevels) {
+            this.levels = this.oldLevels;
+        }
     }
 }
 
@@ -377,6 +389,10 @@ class PlayMap {
         var tx2 = Math.min(this.cols - 1, Math.floor((rect.right - 1) / tileSize)) + 1;
         var ty2 = Math.min(this.rows - 1, Math.floor((rect.bottom - 1) / tileSize)) + 1;
         return [tx1, ty1, tx2, ty2];
+    }
+
+    getTileAt(tx, ty) {
+        return this.tiles[tx][ty];
     }
 }
 
