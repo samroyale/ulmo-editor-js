@@ -197,15 +197,14 @@ const SpriteEditModal = React.createClass({
       sprite: null,
       typeVal: '',
       levelVal: '',
-      locations: [],
-      okDisabled: true
+      locations: []
     }
   },
 
   handleSubmit: function() {
     this.props.onSubmit(rpgMapService.newSprite(
       this.state.typeVal,
-      this.state.levelVal,
+      parseInt(this.state.levelVal, 10),
       this.state.locations
     ));
   },
@@ -215,11 +214,7 @@ const SpriteEditModal = React.createClass({
   },
 
   setTypeVal: function(newTypeVal) {
-    var spriteValid = this.isSpriteValid(newTypeVal, this.state.levelVal, this.state.locations);
-    this.setState({
-      typeVal: newTypeVal,
-      okDisabled: !spriteValid
-    });
+    this.setState({ typeVal: newTypeVal });
   },
 
   handleLevelChange: function(event) {
@@ -227,11 +222,7 @@ const SpriteEditModal = React.createClass({
   },
 
   setLevelVal: function(newLevelVal) {
-    var spriteValid = this.isSpriteValid(this.state.typeVal, newLevelVal, this.state.locations);
-    this.setState({
-      levelVal: newLevelVal,
-      okDisabled: !spriteValid
-    });
+    this.setState({ levelVal: newLevelVal });
   },
 
   isSpriteValid: function(type, level, locations) {
@@ -244,11 +235,7 @@ const SpriteEditModal = React.createClass({
     var newLocations = this.state.locations.slice();
     var location = newLocations[index];
     func(newLocations, location, index);
-    var spriteValid = this.isSpriteValid(this.state.typeVal, this.state.levelVal, newLocations);
-    this.setState({
-      locations: newLocations,
-      okDisabled: !spriteValid
-    });
+    this.setState({ locations: newLocations });
   },
 
   moveTop: function(evt) {
@@ -296,11 +283,7 @@ const SpriteEditModal = React.createClass({
   addLocation: function(x, y) {
     var newLocations = this.state.locations.slice();
     newLocations.push([x, y]);
-    var spriteValid = this.isSpriteValid(this.state.typeVal, this.state.levelVal, newLocations);
-    this.setState({
-      locations: newLocations,
-      okDisabled: !spriteValid
-    });
+    this.setState({ locations: newLocations });
   },
 
   componentWillMount: function() {
@@ -316,9 +299,8 @@ const SpriteEditModal = React.createClass({
       this.setState({
         sprite: props.sprite,
         typeVal: props.sprite.getType(),
-        levelVal: props.sprite.getLevel(),
-        locations: props.sprite.getLocation().slice(),
-        okDisabled: false
+        levelVal: '' + props.sprite.getLevel(),
+        locations: props.sprite.getLocation().slice()
       });
       return;
     }
@@ -409,6 +391,11 @@ const SpriteEditModal = React.createClass({
   },
 
   render: function() {
+    var okDisabled = !this.isSpriteValid(
+        this.state.typeVal,
+        this.state.levelVal,
+        this.state.locations
+    );
     return (
       <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="sprite-edit-modal">
         <Modal.Header closeButton>
@@ -426,7 +413,7 @@ const SpriteEditModal = React.createClass({
           </Grid>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={this.handleSubmit} bsStyle="primary" disabled={this.state.okDisabled}>OK</Button>
+          <Button onClick={this.handleSubmit} bsStyle="primary" disabled={okDisabled}>OK</Button>
           <Button onClick={this.props.onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
@@ -488,8 +475,7 @@ const AddLocationItem = React.createClass({
   getInitialState: function() {
     return {
       xVal: '',
-      yVal: '',
-      addDisabled: true
+      yVal: ''
     }
   },
 
@@ -502,19 +488,11 @@ const AddLocationItem = React.createClass({
   },
 
   setXVal: function(newXVal) {
-    var locationValid = this.isLocationValid(newXVal, this.state.yVal);
-    this.setState({
-      xVal: newXVal,
-      addDisabled: !locationValid
-    });
+    this.setState({ xVal: newXVal });
   },
 
   setYVal: function(newYVal) {
-    var locationValid = this.isLocationValid(this.state.xVal, newYVal);
-    this.setState({
-      yVal: newYVal,
-      addDisabled: !locationValid
-    });
+    this.setState({ yVal: newYVal });
   },
 
   isLocationValid: function(xVal, yVal) {
@@ -522,10 +500,14 @@ const AddLocationItem = React.createClass({
   },
 
   addLocation: function() {
-    this.props.onAddLocation(this.state.xVal, this.state.yVal);
+    this.props.onAddLocation(parseInt(this.state.xVal, 10), parseInt(this.state.yVal, 10));
   },
 
   render: function() {
+    var addDisabled = !this.isLocationValid(
+        this.state.xVal,
+        this.state.yVal
+    );
     return (
       <ListGroupItem>
         <Grid>
@@ -544,7 +526,7 @@ const AddLocationItem = React.createClass({
             </Col>
             <Col className="add-location-col" lg={1}>
               <ButtonToolbar className="sprite-controls">
-                <Button onClick={this.addLocation} disabled={this.state.addDisabled}>
+                <Button onClick={this.addLocation} disabled={addDisabled}>
                   <Glyphicon glyph="plus" />
                 </Button>
               </ButtonToolbar>
