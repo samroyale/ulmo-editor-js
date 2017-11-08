@@ -310,7 +310,7 @@ export class Sprite {
         let p = this._frames.load();
         return p.then(data => {
             this._canvas = data.currentFrame;
-            if (this._level && this._tx && this._ty) {
+            if (this._isPositionValid()) {
                 let marginX = (tileSize - this._canvas.width) / 2;
                 if (!Number.isInteger(marginY)) {
                     marginY = this._canvas.height / -2;
@@ -321,6 +321,10 @@ export class Sprite {
             }
             return data;
         });
+    }
+
+    _isPositionValid() {
+        return (this._level !== null && this._tx !== null && this._ty !== null);
     }
 
     setPosition(level, px, py) {

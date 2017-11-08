@@ -1,6 +1,6 @@
 {
   "name": "ulmo-editor-boot",
-  "version": "0.1.1",
+  "version": "0.5.0",
   "author": "Sam Eldred <samuel.eldred@gmail.com>",
   "description": "Ulmo Editor built with create-react-app",
   "private": true,

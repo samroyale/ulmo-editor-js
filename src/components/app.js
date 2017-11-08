@@ -14,7 +14,7 @@ function Main(props) {
    <Grid>
      <Row>
        <Col lg={12}>
-         <PageHeader className="app-header">Editor <small>v0.1.1</small></PageHeader>
+         <PageHeader className="app-header">Editor <small>v0.5.0</small></PageHeader>
        </Col>
      </Row>
      {props.children}

@@ -666,7 +666,7 @@ const ResizeMapModal = React.createClass({
                 <Col lgOffset={1} lg={2}>
                   <FormGroup controlId="topGroup">
                     <ControlLabel>Top</ControlLabel>
-                    <FormControl type="text" placeholder="number"
+                    <FormControl type="text" placeholder="0-32"
                         value={this.state.topVal} onChange={this.handleTopChange} />
                   </FormGroup>
                 </Col>

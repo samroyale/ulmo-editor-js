@@ -185,7 +185,7 @@ class Sprite {
   constructor(type, level, location) {
     this._type = type;
     this._level = level
-    // location is an array of xy values
+    // location is an array of [x, y] values
     this._location = location;
   }
 
@@ -199,6 +199,11 @@ class Sprite {
 
   getLocation() {
     return this._location;
+  }
+
+  move(x, y) {
+    return new Sprite(this._type, this._level,
+        this._location.map(xy => [xy[0] + x, xy[1] + y]));
   }
 
   getDto() {
@@ -328,15 +333,26 @@ class RpgMap {
     mapTile.setMaskTiles(tile.getMaskTiles());
   }
 
-  resize(rpgMap, left, right, top, bottom) {
-    var topLeft = {
+  resize(rpgMap, left, top) {
+    var sourceTopLeft = {
       x: 0 - Math.min(0, left),
       y: 0 - Math.min(0, top)
     }
-    var rows = rpgMap.getRows() - topLeft.y;
-    var cols = rpgMap.getCols() - topLeft.x;
-    this._pasteTilesInternal(Math.max(0, left), Math.max(0, top),
-        rpgMap._copyInternal(topLeft.x, topLeft.y, rows, cols));
+    var rows = rpgMap.getRows() - sourceTopLeft.y;
+    var cols = rpgMap.getCols() - sourceTopLeft.x;
+    var targetTopLeft = {
+      x: Math.max(0, left),
+      y: Math.max(0, top)
+    }
+    this._pasteTilesInternal(targetTopLeft.x, targetTopLeft.y,
+        rpgMap._copyInternal(sourceTopLeft.x, sourceTopLeft.y, rows, cols));
+    // TODO: filter sprites that are now outside the map?
+    this._sprites = rpgMap.getSprites().map(sprite => 
+        sprite.move(left, top));
+  }
+
+  moveSprite(sprite) {
+
   }
 
   sendToBack(topLeft, rows, cols) {
@@ -556,7 +572,7 @@ class RpgMapService {
     var newMap = this.newMap(newRows, newCols);
     return newMap.then(data => {
       var newRpgMap = data.map;
-      newRpgMap.resize(rpgMap, left, right, top, bottom);
+      newRpgMap.resize(rpgMap, left, top);
       return { map: newRpgMap, oldMap: rpgMap };
     });
   }
@@ -655,9 +671,12 @@ class RpgMapService {
   }
 
   initSprites(rpgMapDef) {
-    return rpgMapDef.sprites.map(spriteDef =>
-      new Sprite(spriteDef.type, spriteDef.level, spriteDef.location)
-    )
+    if (rpgMapDef.sprites) {
+      return rpgMapDef.sprites.map(spriteDef =>
+          new Sprite(spriteDef.type, spriteDef.level, spriteDef.location)
+      )
+    }
+    return [];
   }
 
   /*
