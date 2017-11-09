@@ -6,17 +6,19 @@ import SpritesModal from './sprites-modal';
 import MapCanvas from './map-canvas';
 import RpgMapService from '../services/rpg-maps';
 import { tileSize } from '../config';
-import { errorMessage, loadImage, getDrawingContext } from '../utils';
+import { errorMessage, loadImage, initRect, getDrawingContext } from '../utils';
 import './map-editor.css';
 
 const rpgMapService = new RpgMapService();
 
-var insertSuffix = null;
-loadImage("/img/insert-suffix.png", data => insertSuffix = data.img);
-var addSuffix = null;
-loadImage("/img/add-suffix.png", data => addSuffix = data.img);
-var selectSuffix = null;
-loadImage("/img/select-suffix.png", data => selectSuffix = data.img);
+// var insertSuffix = null;
+// loadImage("/img/insert-suffix.png", data => insertSuffix = data.img);
+// var addSuffix = null;
+// loadImage("/img/add-suffix.png", data => addSuffix = data.img);
+// var selectSuffix = null;
+// loadImage("/img/select-suffix.png", data => selectSuffix = data.img);
+
+const whiteSquare = initRect('white', 9, 9);
 
 /* =============================================================================
  * COMPONENT: MAP EDITOR
@@ -456,20 +458,26 @@ const TileControl = React.createClass({
       ctx.fillStyle = 'rgba(0, 255, 0, 1)';
       ctx.fillRect(0, 0, tileSize, tileSize);
       ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0);
-      if (this.props.tileMode === "INSERT") {
-        ctx.drawImage(insertSuffix, this._canvas.width - 12, this._canvas.height - 12);
-        return;
-      }
-      if (this.props.tileMode === "ADD") {
-        ctx.drawImage(addSuffix, this._canvas.width - 12, this._canvas.height - 12);
-        return;
-      }
-      if (this.props.tileMode === "SELECT") {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
-        ctx.drawImage(selectSuffix, this._canvas.width - 12, this._canvas.height - 12);
+      if (this.props.tileMode !== "SELECT") {
+        ctx.drawImage(whiteSquare, 23, 23);
       }
     }
+  },
+
+  suffixIcon: function() {
+    if (!this.props.selectedTile) {
+      return '';
+    }
+    if (this.props.tileMode === "INSERT") {
+      return (<Glyphicon className="suffix" glyph="plus-sign" />);
+    }
+    if (this.props.tileMode === "ADD") {
+      return (<Glyphicon className="suffix" glyph="circle-arrow-right" />);
+    }
+    if (this.props.tileMode === "SELECT") {
+      return (<Glyphicon className="select-suffix" glyph="ban-circle" />);
+    }
+    return '';
   },
 
   menuItem: function(mode, label) {
@@ -484,8 +492,11 @@ const TileControl = React.createClass({
     return (
       <Dropdown id="tile-control-dropdown" onSelect={this.props.onModeChange}>
         <Button className="tile-button" disabled={this.state.disabled}>
-          <canvas className="tile-button-cvs" width={tileSize + 2} height={tileSize + 2}
-              ref={cvs => this._canvas = cvs} />
+          <div className="tile-button-container">
+            <canvas className="tile-button-cvs" width={tileSize} height={tileSize}
+                ref={cvs => this._canvas = cvs} />
+            {this.suffixIcon()}
+          </div>
         </Button>
         <Dropdown.Toggle className="tile-dropdown" disabled={this.state.disabled} />
         <Dropdown.Menu>

@@ -71,16 +71,7 @@ export function initTransparentRect(width, height) {
 export function initHighlight(rows, cols) {
   // console.log(rows + ", " + cols);
   let canvas = initTransparentRect(tileSize * cols, tileSize * rows);
-  // canvas.width = tileSize * cols;
-  // canvas.height = tileSize * rows;
   let ctx = canvas.getContext('2d');
-  // transparent rect
-  // ctx.beginPath();
-  // ctx.rect(0, 0, canvas.width, canvas.height);
-  // ctx.fillStyle = 'rgba(0, 0, 0, 0)';
-  // ctx.fill();
-  // ctx.closePath();
-  // white border, 2px thick
   ctx.beginPath();
   ctx.rect(0, 0, tileSize * cols, 2);
   ctx.rect(0, tileSize * rows - 2, tileSize * cols, 2);

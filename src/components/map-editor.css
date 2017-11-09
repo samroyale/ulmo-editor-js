@@ -15,7 +15,35 @@ div.component-buttons {
 }
 
 button.tile-button {
-  padding: 8px 5px 0px 8px;
+  padding: 0;
+}
+
+div.tile-button-container {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  margin: 6px 6px 5px 6px;
+}
+
+div.tile-button-container .select-suffix {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  padding: 20px 0 0 20px;
+  background: rgba(255, 255, 255, .6);
+}
+
+div.tile-button-container .suffix {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  padding: 20px 0 0 20px;
 }
 
 canvas.tile-button-cvs {
@@ -23,9 +51,15 @@ canvas.tile-button-cvs {
 }
 
 button.tile-dropdown {
-  padding: 13px 0px 14px 0px;
+  padding: 11px 0px 12px 0px;
 }
 
 div.reverse {
   transform: scale(-1, 1);
 }
+
+div.resize-map-modal {
+  width: 421px;
+}
+
+

@@ -6,7 +6,7 @@ import { tileSize } from '../config';
 import { errorMessage, initTile, initTileHighlight } from '../utils';
 import './tile-palette.css';
 
-const emptyTile = initTile("white");
+const emptyTile = initTile('white');
 
 const tileHighlight = initTileHighlight();
 
