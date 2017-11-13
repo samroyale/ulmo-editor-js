@@ -8,6 +8,8 @@ const rpgMapService = new RpgMapService();
 
 const spriteTypes = ['flames', 'rock', 'key', 'door', 'chest', 'coin', 'checkpoint', 'blades', 'beetle', 'wasp'];
 
+const xyRegex = /[^\d-]/g; // can be negative
+
 const numRegex = /\D/g;
 
 /* =============================================================================
@@ -480,11 +482,11 @@ const AddLocationItem = React.createClass({
   },
 
   handleXChange: function(event) {
-    this.setXVal(event.target.value.replace(numRegex, ''));
+    this.setXVal(event.target.value.replace(xyRegex, ''));
   },
 
   handleYChange: function(event) {
-    this.setYVal(event.target.value.replace(numRegex, ''));
+    this.setYVal(event.target.value.replace(xyRegex, ''));
   },
 
   setXVal: function(newXVal) {
@@ -496,7 +498,15 @@ const AddLocationItem = React.createClass({
   },
 
   isLocationValid: function(xVal, yVal) {
-    return xVal.length > 0 && yVal.length > 0;
+    if (xVal.length === 0 || yVal.length === 0) {
+      return false;
+    }
+    var x = parseInt(this.state.xVal, 10);
+    var y = parseInt(this.state.yVal, 10);
+    if (isNaN(x) || isNaN(y)) {
+      return false;
+    }
+    return true;
   },
 
   addLocation: function() {

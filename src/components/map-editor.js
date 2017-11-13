@@ -6,17 +6,10 @@ import SpritesModal from './sprites-modal';
 import MapCanvas from './map-canvas';
 import RpgMapService from '../services/rpg-maps';
 import { tileSize } from '../config';
-import { errorMessage, loadImage, initRect, getDrawingContext } from '../utils';
+import { errorMessage, initRect, getDrawingContext } from '../utils';
 import './map-editor.css';
 
 const rpgMapService = new RpgMapService();
-
-// var insertSuffix = null;
-// loadImage("/img/insert-suffix.png", data => insertSuffix = data.img);
-// var addSuffix = null;
-// loadImage("/img/add-suffix.png", data => addSuffix = data.img);
-// var selectSuffix = null;
-// loadImage("/img/select-suffix.png", data => selectSuffix = data.img);
 
 const whiteSquare = initRect('white', 9, 9);
 
@@ -469,10 +462,10 @@ const TileControl = React.createClass({
       return '';
     }
     if (this.props.tileMode === "INSERT") {
-      return (<Glyphicon className="suffix" glyph="plus-sign" />);
+      return (<Glyphicon className="suffix" glyph="circle-arrow-right" />);
     }
     if (this.props.tileMode === "ADD") {
-      return (<Glyphicon className="suffix" glyph="circle-arrow-right" />);
+      return (<Glyphicon className="suffix" glyph="plus-sign" />);
     }
     if (this.props.tileMode === "SELECT") {
       return (<Glyphicon className="select-suffix" glyph="ban-circle" />);

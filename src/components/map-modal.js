@@ -7,7 +7,7 @@ import { getDrawingContext, drawTile, parseLevel } from '../utils';
 import './map-modal.css';
 
 // allows 'specials' eg. S1.5, S2 and 'drops' eg. D3-2
-const levelRegex = /[^\dSD\.\-]/g;
+const levelRegex = /[^\dSD.-]/g;
 
 const numRegex = /\D/g;
 
