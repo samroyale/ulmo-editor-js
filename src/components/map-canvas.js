@@ -1,5 +1,5 @@
 import React from 'react';
-import { Overlay, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Overlay, Popover, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { EditLevelsModal, EditImagesModal, EditMasksModal } from './map-modal';
 import { PlayMapModal } from '../play/play-modal';
 import RpgMapService from '../services/rpg-maps';
@@ -339,6 +339,7 @@ const MapCanvas = React.createClass({
   },
 
   handleMouseMove: function(evt) {
+    console.log('mouse move ' + Date.now());
     if (this.state.showOverlay) {
       return;
     }
@@ -352,6 +353,7 @@ const MapCanvas = React.createClass({
       this.setState({ startPosition: null });
     }
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
+    console.log(tilePosition.x + ',' + tilePosition.y + " :: " + tile);
     this.props.onTilePositionUpdated(tilePosition, tile);
   },
 
@@ -438,15 +440,27 @@ const MapCanvas = React.createClass({
 
   render: function() {
     var bsClass = this.state.showMap ? "show" : "hidden";
+    var style = { display: 'none' };
+    console.log(this.props.tilePosition)
+    if (this.props.tilePosition) {
+      style = {
+        left: this.props.tilePosition.x * tileSize,
+        top: this.props.tilePosition.y * tileSize,
+        display: 'block'
+      };
+    }
     return (
       <div className="canvas-container">
+        <div className="inner-canvas-container">
         <canvas className={bsClass}
             onMouseMove={this.handleMouseMove}
             onMouseDown={this.handleMouseDown}
             onMouseUp={this.handleMouseUp}
-            onMouseOut={this.removeHighlight}
             onContextMenu={this.handleRightClick}
             ref={cvs => this._canvas = cvs} />
+
+        <div className="over-rect" style={style} />
+        </div>
 
         <MapCanvasPopup
             showOverlay={this.state.showOverlay}
@@ -508,24 +522,49 @@ const MapCanvasPopup = React.createClass({
         </DropdownButton>
       );
     });
-    return (<ButtonGroup vertical>{buttons}</ButtonGroup>);
+    return (<ButtonGroup vertical block>{buttons}</ButtonGroup>);
   },
 
+  // render: function() {
+  //   var style = {
+  //     marginLeft: this.props.position.x,
+  //     marginTop: this.props.position.y
+  //   };
+  //   return (
+  //     <Overlay
+  //       show={this.props.showOverlay}
+  //       rootClose={true}
+  //       onHide={this.props.onHide}>
+  //       <div className="map-overlay" style={style} onContextMenu={this.suppress}>
+  //         {this.buttonGroup()}
+  //       </div>
+  //     </Overlay>
+  //   );
+  // }
+
   render: function() {
-    var style = {
-      marginLeft: this.props.position.x,
-      marginTop: this.props.position.y
-    };
+      var style = {
+        marginLeft: this.props.position.x,
+        marginTop: this.props.position.y
+      };
+      // var style = {
+      //   top: this.props.position.x,
+      //   left: this.props.position.y
+      // };
     return (
-      <Overlay
-        show={this.props.showOverlay}
-        rootClose={true}
-        onHide={this.props.onHide}>
-        <div className="map-overlay" style={style} onContextMenu={this.suppress}>
+        <Overlay
+            show={this.props.showOverlay}
+            onHide={this.props.onHide}
+            rootClose={true}
+            placement="right">
+        <Popover style={style}
+                 id="popover-basic"
+          >
           {this.buttonGroup()}
-        </div>
-      </Overlay>
-    );
+          {/*And here's some <strong>amazing</strong> content. It's very engaging. right?*/}
+      </Popover>
+          </Overlay>
+    )
   }
 });
 

@@ -1,6 +1,18 @@
 div.canvas-container {
   padding: 0;
+}
+
+div.inner-canvas-container {
   overflow: auto;
+  position: relative;
+}
+
+div.canvas-container .over-rect {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  display: block;
+  background: rgba(255, 255, 255, .6);
 }
 
 div.map-overlay {

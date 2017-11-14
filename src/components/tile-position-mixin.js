@@ -19,10 +19,10 @@ const tilePositionMixin = {
     }
     var cvsElement = evt.target;
     var containerElement = cvsElement.parentElement;
-    var cvsOffsetLeft = cvsElement.offsetLeft + cvsElement.offsetParent.offsetLeft - containerElement.scrollLeft;
-    var cvsOffsetTop = cvsElement.offsetTop + cvsElement.offsetParent.offsetTop - containerElement.scrollTop;
-    // console.log(x + "," + y + " :: " + canvasElement.offsetLeft + "," +
-    //    canvasElement.offsetTop + " :: " + canvasElement.offsetParent );
+    // var cvsOffsetLeft = cvsElement.offsetLeft + cvsElement.offsetParent.offsetLeft - containerElement.scrollLeft;
+    // var cvsOffsetTop = cvsElement.offsetTop + cvsElement.offsetParent.offsetTop - containerElement.scrollTop;
+    var cvsOffsetLeft = containerElement.offsetLeft + containerElement.offsetParent.offsetLeft - containerElement.scrollLeft;
+    var cvsOffsetTop = containerElement.offsetTop + containerElement.offsetParent.offsetTop - containerElement.scrollTop;
     x = Math.max(Math.min(x - cvsOffsetLeft, cvsElement.width), 0);
     y = Math.max(Math.min(y - cvsOffsetTop, cvsElement.height), 0);
     return { x: Math.floor(x / tileSize), y: Math.floor(y / tileSize)};
