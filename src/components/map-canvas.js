@@ -445,17 +445,19 @@ const MapCanvas = React.createClass({
     });
   },
 
-  render: function() {
-    var bsClass = this.state.showMap ? "show" : "hidden";
-    var style = { display: 'none' };
-    console.log(this.props.tilePosition)
+  highlightStyle: function() {
     if (this.props.tilePosition) {
-      style = {
+      return {
         left: this.props.tilePosition.x * tileSize,
         top: this.props.tilePosition.y * tileSize,
         display: 'block'
       };
     }
+    return { display: 'none' };
+  },
+
+  render: function() {
+    var bsClass = this.state.showMap ? "show" : "hidden";
     return (
       <div className="canvas-container">
         <div className="inner-canvas-container">
@@ -466,7 +468,7 @@ const MapCanvas = React.createClass({
               onContextMenu={this.handleRightClick}
               ref={cvs => this._canvas = cvs} />
 
-          <div className="over-rect" style={style} 
+          <div className="highlight" style={this.highlightStyle()}
               onMouseOut={this.handleMouseOut} />
         </div>
 
