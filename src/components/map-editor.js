@@ -286,12 +286,6 @@ const MapEditor = React.createClass({
   },
 
   updateCurrentTile: function(tilePosition, tile) {
-    if (tilePosition) {
-      console.log(tilePosition.x + ',' + tilePosition.y);
-    }
-    else {
-      console.log('nope');
-    }
     this.setState({
       currentTilePosition: tilePosition,
       currentTile: tile

@@ -8,7 +8,7 @@ import { tileSize } from '../config';
 import { initHighlight, initTileHighlight } from '../utils';
 import './map-canvas.css';
 
-const tileHighlight = initTileHighlight();
+// const tileHighlight = initTileHighlight();
 
 const rpgMapService = new RpgMapService();
 
@@ -95,27 +95,27 @@ const MapCanvas = React.createClass({
     }
   },
 
-  unhighlightTile: function(tilePosition) {
-    if (!tilePosition) {
-      return;
-    }
-    this._canvas.getContext('2d').putImageData(
-      this._rpgMap.getMapTile(tilePosition.x, tilePosition.y).getImage(),
-      tilePosition.x * tileSize,
-      tilePosition.y * tileSize
-    );
-  },
+  // unhighlightTile: function(tilePosition) {
+  //   if (!tilePosition) {
+  //     return;
+  //   }
+  //   this._canvas.getContext('2d').putImageData(
+  //     this._rpgMap.getMapTile(tilePosition.x, tilePosition.y).getImage(),
+  //     tilePosition.x * tileSize,
+  //     tilePosition.y * tileSize
+  //   );
+  // },
 
-  highlightTile: function(tilePosition) {
-    if (!tilePosition) {
-      return;
-    }
-    this._canvas.getContext('2d').drawImage(
-      tileHighlight,
-      tilePosition.x * tileSize,
-      tilePosition.y * tileSize
-    );
-  },
+  // highlightTile: function(tilePosition) {
+  //   if (!tilePosition) {
+  //     return;
+  //   }
+  //   this._canvas.getContext('2d').drawImage(
+  //     tileHighlight,
+  //     tilePosition.x * tileSize,
+  //     tilePosition.y * tileSize
+  //   );
+  // },
 
   highlightRange: function(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
@@ -344,11 +344,11 @@ const MapCanvas = React.createClass({
       return;
     }
     var tilePosition = this.getCurrentTilePosition(evt);
-    if (this.props.tilePosition &&
-        tilePosition.x === this.props.tilePosition.x &&
-        tilePosition.y === this.props.tilePosition.y) {
-      return;
-    }
+    // if (this.props.tilePosition &&
+    //     tilePosition.x === this.props.tilePosition.x &&
+    //     tilePosition.y === this.props.tilePosition.y) {
+    //   return;
+    // }
     if (this.state.startPosition && !this._mouseDown) {
       this.setState({ startPosition: null });
     }
@@ -403,6 +403,13 @@ const MapCanvas = React.createClass({
     this.applySelectedTile(this.state.startPosition, this.props.tilePosition);
   },
 
+  handleMouseOut: function(evt) {
+    if (this.isTilePositionWithinBounds(evt)) {
+      return;
+    }
+    this.removeHighlight();
+  },
+
   componentDidUpdate: function(oldProps, oldState) {
     if (oldState.startPosition) {
       this.unhighlightRange(oldState.startPosition, oldProps.tilePosition);
@@ -411,8 +418,8 @@ const MapCanvas = React.createClass({
         return;
       }
     }
-    this.unhighlightTile(oldProps.tilePosition);
-    this.highlightTile(this.props.tilePosition);
+    // this.unhighlightTile(oldProps.tilePosition);
+    // this.highlightTile(this.props.tilePosition);
   },
 
   hideOverlay: function() {
@@ -452,14 +459,15 @@ const MapCanvas = React.createClass({
     return (
       <div className="canvas-container">
         <div className="inner-canvas-container">
-        <canvas className={bsClass}
-            onMouseMove={this.handleMouseMove}
-            onMouseDown={this.handleMouseDown}
-            onMouseUp={this.handleMouseUp}
-            onContextMenu={this.handleRightClick}
-            ref={cvs => this._canvas = cvs} />
+          <canvas className={bsClass}
+              onMouseMove={this.handleMouseMove}
+              onMouseDown={this.handleMouseDown}
+              onMouseUp={this.handleMouseUp}
+              onContextMenu={this.handleRightClick}
+              ref={cvs => this._canvas = cvs} />
 
-        <div className="over-rect" style={style} />
+          <div className="over-rect" style={style} 
+              onMouseOut={this.handleMouseOut} />
         </div>
 
         <MapCanvasPopup
