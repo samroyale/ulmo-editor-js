@@ -19,19 +19,18 @@ const tilePositionMixin = {
   },
 
   /* Returns a tile position relative to the tile canvas */
-  getCurrentTilePosition: function(evt) {
+  getCurrentTilePosition: function(evt, canvas) {
     var {x, y} = this.getRelativePosition(evt);
-    var cvsElement = evt.target;
+    var cvsElement = canvas ? canvas : evt.target;
     x = Math.max(Math.min(x, cvsElement.width), 0);
     y = Math.max(Math.min(y, cvsElement.height), 0);
     return { x: Math.floor(x / tileSize), y: Math.floor(y / tileSize) };
   },
 
-  /* Operates on the css select overlay (hence the canvas element is the previous sibling) */
-  isTilePositionWithinBounds: function(evt) {
+  /* Returns true if the tile position is within the bounds of the canvas */
+  isTilePositionWithinCanvas: function(evt, canvas) {
     var {x, y} = this.getRelativePosition(evt);
-    var cvsElement = evt.target.previousSibling;
-    console.log(x + ',' + y + ' :: ' + cvsElement.width + ',' + cvsElement.height);
+    var cvsElement = canvas ? canvas : evt.target;
     if (x < 0 || x >= cvsElement.width || y < 0 || y >= cvsElement.height) {
       return false;
     }

@@ -117,14 +117,14 @@ const MapCanvas = React.createClass({
   //   );
   // },
 
-  highlightRange: function(fromPosition, toPosition) {
-    this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
-      var highlight = initHighlight(rows, cols);
-      ctx.drawImage(highlight, topLeft.x * tileSize, topLeft.y * tileSize);
-    });
-  },
+  // highlightRange: function(fromPosition, toPosition) {
+  //   this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
+  //     var highlight = initHighlight(rows, cols);
+  //     ctx.drawImage(highlight, topLeft.x * tileSize, topLeft.y * tileSize);
+  //   });
+  // },
 
-  unhighlightRange: function(fromPosition, toPosition) {
+  updateRange: function(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
       for (var i = topLeft.x; i < topLeft.x + cols; i++) {
         for (var j = topLeft.y; j < topLeft.y + rows; j++) {
@@ -238,6 +238,7 @@ const MapCanvas = React.createClass({
     var oldTiles = func(tr.topLeft, tr.rows, tr.cols);
     if (oldTiles) {
       this.props.onMapUpdated(tr.topLeft, oldTiles);
+      this.updateRange(fromPosition, toPosition);
     }
   },
 
@@ -278,14 +279,14 @@ const MapCanvas = React.createClass({
       x: this.props.tilePosition.x + oldTiles.length - 1,
       y: this.props.tilePosition.y + oldTiles[0].length - 1
     }
-    this.unhighlightRange(this.props.tilePosition, toPosition);
+    this.updateRange(this.props.tilePosition, toPosition);
     this.props.onMapUpdated(this.props.tilePosition, oldTiles);
     this.hideOverlay();
   },
 
   restoreTiles: function(topLeft, tiles) {
     var toPosition = this._rpgMap.restoreTiles(topLeft, tiles);
-    this.unhighlightRange(topLeft, toPosition);
+    this.updateRange(topLeft, toPosition);
     this.props.onMapUpdated();
   },
 
@@ -339,7 +340,6 @@ const MapCanvas = React.createClass({
   },
 
   handleMouseMove: function(evt) {
-    console.log('mouse move ' + Date.now());
     if (this.state.showOverlay) {
       return;
     }
@@ -353,7 +353,26 @@ const MapCanvas = React.createClass({
       this.setState({ startPosition: null });
     }
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
-    console.log(tilePosition.x + ',' + tilePosition.y + " :: " + tile);
+    this.props.onTilePositionUpdated(tilePosition, tile);
+  },
+
+  handleSelectionMove: function(evt) {
+    if (this.state.showOverlay) {
+      return;
+    }
+    if (!this._mouseDown) {
+      return;
+    }
+    var tilePosition = this.getCurrentTilePosition(evt, evt.target.previousSibling);
+    if (this.props.tilePosition &&
+        tilePosition.x === this.props.tilePosition.x &&
+        tilePosition.y === this.props.tilePosition.y) {
+      return;
+    }
+    // if (this.state.startPosition && !this._mouseDown) {
+    //   this.setState({ startPosition: null });
+    // }
+    var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
     this.props.onTilePositionUpdated(tilePosition, tile);
   },
 
@@ -379,6 +398,7 @@ const MapCanvas = React.createClass({
   },
 
   handleMouseDown: function(evt) {
+    console.log('start mouse down');
     if (this.state.showOverlay) {
       return;
     }
@@ -386,10 +406,11 @@ const MapCanvas = React.createClass({
       return;
     }
     this._mouseDown = true;
-    var tilePosition = this.getCurrentTilePosition(evt);
+    var tilePosition = this.getCurrentTilePosition(evt, evt.target.previousSibling);
     this.setState({ startPosition: tilePosition});
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
     this.props.onTilePositionUpdated(tilePosition, tile);
+    console.log('end mouse down');
   },
 
   handleMouseUp: function(evt) {
@@ -404,20 +425,27 @@ const MapCanvas = React.createClass({
   },
 
   handleMouseOut: function(evt) {
-    if (this.isTilePositionWithinBounds(evt)) {
+    if (this.isTilePositionWithinCanvas(evt)) {
+      return;
+    }
+    this.removeHighlight();
+  },
+
+  handleSelectionOut: function(evt) {
+    if (this.isTilePositionWithinCanvas(evt, evt.target.previousSibling)) {
       return;
     }
     this.removeHighlight();
   },
 
   componentDidUpdate: function(oldProps, oldState) {
-    if (oldState.startPosition) {
-      this.unhighlightRange(oldState.startPosition, oldProps.tilePosition);
-      if (this.state.startPosition) {
-        this.highlightRange(this.state.startPosition, this.props.tilePosition);
-        return;
-      }
-    }
+    // if (oldState.startPosition) {
+    //   this.updateRange(oldState.startPosition, oldProps.tilePosition);
+    //   if (this.state.startPosition) {
+    //     this.highlightRange(this.state.startPosition, this.props.tilePosition);
+    //     return;
+    //   }
+    // }
     // this.unhighlightTile(oldProps.tilePosition);
     // this.highlightTile(this.props.tilePosition);
   },
@@ -446,6 +474,16 @@ const MapCanvas = React.createClass({
   },
 
   highlightStyle: function() {
+    if (this.state.startPosition) {
+      var tr = this.getTileRange(this.state.startPosition, this.props.tilePosition);
+      return {
+        left: tr.topLeft.x * tileSize,
+        top: tr.topLeft.y * tileSize,
+        width: tr.cols * tileSize,
+        height: tr.rows * tileSize,
+        display: 'block'
+      };
+    }
     if (this.props.tilePosition) {
       return {
         left: this.props.tilePosition.x * tileSize,
@@ -463,13 +501,15 @@ const MapCanvas = React.createClass({
         <div className="inner-canvas-container">
           <canvas className={bsClass}
               onMouseMove={this.handleMouseMove}
-              onMouseDown={this.handleMouseDown}
-              onMouseUp={this.handleMouseUp}
+              onMouseOut={this.handleMouseOut}
               onContextMenu={this.handleRightClick}
               ref={cvs => this._canvas = cvs} />
 
           <div className="highlight" style={this.highlightStyle()}
-              onMouseOut={this.handleMouseOut} />
+              onMouseMove={this.handleSelectionMove}
+              onMouseDown={this.handleMouseDown}
+              onMouseUp={this.handleMouseUp}
+              onMouseOut={this.handleSelectionOut} />
         </div>
 
         <MapCanvasPopup
