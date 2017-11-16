@@ -7,6 +7,8 @@ import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
 import { initHighlight, initTileHighlight } from '../utils';
 import './map-canvas.css';
+import ReactDOM from 'react-dom';
+
 
 // const tileHighlight = initTileHighlight();
 
@@ -393,12 +395,12 @@ const MapCanvas = React.createClass({
     }
     this.setState({
       showOverlay: true,
-      overlayPosition: this.getOverlayPosition(evt)
+      overlayPosition: this.getOverlayPosition(evt),
+      overlayTarget: evt.target
     });
   },
 
   handleMouseDown: function(evt) {
-    console.log('start mouse down');
     if (this.state.showOverlay) {
       return;
     }
@@ -410,7 +412,6 @@ const MapCanvas = React.createClass({
     this.setState({ startPosition: tilePosition});
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
     this.props.onTilePositionUpdated(tilePosition, tile);
-    console.log('end mouse down');
   },
 
   handleMouseUp: function(evt) {
@@ -438,7 +439,7 @@ const MapCanvas = React.createClass({
     this.removeHighlight();
   },
 
-  componentDidUpdate: function(oldProps, oldState) {
+//  componentDidUpdate: function(oldProps, oldState) {
     // if (oldState.startPosition) {
     //   this.updateRange(oldState.startPosition, oldProps.tilePosition);
     //   if (this.state.startPosition) {
@@ -448,7 +449,7 @@ const MapCanvas = React.createClass({
     // }
     // this.unhighlightTile(oldProps.tilePosition);
     // this.highlightTile(this.props.tilePosition);
-  },
+//  },
 
   hideOverlay: function() {
     this.setState({ showOverlay: false });
@@ -502,21 +503,22 @@ const MapCanvas = React.createClass({
           <canvas className={bsClass}
               onMouseMove={this.handleMouseMove}
               onMouseOut={this.handleMouseOut}
-              onContextMenu={this.handleRightClick}
               ref={cvs => this._canvas = cvs} />
 
           <div className="highlight" style={this.highlightStyle()}
               onMouseMove={this.handleSelectionMove}
               onMouseDown={this.handleMouseDown}
               onMouseUp={this.handleMouseUp}
-              onMouseOut={this.handleSelectionOut} />
+              onMouseOut={this.handleSelectionOut}
+              onContextMenu={this.handleRightClick} />
+
+          <SelectionPopup
+              showOverlay={this.state.showOverlay}
+              target={this.state.overlayTarget}
+              buttons={this.buttonsMetadata()}
+              onHide={this.hideOverlay} />
         </div>
 
-        <MapCanvasPopup
-            showOverlay={this.state.showOverlay}
-            position={this.state.overlayPosition}
-            buttons={this.buttonsMetadata()}
-            onHide={this.hideOverlay} />
 
         <EditLevelsModal
             showModal={this.state.showModal === "LEVELS"}
@@ -551,11 +553,7 @@ const MapCanvas = React.createClass({
  * COMPONENT: MAP CANVAS POPUP
  * =============================================================================
  */
-const MapCanvasPopup = React.createClass({
-  suppress: function(evt) {
-    evt.preventDefault();
-  },
-
+const SelectionPopup = React.createClass({
   buttonGroup: function() {
     var buttons = this.props.buttons.map(button => {
       if (!button.menuItems) {
@@ -575,45 +573,18 @@ const MapCanvasPopup = React.createClass({
     return (<ButtonGroup vertical block>{buttons}</ButtonGroup>);
   },
 
-  // render: function() {
-  //   var style = {
-  //     marginLeft: this.props.position.x,
-  //     marginTop: this.props.position.y
-  //   };
-  //   return (
-  //     <Overlay
-  //       show={this.props.showOverlay}
-  //       rootClose={true}
-  //       onHide={this.props.onHide}>
-  //       <div className="map-overlay" style={style} onContextMenu={this.suppress}>
-  //         {this.buttonGroup()}
-  //       </div>
-  //     </Overlay>
-  //   );
-  // }
-
   render: function() {
-      var style = {
-        marginLeft: this.props.position.x,
-        marginTop: this.props.position.y
-      };
-      // var style = {
-      //   top: this.props.position.x,
-      //   left: this.props.position.y
-      // };
     return (
-        <Overlay
-            show={this.props.showOverlay}
-            onHide={this.props.onHide}
-            rootClose={true}
-            placement="right">
-        <Popover style={style}
-                 id="popover-basic"
-          >
+      <Overlay
+          show={this.props.showOverlay}
+          onHide={this.props.onHide}
+          rootClose={true}
+          target={this.props.target}
+          placement="right">
+        <Popover id="popover-basic">
           {this.buttonGroup()}
-          {/*And here's some <strong>amazing</strong> content. It's very engaging. right?*/}
-      </Popover>
-          </Overlay>
+        </Popover>
+      </Overlay>
     )
   }
 });
