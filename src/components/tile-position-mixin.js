@@ -31,29 +31,8 @@ const tilePositionMixin = {
   isTilePositionWithinCanvas: function(evt, canvas) {
     var {x, y} = this.getRelativePosition(evt);
     var cvsElement = canvas ? canvas : evt.target;
-    if (x < 0 || x >= cvsElement.width || y < 0 || y >= cvsElement.height) {
-      return false;
-    }
-    return true;
+    return x >= 0 && x < cvsElement.width && y >= 0 && y < cvsElement.height;
   },
-
-  /*getOverlayPosition: function(evt, tilePosition) {
-    var cvsElement = evt.target;
-    var cvsOffsetLeft = cvsElement.offsetLeft + cvsElement.offsetParent.offsetLeft;
-    var cvsOffsetTop = cvsElement.offsetTop + cvsElement.offsetParent.offsetTop;
-    var x = tilePosition.x * tileSize + cvsOffsetLeft;
-    var y = tilePosition.y * tileSize + cvsOffsetTop;
-    return { x, y };
-  },*/
-  getOverlayPosition: function(evt) {
-    var x = evt.pageX;
-    var y = evt.pageY;
-    if (x === undefined || y === undefined) {
-      x = evt.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-      y = evt.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-    }
-    return { x: x + 1, y: y };
-  }
 };
 
 export default tilePositionMixin;

@@ -395,7 +395,6 @@ const MapCanvas = React.createClass({
     }
     this.setState({
       showOverlay: true,
-      overlayPosition: this.getOverlayPosition(evt),
       overlayTarget: evt.target
     });
   },
@@ -550,43 +549,38 @@ const MapCanvas = React.createClass({
 });
 
 /* =============================================================================
- * COMPONENT: MAP CANVAS POPUP
+ * COMPONENT: SELECTION POPUP
  * =============================================================================
  */
-const SelectionPopup = React.createClass({
-  buttonGroup: function() {
-    var buttons = this.props.buttons.map(button => {
-      if (!button.menuItems) {
-        return (<Button key={button.label} disabled={button.disabled}
-            onClick={button.onClick}>{button.label}</Button>);
-      }
-      var menuItems = button.menuItems.map(menuItem =>
+function SelectionPopup(props) {
+  var buttons = props.buttons.map(button => {
+    if (!button.menuItems) {
+      return (<Button key={button.label} disabled={button.disabled}
+                      onClick={button.onClick}>{button.label}</Button>);
+    }
+    var menuItems = button.menuItems.map(menuItem =>
         <MenuItem key={menuItem.label} disabled={menuItem.disabled}
-            onClick={menuItem.onClick}>{menuItem.label}</MenuItem>
-      );
-      return (
+                  onClick={menuItem.onClick}>{menuItem.label}</MenuItem>
+    );
+    return (
         <DropdownButton id={button.label} key={button.label} title={button.label}>
           {menuItems}
         </DropdownButton>
-      );
-    });
-    return (<ButtonGroup vertical block>{buttons}</ButtonGroup>);
-  },
+    );
+  });
 
-  render: function() {
-    return (
-      <Overlay
-          show={this.props.showOverlay}
-          onHide={this.props.onHide}
-          rootClose={true}
-          target={this.props.target}
-          placement="right">
-        <Popover id="popover-basic">
-          {this.buttonGroup()}
-        </Popover>
-      </Overlay>
-    )
-  }
-});
+  return (
+    <Overlay
+        show={props.showOverlay}
+        onHide={props.onHide}
+        rootClose={true}
+        target={props.target}
+        placement="right">
+      <Popover id="popover-basic">
+        <ButtonGroup vertical block>{buttons}</ButtonGroup>
+      </Popover>
+    </Overlay>
+  )
+}
 
 export default MapCanvas;
