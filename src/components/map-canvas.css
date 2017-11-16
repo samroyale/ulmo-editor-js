@@ -14,12 +14,3 @@ div.canvas-container .highlight {
   display: block;
   background: rgba(255, 255, 255, .6);
 }
-
-div.map-overlay {
-  position: absolute;
-  background-color: #EEE;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-  border: 1px solid #CCC;
-  border-radius: 4px;
-  padding: 8px;
-}

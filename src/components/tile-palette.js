@@ -3,12 +3,10 @@ import { Panel, Modal, ButtonToolbar, Button, Collapse, Alert } from 'react-boot
 import TileSetService from '../services/tile-sets';
 import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
-import { errorMessage, initTile, initTileHighlight } from '../utils';
+import { errorMessage, initTile } from '../utils';
 import './tile-palette.css';
 
 const emptyTile = initTile('white');
-
-const tileHighlight = initTileHighlight();
 
 const tileSetService = new TileSetService();
 
@@ -131,32 +129,42 @@ const TileSetCanvas = React.createClass({
     }
   },
 
-  highlightTile(x, y, currentTile) {
-    if (currentTile) {
-      var ctx = this._canvas.getContext('2d');
-      ctx.drawImage(tileHighlight, x * tileSize, y * tileSize)
-    }
-  },
-
-  resetTile(x, y, previousTile) {
-    if (previousTile) {
-      var ctx = this._canvas.getContext('2d');
-      ctx.putImageData(previousTile.getImage(), x * tileSize, y * tileSize);
-    }
-  },
+  // highlightTile(x, y, currentTile) {
+  //   if (currentTile) {
+  //     var ctx = this._canvas.getContext('2d');
+  //     ctx.drawImage(tileHighlight, x * tileSize, y * tileSize)
+  //   }
+  // },
+  //
+  // resetTile(x, y, previousTile) {
+  //   if (previousTile) {
+  //     var ctx = this._canvas.getContext('2d');
+  //     ctx.putImageData(previousTile.getImage(), x * tileSize, y * tileSize);
+  //   }
+  // },
 
   handleMouseMove(evt) {
     var tilePosition = this.getCurrentTilePosition(evt);
-    if (this.props.tilePosition &&
-        tilePosition.x === this.props.tilePosition.x &&
-        tilePosition.y === this.props.tilePosition.y) {
-      return;
-    }
+    // if (this.props.tilePosition &&
+    //     tilePosition.x === this.props.tilePosition.x &&
+    //     tilePosition.y === this.props.tilePosition.y) {
+    //   return;
+    // }
     var tile = this._tileSet.getTile([tilePosition.x], [tilePosition.y]);
     this.props.onTilePositionUpdated(tilePosition, tile);
   },
 
-  handleMouseOut() {
+  handleMouseOut: function(evt) {
+    if (this.isTilePositionWithinCanvas(evt)) {
+      return;
+    }
+    this.props.onTilePositionUpdated();
+  },
+
+  handleSelectionOut: function(evt) {
+    if (this.isTilePositionWithinCanvas(evt, evt.target.previousSibling)) {
+      return;
+    }
     this.props.onTilePositionUpdated();
   },
 
@@ -171,25 +179,41 @@ const TileSetCanvas = React.createClass({
     evt.preventDefault();
   },
 
-  componentDidUpdate(oldProps, oldState) {
-    if (oldProps.tilePosition) {
-      this.resetTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.tile);
-    }
+  // componentDidUpdate(oldProps, oldState) {
+  //   if (oldProps.tilePosition) {
+  //     this.resetTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.tile);
+  //   }
+  //   if (this.props.tilePosition) {
+  //     this.highlightTile(this.props.tilePosition.x, this.props.tilePosition.y, this.props.tile);
+  //   }
+  // },
+
+  highlightStyle: function() {
     if (this.props.tilePosition) {
-      this.highlightTile(this.props.tilePosition.x, this.props.tilePosition.y, this.props.tile);
+      return {
+        left: this.props.tilePosition.x * tileSize,
+        top: this.props.tilePosition.y * tileSize,
+        display: 'block'
+      };
     }
+    return { display: 'none' };
   },
 
   render() {
     var bsClass = this.state.showTileset ? "show tiles" : "hidden";
     return (
       <div className="canvas-container">
-        <canvas className={bsClass}
-            onMouseMove={this.handleMouseMove}
-            onMouseOut={this.handleMouseOut}
-            onClick={this.handleMouseClick}
-            onContextMenu={this.suppress}
-            ref={cvs => this._canvas = cvs} />
+        <div className="inner-canvas-container">
+          <canvas className={bsClass}
+                  onMouseMove={this.handleMouseMove}
+                  onMouseOut={this.handleMouseOut}
+                  ref={cvs => this._canvas = cvs} />
+
+          <div className="highlight" style={this.highlightStyle()}
+               onMouseOut={this.handleSelectionOut}
+               onClick={this.handleMouseClick}
+               onContextMenu={this.handleRightClick} />
+        </div>
       </div>
     );
   }

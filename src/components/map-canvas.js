@@ -5,12 +5,7 @@ import { PlayMapModal } from '../play/play-modal';
 import RpgMapService from '../services/rpg-maps';
 import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
-import { initHighlight, initTileHighlight } from '../utils';
 import './map-canvas.css';
-import ReactDOM from 'react-dom';
-
-
-// const tileHighlight = initTileHighlight();
 
 const rpgMapService = new RpgMapService();
 
