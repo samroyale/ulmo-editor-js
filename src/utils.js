@@ -68,25 +68,6 @@ export function initTransparentRect(width, height) {
   return canvas;
 }
 
-export function initHighlight(rows, cols) {
-  // console.log(rows + ", " + cols);
-  let canvas = initTransparentRect(tileSize * cols, tileSize * rows);
-  let ctx = canvas.getContext('2d');
-  ctx.beginPath();
-  ctx.rect(0, 0, tileSize * cols, 2);
-  ctx.rect(0, tileSize * rows - 2, tileSize * cols, 2);
-  ctx.rect(0, 0, 2, tileSize * rows);
-  ctx.rect(tileSize * cols - 2, 0, 2, tileSize * rows);
-  ctx.fillStyle = 'white';
-  ctx.fill();
-  ctx.closePath();
-  return canvas;
-};
-
-export function initTileHighlight() {
-  return initHighlight(1, 1);
-};
-
 export function copyCanvas(canvas) {
   let copy = initTransparentRect(canvas.width, canvas.height);
   let ctx = copy.getContext('2d');

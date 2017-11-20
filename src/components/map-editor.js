@@ -286,7 +286,10 @@ const MapEditor = React.createClass({
   },
 
   updateCurrentTile: function(tilePosition, tile) {
-    this.setState({ currentTilePosition: tilePosition, currentTile: tile});
+    this.setState({
+      currentTilePosition: tilePosition,
+      currentTile: tile
+    });
   },
 
   setTileControlMode: function(mode) {

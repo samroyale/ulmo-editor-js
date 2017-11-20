@@ -1,14 +1,11 @@
 import React from 'react';
-import { Overlay, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Overlay, Popover, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { EditLevelsModal, EditImagesModal, EditMasksModal } from './map-modal';
 import { PlayMapModal } from '../play/play-modal';
 import RpgMapService from '../services/rpg-maps';
 import tilePositionMixin from './tile-position-mixin';
 import { tileSize } from '../config';
-import { initHighlight, initTileHighlight } from '../utils';
 import './map-canvas.css';
-
-const tileHighlight = initTileHighlight();
 
 const rpgMapService = new RpgMapService();
 
@@ -95,36 +92,7 @@ const MapCanvas = React.createClass({
     }
   },
 
-  unhighlightTile: function(tilePosition) {
-    if (!tilePosition) {
-      return;
-    }
-    this._canvas.getContext('2d').putImageData(
-      this._rpgMap.getMapTile(tilePosition.x, tilePosition.y).getImage(),
-      tilePosition.x * tileSize,
-      tilePosition.y * tileSize
-    );
-  },
-
-  highlightTile: function(tilePosition) {
-    if (!tilePosition) {
-      return;
-    }
-    this._canvas.getContext('2d').drawImage(
-      tileHighlight,
-      tilePosition.x * tileSize,
-      tilePosition.y * tileSize
-    );
-  },
-
-  highlightRange: function(fromPosition, toPosition) {
-    this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
-      var highlight = initHighlight(rows, cols);
-      ctx.drawImage(highlight, topLeft.x * tileSize, topLeft.y * tileSize);
-    });
-  },
-
-  unhighlightRange: function(fromPosition, toPosition) {
+  updateRange: function(fromPosition, toPosition) {
     this.processRange(fromPosition, toPosition, (topLeft, rows, cols, ctx) => {
       for (var i = topLeft.x; i < topLeft.x + cols; i++) {
         for (var j = topLeft.y; j < topLeft.y + rows; j++) {
@@ -238,6 +206,7 @@ const MapCanvas = React.createClass({
     var oldTiles = func(tr.topLeft, tr.rows, tr.cols);
     if (oldTiles) {
       this.props.onMapUpdated(tr.topLeft, oldTiles);
+      this.updateRange(fromPosition, toPosition);
     }
   },
 
@@ -278,14 +247,14 @@ const MapCanvas = React.createClass({
       x: this.props.tilePosition.x + oldTiles.length - 1,
       y: this.props.tilePosition.y + oldTiles[0].length - 1
     }
-    this.unhighlightRange(this.props.tilePosition, toPosition);
+    this.updateRange(this.props.tilePosition, toPosition);
     this.props.onMapUpdated(this.props.tilePosition, oldTiles);
     this.hideOverlay();
   },
 
   restoreTiles: function(topLeft, tiles) {
     var toPosition = this._rpgMap.restoreTiles(topLeft, tiles);
-    this.unhighlightRange(topLeft, toPosition);
+    this.updateRange(topLeft, toPosition);
     this.props.onMapUpdated();
   },
 
@@ -343,13 +312,22 @@ const MapCanvas = React.createClass({
       return;
     }
     var tilePosition = this.getCurrentTilePosition(evt);
+    if (this.state.startPosition && !this._mouseDown) {
+      this.setState({ startPosition: null });
+    }
+    var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
+    this.props.onTilePositionUpdated(tilePosition, tile);
+  },
+
+  handleSelectionMove: function(evt) {
+    if (this.state.showOverlay || !this._mouseDown) {
+      return;
+    }
+    var tilePosition = this.getCurrentTilePosition(evt, evt.target.previousSibling);
     if (this.props.tilePosition &&
         tilePosition.x === this.props.tilePosition.x &&
         tilePosition.y === this.props.tilePosition.y) {
       return;
-    }
-    if (this.state.startPosition && !this._mouseDown) {
-      this.setState({ startPosition: null });
     }
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
     this.props.onTilePositionUpdated(tilePosition, tile);
@@ -372,7 +350,7 @@ const MapCanvas = React.createClass({
     }
     this.setState({
       showOverlay: true,
-      overlayPosition: this.getOverlayPosition(evt)
+      overlayTarget: evt.target
     });
   },
 
@@ -384,7 +362,7 @@ const MapCanvas = React.createClass({
       return;
     }
     this._mouseDown = true;
-    var tilePosition = this.getCurrentTilePosition(evt);
+    var tilePosition = this.getCurrentTilePosition(evt, evt.target.previousSibling);
     this.setState({ startPosition: tilePosition});
     var tile = this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
     this.props.onTilePositionUpdated(tilePosition, tile);
@@ -401,16 +379,18 @@ const MapCanvas = React.createClass({
     this.applySelectedTile(this.state.startPosition, this.props.tilePosition);
   },
 
-  componentDidUpdate: function(oldProps, oldState) {
-    if (oldState.startPosition) {
-      this.unhighlightRange(oldState.startPosition, oldProps.tilePosition);
-      if (this.state.startPosition) {
-        this.highlightRange(this.state.startPosition, this.props.tilePosition);
-        return;
-      }
+  handleMouseOut: function(evt) {
+    if (this.isTilePositionWithinCanvasView(evt)) {
+      return;
     }
-    this.unhighlightTile(oldProps.tilePosition);
-    this.highlightTile(this.props.tilePosition);
+    this.removeHighlight();
+  },
+
+  handleSelectionOut: function(evt) {
+    if (this.isTilePositionWithinCanvasView(evt, evt.target.previousSibling)) {
+      return;
+    }
+    this.removeHighlight();
   },
 
   hideOverlay: function() {
@@ -436,23 +416,51 @@ const MapCanvas = React.createClass({
     });
   },
 
+  highlightStyle: function() {
+    if (this.state.startPosition) {
+      var tr = this.getTileRange(this.state.startPosition, this.props.tilePosition);
+      return {
+        left: tr.topLeft.x * tileSize,
+        top: tr.topLeft.y * tileSize,
+        width: tr.cols * tileSize,
+        height: tr.rows * tileSize,
+        display: 'block'
+      };
+    }
+    if (this.props.tilePosition) {
+      return {
+        left: this.props.tilePosition.x * tileSize,
+        top: this.props.tilePosition.y * tileSize,
+        display: 'block'
+      };
+    }
+    return {};
+  },
+
   render: function() {
     var bsClass = this.state.showMap ? "show" : "hidden";
     return (
       <div className="canvas-container">
-        <canvas className={bsClass}
-            onMouseMove={this.handleMouseMove}
-            onMouseDown={this.handleMouseDown}
-            onMouseUp={this.handleMouseUp}
-            onMouseOut={this.removeHighlight}
-            onContextMenu={this.handleRightClick}
-            ref={cvs => this._canvas = cvs} />
+        <div className="inner-canvas-container">
+          <canvas className={bsClass}
+              onMouseMove={this.handleMouseMove}
+              onMouseOut={this.handleMouseOut}
+              ref={cvs => this._canvas = cvs} />
 
-        <MapCanvasPopup
-            showOverlay={this.state.showOverlay}
-            position={this.state.overlayPosition}
-            buttons={this.buttonsMetadata()}
-            onHide={this.hideOverlay} />
+          <div className="highlight" style={this.highlightStyle()}
+              onMouseMove={this.handleSelectionMove}
+              onMouseDown={this.handleMouseDown}
+              onMouseUp={this.handleMouseUp}
+              onMouseOut={this.handleSelectionOut}
+              onContextMenu={this.handleRightClick} />
+
+          <SelectionPopup
+              showOverlay={this.state.showOverlay}
+              target={this.state.overlayTarget}
+              buttons={this.buttonsMetadata()}
+              onHide={this.hideOverlay} />
+        </div>
+
 
         <EditLevelsModal
             showModal={this.state.showModal === "LEVELS"}
@@ -484,49 +492,38 @@ const MapCanvas = React.createClass({
 });
 
 /* =============================================================================
- * COMPONENT: MAP CANVAS POPUP
+ * COMPONENT: SELECTION POPUP
  * =============================================================================
  */
-const MapCanvasPopup = React.createClass({
-  suppress: function(evt) {
-    evt.preventDefault();
-  },
-
-  buttonGroup: function() {
-    var buttons = this.props.buttons.map(button => {
-      if (!button.menuItems) {
-        return (<Button key={button.label} disabled={button.disabled}
-            onClick={button.onClick}>{button.label}</Button>);
-      }
-      var menuItems = button.menuItems.map(menuItem =>
+function SelectionPopup(props) {
+  var buttons = props.buttons.map(button => {
+    if (!button.menuItems) {
+      return (<Button key={button.label} disabled={button.disabled}
+                      onClick={button.onClick}>{button.label}</Button>);
+    }
+    var menuItems = button.menuItems.map(menuItem =>
         <MenuItem key={menuItem.label} disabled={menuItem.disabled}
-            onClick={menuItem.onClick}>{menuItem.label}</MenuItem>
-      );
-      return (
+                  onClick={menuItem.onClick}>{menuItem.label}</MenuItem>
+    );
+    return (
         <DropdownButton id={button.label} key={button.label} title={button.label}>
           {menuItems}
         </DropdownButton>
-      );
-    });
-    return (<ButtonGroup vertical>{buttons}</ButtonGroup>);
-  },
-
-  render: function() {
-    var style = {
-      marginLeft: this.props.position.x,
-      marginTop: this.props.position.y
-    };
-    return (
-      <Overlay
-        show={this.props.showOverlay}
-        rootClose={true}
-        onHide={this.props.onHide}>
-        <div className="map-overlay" style={style} onContextMenu={this.suppress}>
-          {this.buttonGroup()}
-        </div>
-      </Overlay>
     );
-  }
-});
+  });
+
+  return (
+    <Overlay
+        show={props.showOverlay}
+        onHide={props.onHide}
+        rootClose={true}
+        target={props.target}
+        placement="right">
+      <Popover id="popover-basic">
+        <ButtonGroup vertical block>{buttons}</ButtonGroup>
+      </Popover>
+    </Overlay>
+  )
+}
 
 export default MapCanvas;
