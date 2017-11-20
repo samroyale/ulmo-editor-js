@@ -11,6 +11,6 @@ div.canvas-container .highlight {
   position: absolute;
   width: 32px;
   height: 32px;
-  display: block;
+  display: none;
   background: rgba(255, 255, 255, .6);
 }

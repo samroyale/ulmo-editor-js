@@ -129,40 +129,21 @@ const TileSetCanvas = React.createClass({
     }
   },
 
-  // highlightTile(x, y, currentTile) {
-  //   if (currentTile) {
-  //     var ctx = this._canvas.getContext('2d');
-  //     ctx.drawImage(tileHighlight, x * tileSize, y * tileSize)
-  //   }
-  // },
-  //
-  // resetTile(x, y, previousTile) {
-  //   if (previousTile) {
-  //     var ctx = this._canvas.getContext('2d');
-  //     ctx.putImageData(previousTile.getImage(), x * tileSize, y * tileSize);
-  //   }
-  // },
-
   handleMouseMove(evt) {
     var tilePosition = this.getCurrentTilePosition(evt);
-    // if (this.props.tilePosition &&
-    //     tilePosition.x === this.props.tilePosition.x &&
-    //     tilePosition.y === this.props.tilePosition.y) {
-    //   return;
-    // }
     var tile = this._tileSet.getTile([tilePosition.x], [tilePosition.y]);
     this.props.onTilePositionUpdated(tilePosition, tile);
   },
 
   handleMouseOut: function(evt) {
-    if (this.isTilePositionWithinCanvas(evt)) {
+    if (this.isTilePositionWithinCanvasView(evt)) {
       return;
     }
     this.props.onTilePositionUpdated();
   },
 
   handleSelectionOut: function(evt) {
-    if (this.isTilePositionWithinCanvas(evt, evt.target.previousSibling)) {
+    if (this.isTilePositionWithinCanvasView(evt, evt.target.previousSibling)) {
       return;
     }
     this.props.onTilePositionUpdated();
@@ -179,15 +160,6 @@ const TileSetCanvas = React.createClass({
     evt.preventDefault();
   },
 
-  // componentDidUpdate(oldProps, oldState) {
-  //   if (oldProps.tilePosition) {
-  //     this.resetTile(oldProps.tilePosition.x, oldProps.tilePosition.y, oldProps.tile);
-  //   }
-  //   if (this.props.tilePosition) {
-  //     this.highlightTile(this.props.tilePosition.x, this.props.tilePosition.y, this.props.tile);
-  //   }
-  // },
-
   highlightStyle: function() {
     if (this.props.tilePosition) {
       return {
@@ -196,7 +168,7 @@ const TileSetCanvas = React.createClass({
         display: 'block'
       };
     }
-    return { display: 'none' };
+    return {};
   },
 
   render() {
@@ -212,7 +184,7 @@ const TileSetCanvas = React.createClass({
           <div className="highlight" style={this.highlightStyle()}
                onMouseOut={this.handleSelectionOut}
                onClick={this.handleMouseClick}
-               onContextMenu={this.handleRightClick} />
+               onContextMenu={this.suppress} />
         </div>
       </div>
     );
