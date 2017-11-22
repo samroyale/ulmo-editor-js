@@ -278,9 +278,14 @@ export class SpriteGroup {
         this._sprites.forEach(sprite => sprite.update(...args));
     }
 
+    drawStatic(ctx, viewRect) {
+        this._sprites.forEach(sprite => sprite.assignInView(viewRect));
+        this.draw(ctx, viewRect);
+    }
+
     draw(ctx, viewRect) {
         this._visibleSprites = this._sprites
-            .filter(sprite => sprite.isInView(viewRect));
+            .filter(sprite => sprite.isInView());
 
         this._visibleSprites
             .sort((spriteA, spriteB) => spriteA.getZIndex() - spriteB.getZIndex())
@@ -387,9 +392,6 @@ export class Sprite {
         let inView = viewRect.intersectsWith(this._rect);
         if (inView) {
             this._canvas = this._frames.advanceFrame(direction);
-            // if (player.getBaseRect().intersectsWith(this._baseRect)) {
-            //     this._processCollision();
-            // }
         }
         return inView;
     }
@@ -403,8 +405,12 @@ export class Sprite {
         this._render(ctx, viewRect);
     }
 
-    isInView(viewRect) {
+    isInView() {
         return this._inView;
+    }
+
+    assignInView(viewRect) {
+        this._inView = viewRect.intersectsWith(this._rect);
     }
 
     _processMapExit() {

@@ -86,19 +86,20 @@ export const PlayMapModal = React.createClass({
             return;
         }
         if (this.state.rpgMap && !this._player) {
-            var p = this._initPlay(this.executePlay);
+            let p = this._initPlay();
             p.then(() => {
+                this._execute = this.executePlay;
                 let onEachFrameFunc = this.assignOnEachFrame();
                 onEachFrameFunc(this.executeMain);
                 this.setState({
                     playReady: true,
                     playError: false
                 });
-            });
+            }).done();
         }
     },
 
-    _initPlay(executeFunc) {
+    _initPlay() {
         this._keys = new Keys();
         let playMap = new PlayMap(this.state.rpgMap);
         this._player = new Player(playMap, this.props.level,
@@ -107,16 +108,12 @@ export const PlayMapModal = React.createClass({
         sprites.push(this._player);
         let spritePromises = sprites.map(sprite => sprite.load());
         let p = Q.all(spritePromises);
-        return p.then(
-            () => this.playReady(sprites, executeFunc),
+        return p.then(() => {
+                this._mapSprites = new SpriteGroup();
+                this._mapSprites.addAll(sprites);
+            },
             data => this.setState({ playReady: false, playError: data.err })
         );
-    },
-
-    playReady(sprites, executeFunc) {
-        this._mapSprites = new SpriteGroup();
-        this._mapSprites.addAll(sprites);
-        this._execute = executeFunc;
     },
 
     _toGameSprites(sprites) {
@@ -158,70 +155,61 @@ export const PlayMapModal = React.createClass({
      * Simple version of playMain
      */
     executePlay: function() {
-//        return () => {
-            // update stuff
-            let viewRect = this._player.handleInput(this._keys.processKeysDown());
-            this._mapSprites.update(viewRect, this._mapSprites, this._player);
-            // render the view
-            let viewCtx = this._canvas.getContext('2d');
-            this._player.drawMapView(viewCtx, viewRect);
-            this._mapSprites.draw(viewCtx, viewRect);
-            this._player.handleCollisions(this._mapSprites, () => {
-                this._ticks = 0;
-                this._canvasCopy = copyCanvas(this._canvas);
-                this._execute = this.executeLoseLife;
-            });
-//        };
+        // return () => {
+        // update stuff
+        let viewRect = this._player.handleInput(this._keys.processKeysDown());
+        this._mapSprites.update(viewRect, this._mapSprites, this._player);
+        // render the view
+        let viewCtx = this._canvas.getContext('2d');
+        this._player.drawMapView(viewCtx, viewRect);
+        this._mapSprites.draw(viewCtx, viewRect);
+        // see if player collided with anything
+        this._player.handleCollisions(this._mapSprites, () => {
+            this._ticks = 0;
+            this._canvasCopy = copyCanvas(this._canvas);
+            this._execute = this.executeLoseLife;
+        });
+        // };
     },
 
     executeLoseLife: function() {
-        let viewCtx = this._canvas.getContext('2d');
-        // this.sceneZoomIn(viewCtx, this._ticks);
-        // if (this._ticks < 32) {
-        //     this.sceneZoomIn(viewCtx, this._ticks);
-        // }
         if (this._ticks < 64) {
             if (this._ticks === 32) {
-                console.log('Reset play');
                 this._execute = () => {};
-                this._initPlay(this.executePlay);
+                let p = this._initPlay();
+                p.then(() => {
+                    let viewRect = this._player.handleInput();
+                    let copyCtx = this._canvasCopy.getContext('2d');
+                    this._player.drawMapView(copyCtx, viewRect);
+                    this._mapSprites.drawStatic(copyCtx, viewRect);
+                    this._execute = this.executeLoseLife;
+                }).done();
             }
+            let viewCtx = this._canvas.getContext('2d');
             this.sceneZoomIn(viewCtx, this._ticks);
+            this._ticks++;
+            return;
         }
-        else {
-            console.log('DONE');
-        }
-        this._ticks++;
+        this._execute = this.executePlay;
     },
 
     sceneZoomIn: function(viewCtx, ticks) {
         let xBorder = (ticks + 1) * xMultiplier;
         let yBorder = xBorder * yxRatio;
-        viewCtx.drawImage(blackScreen, 0, 0);
+        if (ticks < 32) {
+            viewCtx.drawImage(blackScreen, 0, 0);
+        }
         let extractWidth = viewWidth - xBorder * 2;
         let extractHeight = viewHeight - yBorder * 2;
         viewCtx.drawImage(this._canvasCopy,
             xBorder, yBorder, extractWidth, extractHeight,
             xBorder, yBorder, extractWidth, extractHeight);
     },
-// xBorder = (ticks + 1) * X_MULT
-// yBorder = xBorder * Y_X_RATIO
-// screen.blit(blackRect, ORIGIN)
-// extract = Rect(xBorder, yBorder, VIEW_WIDTH - xBorder * 2, VIEW_HEIGHT - yBorder * 2)
-// screen.blit(screenImage, (xBorder, yBorder), extract)
-// pygame.display.flip()
-//
-// def sceneZoomOut(screenImage, ticks):
-// xBorder = (THIRTY_TWO - (ticks + 1)) * X_MULT
-// yBorder = xBorder * Y_X_RATIO
-// extract = Rect(xBorder, yBorder, VIEW_WIDTH - xBorder * 2, VIEW_HEIGHT - yBorder * 2)
-// screen.blit(screenImage, (xBorder, yBorder), extract)
-// pygame.display.flip()
 
-/*
- * Alternative version of playMain, that attempts to apply consistent updates
- * even when the framerate drops below the specified level.
- */
+    /*
+     * Alternative version of playMain, that attempts to apply consistent updates
+     * even when the framerate drops below the specified level.
+     */
     // playMain: function() {
     //     console.log("playMain");
     //     var i = 0,
