@@ -86,7 +86,15 @@ export const PlayMapModal = React.createClass({
             return;
         }
         if (this.state.rpgMap && !this._player) {
-            this._initPlay(this.executePlay);
+            var p = this._initPlay(this.executePlay);
+            p.then(() => {
+                let onEachFrameFunc = this.assignOnEachFrame();
+                onEachFrameFunc(this.executeMain);
+                this.setState({
+                    playReady: true,
+                    playError: false
+                });
+            });
         }
     },
 
@@ -99,22 +107,16 @@ export const PlayMapModal = React.createClass({
         sprites.push(this._player);
         let spritePromises = sprites.map(sprite => sprite.load());
         let p = Q.all(spritePromises);
-        p.then(
+        return p.then(
             () => this.playReady(sprites, executeFunc),
             data => this.setState({ playReady: false, playError: data.err })
-        ).done();
+        );
     },
 
     playReady(sprites, executeFunc) {
         this._mapSprites = new SpriteGroup();
         this._mapSprites.addAll(sprites);
         this._execute = executeFunc;
-        let onEachFrameFunc = this.assignOnEachFrame();
-        onEachFrameFunc(this.executeMain);
-        this.setState({
-            playReady: true,
-            playError: false
-        });
     },
 
     _toGameSprites(sprites) {
@@ -181,6 +183,8 @@ export const PlayMapModal = React.createClass({
         if (this._ticks < 64) {
             if (this._ticks === 32) {
                 console.log('Reset play');
+                this._execute = () => {};
+                this._initPlay(this.executePlay);
             }
             this.sceneZoomIn(viewCtx, this._ticks);
         }
