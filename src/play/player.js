@@ -120,7 +120,7 @@ export class Player extends Sprite {
 
     _initBaseRect(spriteRect) {
         this._inView = true;
-        let baseRectTop = this._rect.bottom + baseRectExtension - defaultBaseRectHeight;
+        let baseRectTop = spriteRect.bottom + baseRectExtension - defaultBaseRectHeight;
         return new Rect(spriteRect.left, baseRectTop, spriteRect.width, defaultBaseRectHeight);
     }
 
@@ -133,7 +133,7 @@ export class Player extends Sprite {
         if (this._falling) {
             return;
         }
-        if (keyBits === this._keyBits && this.applyDeferredMovement()) {
+        if (keyBits === this._keyBits && this._applyDeferredMovement()) {
             return;
         }
         this._keyBits = keyBits;
@@ -217,7 +217,7 @@ export class Player extends Sprite {
         return valid;
     }
 
-    applyDeferredMovement() {
+    _applyDeferredMovement() {
         if (this._deferredMovement) {
             var [direction, level, mx, my] = this._deferredMovement;
             this._applyMovement(direction, level, mx, my);
@@ -290,6 +290,17 @@ export class Player extends Sprite {
         this._frames = this._movingFrames;
         this._canvas = this._frames.currentFrame();
         this._shadow.removeOnNextTick();
+    }
+
+    handleCollisions(mapSprites, lifeLostFunc) {
+        mapSprites.getVisibleSprites().forEach(sprite => {
+            if (this._level === sprite.getLevel() &&
+                this._baseRect.intersectsWith(sprite.getBaseRect())) {
+                if (sprite.processCollision()) {
+                    lifeLostFunc();
+                }
+            }
+        });
     }
 
     drawMapView(viewCtx, viewRect) {

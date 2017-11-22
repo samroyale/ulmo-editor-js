@@ -178,6 +178,9 @@ export class Rect {
   }
 
   intersectsWith(rect) {
+    if (!rect) {
+      return false;
+    }
     return (
       (rect.left < this.right) && (rect.top < this.bottom) &&
       (rect.right > this.left) && (rect.bottom > this.top)

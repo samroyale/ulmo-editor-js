@@ -259,6 +259,7 @@ export class SingleFrame {
 export class SpriteGroup {
     constructor() {
         this._sprites = [];
+        this._visibleSprites = [];
     }
 
     add(sprite) {
@@ -278,10 +279,16 @@ export class SpriteGroup {
     }
 
     draw(ctx, viewRect) {
-        this._sprites
-            .filter(sprite => sprite.isInView(viewRect))
+        this._visibleSprites = this._sprites
+            .filter(sprite => sprite.isInView(viewRect));
+
+        this._visibleSprites
             .sort((spriteA, spriteB) => spriteA.getZIndex() - spriteB.getZIndex())
             .forEach(sprite => sprite.draw(ctx, viewRect));
+    }
+
+    getVisibleSprites() {
+        return this._visibleSprites;
     }
 }
 
@@ -331,11 +338,13 @@ export class Sprite {
         this._level = level;
         this._rect = new Rect(px, py, this._canvas.width, this._canvas.height);
         this._baseRect = this._initBaseRect(this._rect);
+        console.log("base rect: " + this._baseRect);
         this._zIndex = this._updateZIndex();
     }
 
     _initBaseRect(spriteRect) {
-        // leave as null by default
+        // return null by default
+        return null;
     }
 
     _baseRectTopLeft(baseRectWidth, baseRectHeight) {
@@ -362,20 +371,29 @@ export class Sprite {
                 this._baseRect.moveInPlace(mx, my);
             }
             this._rect.moveInPlace(mx, my);
-            this._inView = viewRect.intersectsWith(this._rect);
+            this._inView = this._advanceFrame(viewRect, player, direction)
             if (this._inView) {
-                this._canvas = this._frames.advanceFrame(direction);
                 return;
             }
         }
-        this._inView = viewRect.intersectsWith(this._rect);
+        this._inView = this._advanceFrame(viewRect, player)
         if (this._inView) {
-            this._canvas = this._frames.advanceFrame();
             return;
         }
         this._processMapExit();
     }
-    
+
+    _advanceFrame(viewRect, player, direction) {
+        let inView = viewRect.intersectsWith(this._rect);
+        if (inView) {
+            this._canvas = this._frames.advanceFrame(direction);
+            // if (player.getBaseRect().intersectsWith(this._baseRect)) {
+            //     this._processCollision();
+            // }
+        }
+        return inView;
+    }
+
     _getMovement(player) {
         return null;
     }
@@ -443,6 +461,11 @@ export class Sprite {
 
     removeOnNextTick() {
         this._toRemove = true;
+    }
+
+    // sprites that kill the player should override this and return true
+    processCollision() {
+        this.removeOnNextTick();
     }
 }
 
@@ -554,6 +577,10 @@ export class Door extends Sprite {
         let topLeft = this._baseRectTopLeft(8, defaultBaseRectHeight);
         return new Rect(topLeft.x, topLeft.y + baseRectExtension, 8, defaultBaseRectHeight);
     }
+
+    processCollision() {
+        // do nothing
+    }
 }
 
 /* =============================================================================
@@ -602,6 +629,10 @@ export class Beetle extends Sprite {
         }
         // otherwise there is nowhere to move to
         return null;
+    }
+
+    processCollision() {
+        return true;
     }
 }
 
@@ -668,6 +699,10 @@ export class Wasp extends Sprite {
         }
         this.removeOnNextTick();
     }
+
+    processCollision() {
+        return true;
+    }
 }
 
 /* =============================================================================
@@ -723,5 +758,9 @@ export class Blades extends Sprite {
 
     _getMapTile() {
         return this._playMap.getTileAt(this._tx, this._ty);
+    }
+
+    processCollision() {
+        return true;
     }
 }
