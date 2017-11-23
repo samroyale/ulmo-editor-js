@@ -110,11 +110,6 @@ export class MovingFrames {
         return copyCanvas(this.currentFrame());
     }
 
-    // withFrameIndex(frameIndex) {
-    //     this._frameIndex = frameIndex;
-    //     return this;
-    // }
-
     getFrameIndex() {
         return this._frameIndex;
     }
@@ -235,10 +230,6 @@ export class SingleFrame {
         this._frame = frameCanvas;
     }
 
-    getDirection() {
-        return null;
-    }
-
     advanceFrame() {
         return this._frame;
     }
@@ -276,11 +267,6 @@ export class SpriteGroup {
 
     update(...args) {
         this._sprites.forEach(sprite => sprite.update(...args));
-    }
-
-    drawStatic(ctx, viewRect) {
-        this._sprites.forEach(sprite => sprite.assignInView(viewRect));
-        this.draw(ctx, viewRect);
     }
 
     draw(ctx, viewRect) {
@@ -364,7 +350,7 @@ export class Sprite {
         return new Rect(topLeft.x, topLeft.y, defaultBaseRectWidth, defaultBaseRectWidth);
     }
 
-    update(viewRect, mapSprites, player) {
+    update(viewRect, mapSprites, player, applyMovement) {
         if (this._toRemove) {
             mapSprites.remove(this);
             return;
@@ -372,23 +358,25 @@ export class Sprite {
         let movement = this._getMovement(player);
         if (movement) {
             let [direction, mx, my] = movement;
-            if (this._baseRect) {
-                this._baseRect.moveInPlace(mx, my);
+            if (applyMovement) {
+                if (this._baseRect) {
+                    this._baseRect.moveInPlace(mx, my);
+                }
+                this._rect.moveInPlace(mx, my);
             }
-            this._rect.moveInPlace(mx, my);
-            this._inView = this._advanceFrame(viewRect, player, direction)
+            this._inView = this._advanceFrame(viewRect, direction);
             if (this._inView) {
                 return;
             }
         }
-        this._inView = this._advanceFrame(viewRect, player)
+        this._inView = this._advanceFrame(viewRect);
         if (this._inView) {
             return;
         }
         this._processMapExit();
     }
 
-    _advanceFrame(viewRect, player, direction) {
+    _advanceFrame(viewRect, direction) {
         let inView = viewRect.intersectsWith(this._rect);
         if (inView) {
             this._canvas = this._frames.advanceFrame(direction);
@@ -767,6 +755,8 @@ export class Blades extends Sprite {
     }
 
     processCollision() {
-        return true;
+        if (this._frames.getFrameIndex() > 0) {
+            return true;
+        }
     }
 }

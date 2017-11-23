@@ -88,7 +88,7 @@ export const PlayMapModal = React.createClass({
         if (this.state.rpgMap && !this._player) {
             let p = this._initPlay();
             p.then(() => {
-                this._execute = this.executePlay;
+                this._execute = this._executePlay;
                 let onEachFrameFunc = this.assignOnEachFrame();
                 onEachFrameFunc(this.executeMain);
                 this.setState({
@@ -147,6 +147,10 @@ export const PlayMapModal = React.createClass({
         }
     },
 
+    /*
+     * Using the _execute function as a lightweight state - this will
+     * reference either _executePlay or _executeLoseLife.
+     */
     executeMain: function() {
         this._execute();
     },
@@ -154,11 +158,11 @@ export const PlayMapModal = React.createClass({
     /*
      * Simple version of playMain
      */
-    executePlay: function() {
+    _executePlay: function() {
         // return () => {
         // update stuff
         let viewRect = this._player.handleInput(this._keys.processKeysDown());
-        this._mapSprites.update(viewRect, this._mapSprites, this._player);
+        this._mapSprites.update(viewRect, this._mapSprites, this._player, true);
         // render the view
         let viewCtx = this._canvas.getContext('2d');
         this._player.drawMapView(viewCtx, viewRect);
@@ -167,33 +171,35 @@ export const PlayMapModal = React.createClass({
         this._player.handleCollisions(this._mapSprites, () => {
             this._ticks = 0;
             this._canvasCopy = copyCanvas(this._canvas);
-            this._execute = this.executeLoseLife;
+            this._execute = this._executeLoseLife;
         });
         // };
     },
 
-    executeLoseLife: function() {
+    _executeLoseLife: function() {
         if (this._ticks < 64) {
             if (this._ticks === 32) {
                 this._execute = () => {};
                 let p = this._initPlay();
                 p.then(() => {
                     let viewRect = this._player.handleInput();
+                    this._mapSprites.update(viewRect, this._mapSprites, this._player);
                     let copyCtx = this._canvasCopy.getContext('2d');
                     this._player.drawMapView(copyCtx, viewRect);
-                    this._mapSprites.drawStatic(copyCtx, viewRect);
-                    this._execute = this.executeLoseLife;
+                    // this._mapSprites.drawStatic(copyCtx, viewRect);
+                    this._mapSprites.draw(copyCtx, viewRect);
+                    this._execute = this._executeLoseLife;
                 }).done();
             }
             let viewCtx = this._canvas.getContext('2d');
-            this.sceneZoomIn(viewCtx, this._ticks);
+            this._applyZoom(viewCtx, this._ticks);
             this._ticks++;
             return;
         }
-        this._execute = this.executePlay;
+        this._execute = this._executePlay;
     },
 
-    sceneZoomIn: function(viewCtx, ticks) {
+    _applyZoom: function(viewCtx, ticks) {
         let xBorder = (ticks + 1) * xMultiplier;
         let yBorder = xBorder * yxRatio;
         if (ticks < 32) {
