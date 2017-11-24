@@ -1,31 +1,10 @@
-import Q from 'q';
 import React from 'react';
 import { Alert, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
-import { copyCanvas, initRect } from '../utils';
-import { Keys, Player } from './player';
-import { SpriteGroup, Beetle, Blades, Checkpoint, Coin, Door, Flames, Key, Rock, Wasp } from './sprites';
-import PlayMap from './play-map';
+import Stage from './stage';
 import './play-modal.css';
 
 const fps = 60;
-
-export const spriteProvider = new Map([
-    ['flames', (playMap, sprite) => new Flames(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['key', (playMap, sprite) => new Key(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['rock', (playMap, sprite) => new Rock(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['beetle', (playMap, sprite) => new Beetle(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['wasp', (playMap, sprite) => new Wasp(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['door', (playMap, sprite) => new Door(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['blades', (playMap, sprite) => new Blades(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['checkpoint', (playMap, sprite) => new Checkpoint(playMap, sprite.getLevel(), sprite.getLocation())]
-]);
-
-const blackScreen = initRect('black', viewWidth, viewHeight);
-
-const xMultiplier = viewWidth / 64
-const yxRatio = viewHeight / viewWidth;
 
 /* =============================================================================
  * COMPONENT: PLAY MAP MODAL
@@ -33,16 +12,10 @@ const yxRatio = viewHeight / viewWidth;
  */
 export const PlayMapModal = React.createClass({
     _canvas: null,
-    _player: null,
-    _mapSprites: null,
-    _keys: null,
+    _stage: null,
 
     _requestId: null, // only set if using requestAnimationFrame
     _intervalId: null, // only set if using setInterval
-
-    _execute: null,
-    _canvasCopy: null,
-    _ticks: 0,
 
     getInitialState: function() {
         return {
@@ -59,7 +32,7 @@ export const PlayMapModal = React.createClass({
             clearInterval(this._intervalId);
             this._intervalId = null;
         }
-        this._player = null;
+        this._stage = null;
         this.props.onClose();
         this.setState({
             playReady: false,
@@ -85,51 +58,24 @@ export const PlayMapModal = React.createClass({
         if (!this.props.showModal) {
             return;
         }
-        if (this.state.rpgMap && !this._player) {
-            let p = this._initPlay();
-            p.then(() => {
-                this._execute = this._executePlay;
-                let onEachFrameFunc = this.assignOnEachFrame();
-                onEachFrameFunc(this.executeMain);
-                this.setState({
-                    playReady: true,
-                    playError: false
-                });
-            }).done();
+        if (this.state.rpgMap && !this._stage) {
+            this._stage = new Stage(this.state.rpgMap, this.props.level,
+                this.props.tilePosition.x, this.props.tilePosition.y);
+            let p = this._stage.initPlay();
+            p.then(
+                () => {
+                    let onEachFrame = this.assignOnEachFrame();
+                    onEachFrame(() => this._stage.executeMain(this._canvas, this._keys));
+                    this.setState({
+                        playReady: true,
+                        playError: false
+                    });
+                },
+                data => this.setState({ playReady: false, playError: data.err })
+            ).done();
         }
     },
 
-    _initPlay() {
-        this._keys = new Keys();
-        let playMap = new PlayMap(this.state.rpgMap);
-        this._player = new Player(playMap, this.props.level,
-            this.props.tilePosition.x, this.props.tilePosition.y);
-        let sprites = this._toGameSprites(this.state.rpgMap.getSprites());
-        sprites.push(this._player);
-        let spritePromises = sprites.map(sprite => sprite.load());
-        let p = Q.all(spritePromises);
-        return p.then(() => {
-                this._mapSprites = new SpriteGroup();
-                this._mapSprites.addAll(sprites);
-            },
-            data => this.setState({ playReady: false, playError: data.err })
-        );
-    },
-
-    _toGameSprites(sprites) {
-        if (!sprites) {
-            return;
-        }
-        let gameSprites = [];
-        sprites.forEach(sprite => {
-            let func = spriteProvider.get(sprite.getType());
-            if (func) {
-                gameSprites.push(func(this._player.getPlayMap(), sprite));
-            }
-        });
-        return gameSprites;
-    },
-    
     assignOnEachFrame() {
         if (window.requestAnimationFrame) {
             console.log('Using requestAnimationFrame');
@@ -147,101 +93,12 @@ export const PlayMapModal = React.createClass({
         }
     },
 
-    /*
-     * Using the _execute function as a lightweight state - this will
-     * reference either _executePlay or _executeLoseLife.
-     */
-    executeMain: function() {
-        this._execute();
-    },
-
-    /*
-     * Simple version of playMain
-     */
-    _executePlay: function() {
-        // return () => {
-        // update stuff
-        let viewRect = this._player.handleInput(this._keys.processKeysDown());
-        this._mapSprites.update(viewRect, this._mapSprites, this._player, true);
-        // render the view
-        let viewCtx = this._canvas.getContext('2d');
-        this._player.drawMapView(viewCtx, viewRect);
-        this._mapSprites.draw(viewCtx, viewRect);
-        // see if player collided with anything
-        this._player.handleCollisions(this._mapSprites, () => {
-            this._ticks = 0;
-            this._canvasCopy = copyCanvas(this._canvas);
-            this._execute = this._executeLoseLife;
-        });
-        // };
-    },
-
-    _executeLoseLife: function() {
-        if (this._ticks < 64) {
-            if (this._ticks === 32) {
-                this._execute = () => {};
-                let p = this._initPlay();
-                p.then(() => {
-                    let viewRect = this._player.handleInput();
-                    this._mapSprites.update(viewRect, this._mapSprites, this._player);
-                    let copyCtx = this._canvasCopy.getContext('2d');
-                    this._player.drawMapView(copyCtx, viewRect);
-                    // this._mapSprites.drawStatic(copyCtx, viewRect);
-                    this._mapSprites.draw(copyCtx, viewRect);
-                    this._execute = this._executeLoseLife;
-                }).done();
-            }
-            let viewCtx = this._canvas.getContext('2d');
-            this._applyZoom(viewCtx, this._ticks);
-            this._ticks++;
-            return;
-        }
-        this._execute = this._executePlay;
-    },
-
-    _applyZoom: function(viewCtx, ticks) {
-        let xBorder = (ticks + 1) * xMultiplier;
-        let yBorder = xBorder * yxRatio;
-        if (ticks < 32) {
-            viewCtx.drawImage(blackScreen, 0, 0);
-        }
-        let extractWidth = viewWidth - xBorder * 2;
-        let extractHeight = viewHeight - yBorder * 2;
-        viewCtx.drawImage(this._canvasCopy,
-            xBorder, yBorder, extractWidth, extractHeight,
-            xBorder, yBorder, extractWidth, extractHeight);
-    },
-
-    /*
-     * Alternative version of playMain, that attempts to apply consistent updates
-     * even when the framerate drops below the specified level.
-     */
-    // playMain: function() {
-    //     console.log("playMain");
-    //     var i = 0,
-    //         skipTicks = 1000 / fps,
-    //         maxFrameSkip = 10,
-    //         nextGameTick = new Date().getTime();
-    //
-    //     return () => {
-    //         i = 0;
-    //
-    //         while (new Date().getTime() > nextGameTick && i < maxFrameSkip) {
-    //             this._playUpdate();
-    //             nextGameTick += skipTicks;
-    //             i++;
-    //         }
-    //
-    //         this._renderView();
-    //     };
-    // },
-    
     keyDown: function(e) {
-        this._keys.keyDown(e.keyCode);
+        this._stage.keyDown(e.keyCode);
     },
 
     keyUp: function(e) {
-        this._keys.keyUp(e.keyCode);
+        this._stage.keyUp(e.keyCode);
     },
 
     modalBody: function() {
@@ -251,7 +108,7 @@ export const PlayMapModal = React.createClass({
                 <Modal.Body>
                     <Collapse in={showError}>
                         <div>
-                            <Alert bsStyle="danger">{this.state.playError}</Alert>
+                            <Alert bsStyle="danger">Could not initiate play mode: {this.state.playError}</Alert>
                         </div>
                     </Collapse>
                     <Collapse in={this.state.playReady}>
