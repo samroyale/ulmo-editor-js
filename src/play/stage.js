@@ -29,23 +29,24 @@ const yxRatio = viewHeight / viewWidth;
  * =============================================================================
  */
 class Stage {
-
     constructor(rpgMap, playerLevel, playerX, playerY) {
         this._rpgMap = rpgMap;
         this._playerLevel = playerLevel;
         this._playerX = playerX;
         this._playerY = playerY;
+        this._playMap = null;
         this._player = null;
         this._mapSprites = null;
         this._canvasCopy = null;
         this._keys = null;
         this._ticks = 0;
+        this._liveMode = true;
         this._execute = this._executePlay;
     }
 
     initPlay() {
-        let playMap = new PlayMap(this._rpgMap);
-        this._player = new Player(playMap, this._playerLevel,
+        this._playMap = new PlayMap(this._rpgMap);
+        this._player = new Player(this._playMap, this._playerLevel,
             this._playerX, this._playerY);
         let sprites = this._toGameSprites(this._rpgMap.getSprites());
         sprites.push(this._player);
@@ -60,13 +61,13 @@ class Stage {
 
     _toGameSprites(sprites) {
         if (!sprites) {
-            return;
+            return [];
         }
         let gameSprites = [];
         sprites.forEach(sprite => {
-            let func = spriteProvider.get(sprite.getType());
-            if (func) {
-                gameSprites.push(func(this._player.getPlayMap(), sprite));
+            let spriteFunc = spriteProvider.get(sprite.getType());
+            if (spriteFunc) {
+                gameSprites.push(spriteFunc(this._playMap, sprite));
             }
         });
         return gameSprites;
@@ -86,13 +87,15 @@ class Stage {
         this._mapSprites.update(viewRect, this._mapSprites, this._player, true);
         // render the view
         let viewCtx = canvas.getContext('2d');
-        this._player.drawMapView(viewCtx, viewRect);
+        this._playMap.drawView(viewCtx, viewRect);
         this._mapSprites.draw(viewCtx, viewRect);
         // see if player collided with anything
         this._player.handleCollisions(this._mapSprites, () => {
-            this._ticks = 0;
-            this._canvasCopy = copyCanvas(canvas);
-            this._execute = this._executeLoseLife;
+            if (this._liveMode) {
+                this._ticks = 0;
+                this._canvasCopy = copyCanvas(canvas);
+                this._execute = this._executeLoseLife;
+            }
         });
     }
 
@@ -105,7 +108,7 @@ class Stage {
                     let viewRect = this._player.handleInput();
                     this._mapSprites.update(viewRect, this._mapSprites, this._player);
                     let copyCtx = this._canvasCopy.getContext('2d');
-                    this._player.drawMapView(copyCtx, viewRect);
+                    this._playMap.drawView(copyCtx, viewRect);
                     this._mapSprites.draw(copyCtx, viewRect);
                     this._execute = this._executeLoseLife;
                 }).done();
@@ -137,6 +140,10 @@ class Stage {
 
     keyUp(keyCode) {
         this._keys.keyUp(keyCode);
+    }
+    
+    setLiveMode(liveMode) {
+        this._liveMode = liveMode;
     }
 }
 

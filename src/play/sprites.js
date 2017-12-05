@@ -329,7 +329,6 @@ export class Sprite {
         this._level = level;
         this._rect = new Rect(px, py, this._canvas.width, this._canvas.height);
         this._baseRect = this._initBaseRect(this._rect);
-        console.log("base rect: " + this._baseRect);
         this._zIndex = this._updateZIndex();
     }
 
@@ -755,8 +754,6 @@ export class Blades extends Sprite {
     }
 
     processCollision() {
-        if (this._frames.getFrameIndex() > 0) {
-            return true;
-        }
+        return this._frames.getFrameIndex() > 0;
     }
 }

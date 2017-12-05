@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Collapse, Modal } from 'react-bootstrap';
+import { Alert, Checkbox, Collapse, FormGroup, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import Stage from './stage';
 import './play-modal.css';
@@ -19,7 +19,8 @@ export const PlayMapModal = React.createClass({
 
     getInitialState: function() {
         return {
-            rpgMap: null
+            rpgMap: null,
+            liveModeVal: true
         };
     },
 
@@ -38,6 +39,13 @@ export const PlayMapModal = React.createClass({
             playReady: false,
             playError: false
         });
+    },
+
+    handleLiveModeChange: function(event) {
+        this.setState({ liveModeVal: event.target.checked })
+        if (this._stage) {
+            this._stage.setLiveMode(event.target.checked);
+        }
     },
 
     componentWillMount: function() {
@@ -115,6 +123,11 @@ export const PlayMapModal = React.createClass({
                         <div>
                             <canvas className="play-canvas" width={viewWidth} height={viewHeight}
                                 ref={cvs => this._canvas = cvs} />
+                            <FormGroup controlId="liveMode">
+                                <Checkbox checked={this.state.liveModeVal} onChange={this.handleLiveModeChange}>
+                                    Live Mode
+                                </Checkbox>
+                            </FormGroup>
                         </div>
                     </Collapse>
                 </Modal.Body>

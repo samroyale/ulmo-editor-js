@@ -108,6 +108,7 @@ export class Player extends Sprite {
         this._shadowFrames = new SingleFrame(shadowFramesUrl);
         this._deferredMovement = null;
         this._keyBits = 0;
+        this._deferDiagonal = true;
     }
 
     load() {
@@ -139,11 +140,11 @@ export class Player extends Sprite {
         this._keyBits = keyBits;
         let moves = movement.get(keyBits);
         if (moves) {
-            this._move(moves[0], moves[1], moves[2]);
+            this._move(moves[0], moves[1], moves[2], moves[3]);
         }
     }
 
-    _move(direction, mx, my) {
+    _move(direction, mx, my, diagonal) {
         // check requested movement falls within map boundary
         var newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
@@ -154,6 +155,14 @@ export class Player extends Sprite {
         let newBaseRect = this._baseRect.move(mx, my);
         let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
+            if (diagonal) {
+                if (this._deferDiagonal) {
+                    this._deferDiagonal = false;
+                    this._deferMovement(direction, level, mx, my);
+                    return;
+                }
+            }
+            this._deferDiagonal = true;
             this._applyRectMovement(direction, level, newBaseRect, newRect);
             return;
         }
@@ -293,21 +302,12 @@ export class Player extends Sprite {
     }
 
     handleCollisions(mapSprites, lifeLostFunc) {
-        mapSprites.getVisibleSprites().forEach(sprite => {
-            if (this._level === sprite.getLevel() &&
-                this._baseRect.intersectsWith(sprite.getBaseRect())) {
-                if (sprite.processCollision()) {
-                    lifeLostFunc();
-                }
-            }
-        });
+        let lifeLost = mapSprites.getVisibleSprites()
+            .filter(sprite => this._level === sprite.getLevel() &&
+                this._baseRect.intersectsWith(sprite.getBaseRect()))
+            .some(sprite => sprite.processCollision()); // processCollision returns true if player has lost a life
+        if (lifeLost) {
+            lifeLostFunc();
+        }
     }
-
-    drawMapView(viewCtx, viewRect) {
-        return this._playMap.drawView(viewCtx, viewRect);
-    }
-
-    getPlayMap() {
-        return this._playMap;
-    }
-};
+}
