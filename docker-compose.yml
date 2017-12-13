@@ -1,0 +1,30 @@
+version: '2.1'
+services:
+  ui:
+    build: ui
+    depends_on:
+      - api
+    volumes:
+      - ./ui/public:/usr/src/client/public:ro
+      - ./ui/src:/usr/src/client/src:ro
+    ports:
+      - "3000:3000"
+  api:
+    build: api
+    depends_on:
+      - db
+    environment:
+      MONGODB_URI: mongodb://db/ulmo
+    ports:
+      - "8081:8081"
+  db:
+    #image: mongo:latest
+    build: db
+    environment:
+      #MONGO_INITDB_ROOT_USERNAME: admin
+      #MONGO_INITDB_ROOT_PASSWORD: adminpassword
+      MONGO_INITDB_DATABASE: ulmo
+    volumes:
+      - ./db/data:/data/db
+    ports:
+      - "27017:27017"

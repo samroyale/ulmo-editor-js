@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 API_URL="http://localhost:8081/api"
 #API_URL="https://ulmo-editor.herokuapp.com/api"

@@ -15,13 +15,29 @@ app.use(bodyParser.json({ limit: '1mb' }));
 app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
 
 var mongoUri = process.env.MONGODB_URI || 'mongodb://localhost/ulmo';
-mongoose.connect(mongoUri, function (err, res) {
-  if (err) {
-    console.log ('ERROR connecting to: ' + mongoUri + '. ' + err);
-    return;
-  }
-  console.log ('Succeeded connected to: ' + mongoUri);
-});
+
+var tries = 0;
+
+// attempts 10 times to connect to Mongo - this is so we can run in a container orchestrated via docker-compose
+// (when we can't be sure that mongo is immediately available on startup)
+function connectToMongo() {
+  mongoose.connect(mongoUri, function (err) {
+    if (err) {
+      console.log ('ERROR connecting to: ' + mongoUri + ' (tries: ' + ++tries + '). ' + err);
+      if (tries <= 10) {
+        setTimeout(connectToMongo, tries * 1000);
+      }
+      else {
+        return;
+      }
+    }
+    else {
+      console.log ('Succeeded connected to: ' + mongoUri);
+    }
+  });
+}
+
+connectToMongo();
 
 var schema = require('./app/model/schema');
 var TileSet = schema.TileSet;

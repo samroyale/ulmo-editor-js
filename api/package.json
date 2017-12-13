@@ -1,6 +1,9 @@
 {
     "name": "ulmo-server",
     "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
     "dependencies": {
         "express": "~4.8.0",
         "express-history-api-fallback": "~2.0.0",
