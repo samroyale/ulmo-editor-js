@@ -2,6 +2,10 @@ div.play-map-modal {
   width: 544px;
 }
 
+div.play-buttons {
+  padding-right: 5px;
+}
+
 canvas.play-canvas {
   background-color: #000;
 }

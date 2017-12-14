@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Checkbox, Collapse, FormGroup, Modal } from 'react-bootstrap';
+import { Alert, ButtonToolbar, ToggleButtonGroup, ToggleButton, Checkbox, Collapse, FormGroup, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import Stage from './stage';
 import './play-modal.css';
@@ -20,7 +20,7 @@ export const PlayMapModal = React.createClass({
     getInitialState: function() {
         return {
             rpgMap: null,
-            liveModeVal: true
+            modeVal: 'live'
         };
     },
 
@@ -41,11 +41,15 @@ export const PlayMapModal = React.createClass({
         });
     },
 
-    handleLiveModeChange: function(event) {
-        this.setState({ liveModeVal: event.target.checked })
+    handleModeChange: function(value) {
+        this.setState({ modeVal: value })
         if (this._stage) {
-            this._stage.setLiveMode(event.target.checked);
+            this._stage.setLiveMode(this.isLive(value));
         }
+    },
+
+    isLive: function(value) {
+        return (value === 'live');
     },
 
     componentWillMount: function() {
@@ -67,8 +71,9 @@ export const PlayMapModal = React.createClass({
             return;
         }
         if (this.state.rpgMap && !this._stage) {
+            let liveMode = this.isLive(this.state.modeVal);
             this._stage = new Stage(this.state.rpgMap, this.props.level,
-                this.props.tilePosition.x, this.props.tilePosition.y);
+                this.props.tilePosition.x, this.props.tilePosition.y, liveMode);
             let p = this._stage.initPlay();
             p.then(
                 () => {
@@ -102,10 +107,12 @@ export const PlayMapModal = React.createClass({
     },
 
     keyDown: function(e) {
+        e.preventDefault();
         this._stage.keyDown(e.keyCode);
     },
 
     keyUp: function(e) {
+        e.preventDefault();
         this._stage.keyUp(e.keyCode);
     },
 
@@ -123,13 +130,18 @@ export const PlayMapModal = React.createClass({
                         <div>
                             <canvas className="play-canvas" width={viewWidth} height={viewHeight}
                                 ref={cvs => this._canvas = cvs} />
-                            <FormGroup controlId="liveMode">
-                                <Checkbox checked={this.state.liveModeVal} onChange={this.handleLiveModeChange}>
-                                    Live Mode
-                                </Checkbox>
-                            </FormGroup>
                         </div>
                     </Collapse>
+                    <ButtonToolbar className="play-buttons">
+                        <ToggleButtonGroup type="radio"
+                                           name="options"
+                                           value={this.state.modeVal}
+                                           onChange={this.handleModeChange}
+                                           justified>
+                            <ToggleButton type="radio" value={'live'}>Live Mode</ToggleButton>
+                            <ToggleButton type="radio" value={'test'}>Test Mode</ToggleButton>
+                        </ToggleButtonGroup>
+                    </ButtonToolbar>
                 </Modal.Body>
             );
         }

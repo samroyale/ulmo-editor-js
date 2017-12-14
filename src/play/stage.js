@@ -29,18 +29,18 @@ const yxRatio = viewHeight / viewWidth;
  * =============================================================================
  */
 class Stage {
-    constructor(rpgMap, playerLevel, playerX, playerY) {
+    constructor(rpgMap, playerLevel, playerX, playerY, liveMode) {
         this._rpgMap = rpgMap;
         this._playerLevel = playerLevel;
         this._playerX = playerX;
         this._playerY = playerY;
+        this._liveMode = liveMode;
         this._playMap = null;
         this._player = null;
         this._mapSprites = null;
         this._canvasCopy = null;
         this._keys = null;
         this._ticks = 0;
-        this._liveMode = true;
         this._execute = this._executePlay;
     }
 
