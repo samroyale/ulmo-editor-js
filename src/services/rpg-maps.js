@@ -351,10 +351,6 @@ class RpgMap {
         sprite.move(left, top));
   }
 
-  moveSprite(sprite) {
-
-  }
-
   sendToBack(topLeft, rows, cols) {
     return this.doStuff(topLeft, rows, cols, mapTile =>
       mapTile.sendToBack()

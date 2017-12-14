@@ -108,6 +108,7 @@ export class Player extends Sprite {
         this._shadowFrames = new SingleFrame(shadowFramesUrl);
         this._deferredMovement = null;
         this._keyBits = 0;
+        this._deferDiagonal = true;
     }
 
     load() {
@@ -120,7 +121,7 @@ export class Player extends Sprite {
 
     _initBaseRect(spriteRect) {
         this._inView = true;
-        let baseRectTop = this._rect.bottom + baseRectExtension - defaultBaseRectHeight;
+        let baseRectTop = spriteRect.bottom + baseRectExtension - defaultBaseRectHeight;
         return new Rect(spriteRect.left, baseRectTop, spriteRect.width, defaultBaseRectHeight);
     }
 
@@ -133,17 +134,17 @@ export class Player extends Sprite {
         if (this._falling) {
             return;
         }
-        if (keyBits === this._keyBits && this.applyDeferredMovement()) {
+        if (keyBits === this._keyBits && this._applyDeferredMovement()) {
             return;
         }
         this._keyBits = keyBits;
         let moves = movement.get(keyBits);
         if (moves) {
-            this._move(moves[0], moves[1], moves[2]);
+            this._move(moves[0], moves[1], moves[2], moves[3]);
         }
     }
 
-    _move(direction, mx, my) {
+    _move(direction, mx, my, diagonal) {
         // check requested movement falls within map boundary
         var newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
@@ -154,6 +155,14 @@ export class Player extends Sprite {
         let newBaseRect = this._baseRect.move(mx, my);
         let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
+            if (diagonal) {
+                if (this._deferDiagonal) {
+                    this._deferDiagonal = false;
+                    this._deferMovement(direction, level, mx, my);
+                    return;
+                }
+            }
+            this._deferDiagonal = true;
             this._applyRectMovement(direction, level, newBaseRect, newRect);
             return;
         }
@@ -217,7 +226,7 @@ export class Player extends Sprite {
         return valid;
     }
 
-    applyDeferredMovement() {
+    _applyDeferredMovement() {
         if (this._deferredMovement) {
             var [direction, level, mx, my] = this._deferredMovement;
             this._applyMovement(direction, level, mx, my);
@@ -292,11 +301,13 @@ export class Player extends Sprite {
         this._shadow.removeOnNextTick();
     }
 
-    drawMapView(viewCtx, viewRect) {
-        return this._playMap.drawView(viewCtx, viewRect);
+    handleCollisions(mapSprites, lifeLostFunc) {
+        let lifeLost = mapSprites.getVisibleSprites()
+            .filter(sprite => this._level === sprite.getLevel() &&
+                this._baseRect.intersectsWith(sprite.getBaseRect()))
+            .some(sprite => sprite.processCollision()); // processCollision returns true if player has lost a life
+        if (lifeLost) {
+            lifeLostFunc();
+        }
     }
-
-    getPlayMap() {
-        return this._playMap;
-    }
-};
+}

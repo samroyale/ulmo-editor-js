@@ -110,11 +110,6 @@ export class MovingFrames {
         return copyCanvas(this.currentFrame());
     }
 
-    // withFrameIndex(frameIndex) {
-    //     this._frameIndex = frameIndex;
-    //     return this;
-    // }
-
     getFrameIndex() {
         return this._frameIndex;
     }
@@ -235,10 +230,6 @@ export class SingleFrame {
         this._frame = frameCanvas;
     }
 
-    getDirection() {
-        return null;
-    }
-
     advanceFrame() {
         return this._frame;
     }
@@ -259,6 +250,7 @@ export class SingleFrame {
 export class SpriteGroup {
     constructor() {
         this._sprites = [];
+        this._visibleSprites = [];
     }
 
     add(sprite) {
@@ -278,10 +270,16 @@ export class SpriteGroup {
     }
 
     draw(ctx, viewRect) {
-        this._sprites
-            .filter(sprite => sprite.isInView(viewRect))
+        this._visibleSprites = this._sprites
+            .filter(sprite => sprite.isInView());
+
+        this._visibleSprites
             .sort((spriteA, spriteB) => spriteA.getZIndex() - spriteB.getZIndex())
             .forEach(sprite => sprite.draw(ctx, viewRect));
+    }
+
+    getVisibleSprites() {
+        return this._visibleSprites;
     }
 }
 
@@ -335,7 +333,8 @@ export class Sprite {
     }
 
     _initBaseRect(spriteRect) {
-        // leave as null by default
+        // return null by default
+        return null;
     }
 
     _baseRectTopLeft(baseRectWidth, baseRectHeight) {
@@ -350,7 +349,7 @@ export class Sprite {
         return new Rect(topLeft.x, topLeft.y, defaultBaseRectWidth, defaultBaseRectWidth);
     }
 
-    update(viewRect, mapSprites, player) {
+    update(viewRect, mapSprites, player, applyMovement) {
         if (this._toRemove) {
             mapSprites.remove(this);
             return;
@@ -358,24 +357,32 @@ export class Sprite {
         let movement = this._getMovement(player);
         if (movement) {
             let [direction, mx, my] = movement;
-            if (this._baseRect) {
-                this._baseRect.moveInPlace(mx, my);
+            if (applyMovement) {
+                if (this._baseRect) {
+                    this._baseRect.moveInPlace(mx, my);
+                }
+                this._rect.moveInPlace(mx, my);
             }
-            this._rect.moveInPlace(mx, my);
-            this._inView = viewRect.intersectsWith(this._rect);
+            this._inView = this._advanceFrame(viewRect, direction);
             if (this._inView) {
-                this._canvas = this._frames.advanceFrame(direction);
                 return;
             }
         }
-        this._inView = viewRect.intersectsWith(this._rect);
+        this._inView = this._advanceFrame(viewRect);
         if (this._inView) {
-            this._canvas = this._frames.advanceFrame();
             return;
         }
         this._processMapExit();
     }
-    
+
+    _advanceFrame(viewRect, direction) {
+        let inView = viewRect.intersectsWith(this._rect);
+        if (inView) {
+            this._canvas = this._frames.advanceFrame(direction);
+        }
+        return inView;
+    }
+
     _getMovement(player) {
         return null;
     }
@@ -385,8 +392,12 @@ export class Sprite {
         this._render(ctx, viewRect);
     }
 
-    isInView(viewRect) {
+    isInView() {
         return this._inView;
+    }
+
+    assignInView(viewRect) {
+        this._inView = viewRect.intersectsWith(this._rect);
     }
 
     _processMapExit() {
@@ -443,6 +454,11 @@ export class Sprite {
 
     removeOnNextTick() {
         this._toRemove = true;
+    }
+
+    // sprites that kill the player should override this and return true
+    processCollision() {
+        this.removeOnNextTick();
     }
 }
 
@@ -554,6 +570,10 @@ export class Door extends Sprite {
         let topLeft = this._baseRectTopLeft(8, defaultBaseRectHeight);
         return new Rect(topLeft.x, topLeft.y + baseRectExtension, 8, defaultBaseRectHeight);
     }
+
+    processCollision() {
+        // do nothing
+    }
 }
 
 /* =============================================================================
@@ -602,6 +622,10 @@ export class Beetle extends Sprite {
         }
         // otherwise there is nowhere to move to
         return null;
+    }
+
+    processCollision() {
+        return true;
     }
 }
 
@@ -668,6 +692,10 @@ export class Wasp extends Sprite {
         }
         this.removeOnNextTick();
     }
+
+    processCollision() {
+        return true;
+    }
 }
 
 /* =============================================================================
@@ -723,5 +751,9 @@ export class Blades extends Sprite {
 
     _getMapTile() {
         return this._playMap.getTileAt(this._tx, this._ty);
+    }
+
+    processCollision() {
+        return this._frames.getFrameIndex() > 0;
     }
 }
