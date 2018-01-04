@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, ButtonToolbar, ToggleButtonGroup, ToggleButton, Checkbox, Collapse, FormGroup, Modal } from 'react-bootstrap';
+import { Alert, ButtonToolbar, ToggleButtonGroup, ToggleButton, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
 import Stage from './stage';
 import './play-modal.css';
