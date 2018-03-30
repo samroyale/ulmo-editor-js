@@ -54,11 +54,12 @@ const SpritesModal = React.createClass({
   },
 
   applySpriteEdit: function(newSprite) {
-    var newSprites = this.state.sprites.slice();
+    const { sprites } = this.state;
     if (this.state.editableSprite) {
-      var index = this.state.sprites.indexOf(this.state.editableSprite);
+      var index = sprites.indexOf(this.state.editableSprite);
       if (index > -1) {
-        newSprites.splice(index, 1, newSprite);
+        var newSprites = sprites.slice();
+        newSprites[index] = newSprite;
         this.setState({
           sprites: newSprites,
           showEditModal: false
@@ -66,9 +67,8 @@ const SpritesModal = React.createClass({
         return;
       }
     }
-    newSprites.push(newSprite);
     this.setState({
-      sprites: newSprites,
+      sprites: [...sprites, newSprite],
       showEditModal: false
     });
   },
@@ -283,9 +283,7 @@ const SpriteEditModal = React.createClass({
   },
 
   addLocation: function(x, y) {
-    var newLocations = this.state.locations.slice();
-    newLocations.push([x, y]);
-    this.setState({ locations: newLocations });
+    this.setState({ locations: [...this.state.locations, [x, y]] });
   },
 
   componentWillMount: function() {

@@ -60,11 +60,9 @@ export const EditLevelsModal = React.createClass({
       if (this.state.levels.includes(level)) {
         return;
       }
-      var newLevels = this.state.levels.slice();
-      newLevels.push(level);
       this.setState({
         levelVal: "",
-        levels: newLevels,
+        levels: [...this.state.levels, level],
         addDisabled: true
       });
     }
