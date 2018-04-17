@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import Q from 'q';
-import TileSetService from './tile-sets';
+import TileSetService from './TileSets';
 import { drawTile, initTile } from '../utils';
 import { rpgMapsApi, baseTileColours } from '../config';
 
@@ -21,13 +21,13 @@ class Clipboard {
     this._tiles = tiles;
   }
 
-  setTiles(tiles) {
+  setTiles = tiles => {
     this._tiles = tiles;
-  }
+  };
 
-  getTiles() {
+  getTiles = () => {
     return this._tiles;
-  }
+  };
 }
 
 /* =============================================================================
@@ -42,29 +42,29 @@ class MaskTile {
     this._maskLevel = maskLevel; // string
   }
 
-  getTile() {
+  getTile = () => {
     return this._tile;
-  }
+  };
 
-  getMaskLevel() {
+  getMaskLevel = () => {
     return this._maskLevel;
-  }
+  };
 
-  setMaskLevel(maskLevel) {
+  setMaskLevel = maskLevel => {
     this._maskLevel = maskLevel;
-  }
+  };
 
-  copy() {
+  copy = () => {
     return new MaskTile(this._tile, this._maskLevel);
-  }
+  };
 
-  getDto() {
+  getDto = () => {
     return {
       tileSet: this._tile.getTileSetName(),
       tile: this._tile.getTileName(),
       maskLevel: this._maskLevel
     }
-  }
+  };
 }
 
 /* =============================================================================
@@ -79,100 +79,96 @@ class MapTile {
     this._maskTiles = maskTiles ? maskTiles : [];
     this._levels = levels ? levels : [];
     if (baseTileCanvas) {
-      this.initImageData();
+      this._initImageData();
     }
   }
 
-  initImageData() {
+  _initImageData = () => {
     var tileCanvas = drawTile(this._maskTiles, this._baseTileCanvas);
     var ctx = tileCanvas.getContext('2d');
     this._imageData = ctx.getImageData(0, 0, tileCanvas.width, tileCanvas.height);
-  }
+  };
 
-  getMaskTiles() {
+  getMaskTiles = () => {
     return this._maskTiles;
-  }
+  };
 
-  getLevels() {
+  getLevels = () => {
     return this._levels;
-  }
+  };
 
-  getImage() {
+  getImage = () => {
     return this._imageData;
-  }
+  };
 
-  setMaskTiles(maskTiles) {
+  setMaskTiles = maskTiles => {
     this._maskTiles = maskTiles;
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  addAsMaskTile(tile) {
+  addAsMaskTile = tile => {
     this._maskTiles.push(new MaskTile(tile));
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  insertAsMaskTile(tile) {
+  insertAsMaskTile = tile => {
     this._maskTiles = [];
     this._maskTiles.push(new MaskTile(tile));
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  setLevels(levels) {
+  setLevels = levels => {
     this._levels = levels;
-  }
+  };
 
-  addLevel(level) {
+  addLevel = level => {
     this._levels.push(level);
-  }
+  };
 
-  sendToBack() {
+  sendToBack = () => {
     if (this._maskTiles.length < 2) {
       return;
     }
     var topTile = this._maskTiles.pop();
     this._maskTiles.unshift(topTile);
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  keepTop() {
+  keepTop = () => {
     if (this._maskTiles.length < 2) {
       return;
     }
     var topTile = this._maskTiles.pop();
     this._maskTiles = [topTile];
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  clear() {
+  clear = () => {
     if (this._maskTiles.length === 0) {
       return;
     }
     this._maskTiles = [];
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  copy() {
+  copy = () => {
     return new MapTile(
       null,
-      this._maskTiles.map(maskTile =>
-        maskTile.copy()
-      ),
-      this._levels.slice(0)
+      this._maskTiles.map(maskTile => maskTile.copy()),
+      [...this._levels]
     );
-  }
+  };
 
-  getDto(x, y) {
+  getDto = (x, y) => {
     if (this._maskTiles) {
       return {
         xy: [x, y],
-        tiles: this._maskTiles.map(maskTile =>
-          maskTile.getDto()
-        ),
+        tiles: this._maskTiles.map(maskTile => maskTile.getDto()),
         levels: this._levels
       }
     }
     return null;
-  }
+  };
 }
 
 /* =============================================================================
@@ -189,30 +185,30 @@ class Sprite {
     this._location = location;
   }
 
-  getType() {
+  getType = () => {
     return this._type;
-  }
+  };
 
-  getLevel() {
+  getLevel = () => {
     return this._level;
-  }
+  };
 
-  getLocation() {
+  getLocation = () => {
     return this._location;
-  }
+  };
 
-  move(x, y) {
+  move = (x, y) => {
     return new Sprite(this._type, this._level,
         this._location.map(xy => [xy[0] + x, xy[1] + y]));
-  }
+  };
 
-  getDto() {
+  getDto = () => {
     return {
       type: this._type,
       level: this._level,
       location: this._location
     }
-  }
+  };
 }
 
 /* =============================================================================
@@ -232,59 +228,59 @@ class RpgMap {
     this._sprites = sprites;
   }
 
-  getId() {
+  getId = () => {
     return this._id;
-  }
+  };
 
-  setId(id) {
+  setId = id => {
     this._id = id;
-  }
+  };
 
-  getName() {
+  getName = () => {
     return this._name;
-  }
+  };
 
-  setName(name) {
+  setName = name => {
     this._name = name;
-  }
+  };
 
-  getMapTile(x, y) {
+  getMapTile = (x, y) => {
     return this._mapTiles[x][y];
-  }
+  };
 
-  putMapTile(x, y, mapTile) {
+  putMapTile = (x, y, mapTile) => {
     this._mapTiles[x][y] = mapTile;
-  }
+  };
 
-  getSprites() {
+  getSprites = () => {
     return this._sprites;
-  }
+  };
 
-  setSprites(sprites) {
+  setSprites = sprites => {
     var oldSprites = this._sprites;
     this._sprites = sprites;
     return oldSprites;
-  }
+  };
 
-  getCols() {
+  getCols = () => {
     return this._mapTiles.length;
-  }
+  };
 
-  getRows() {
+  getRows = () => {
     return this._mapTiles[0].length;
-  }
+  };
 
-  cutTiles(topLeft, rows, cols, clipboard) {
+  cutTiles = (topLeft, rows, cols, clipboard) => {
     this.copyTiles(topLeft, rows, cols, clipboard);
     return this.clear(topLeft, rows, cols);
-  }
+  };
 
-  copyTiles(topLeft, rows, cols, clipboard) {
+  copyTiles = (topLeft, rows, cols, clipboard) => {
     clipboard.setTiles(this._copyInternal(topLeft.x, topLeft.y, rows, cols));
     return null;
-  }
+  };
 
-  _copyInternal(x, y, rows, cols) {
+  _copyInternal = (x, y, rows, cols) => {
     var tiles = new Array(cols);
     for (var i = 0; i < cols; i++) {
       tiles[i] = new Array(rows);
@@ -293,13 +289,13 @@ class RpgMap {
       }
     }
     return tiles;
-  }
+  };
 
-  pasteTiles(topLeft, clipboard) {
+  pasteTiles = (topLeft, clipboard) => {
     return this._pasteTilesInternal(topLeft.x, topLeft.y, clipboard.getTiles());
-  }
+  };
 
-  _pasteTilesInternal(x, y, tiles) {
+  _pasteTilesInternal = (x, y, tiles) => {
     var xBound = Math.min(tiles.length, this.getCols() - x);
     var yBound = Math.min(tiles[0].length, this.getRows() - y);
     var oldTiles = this._copyInternal(x, y, yBound, xBound);
@@ -312,9 +308,9 @@ class RpgMap {
       }
     }
     return oldTiles;
-  }
+  };
 
-  restoreTiles(topLeft, tiles) {
+  restoreTiles = (topLeft, tiles) => {
     var x = topLeft.x, y = topLeft.y;
     var xBound = tiles.length, yBound = tiles[0].length;
     for (var i = 0; i < xBound; i++) {
@@ -326,14 +322,14 @@ class RpgMap {
       }
     }
     return {x: xBound + x - 1, y: yBound + y - 1};
-  }
+  };
 
-  applyTile(mapTile, tile) {
+  applyTile = (mapTile, tile) => {
     mapTile.setLevels(tile.getLevels());
     mapTile.setMaskTiles(tile.getMaskTiles());
-  }
+  };
 
-  resize(rpgMap, left, top) {
+  resize = (rpgMap, left, top) => {
     var sourceTopLeft = {
       x: 0 - Math.min(0, left),
       y: 0 - Math.min(0, top)
@@ -349,51 +345,51 @@ class RpgMap {
     // TODO: filter sprites that are now outside the map?
     this._sprites = rpgMap.getSprites().map(sprite => 
         sprite.move(left, top));
-  }
+  };
 
-  sendToBack(topLeft, rows, cols) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  sendToBack = (topLeft, rows, cols) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.sendToBack()
     );
-  }
+  };
 
-  keepTop(topLeft, rows, cols) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  keepTop = (topLeft, rows, cols) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.keepTop()
     );
-  }
+  };
 
-  clear(topLeft, rows, cols) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  clear = (topLeft, rows, cols) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.clear()
     );
-  }
+  };
 
-  addAsMaskTile(topLeft, rows, cols, tile) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  addAsMaskTile = (topLeft, rows, cols, tile) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.addAsMaskTile(tile)
     );
-  }
+  };
 
-  insertAsMaskTile(topLeft, rows, cols, tile) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  insertAsMaskTile = (topLeft, rows, cols, tile) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.insertAsMaskTile(tile)
     );
-  }
+  };
 
-  setLevels(topLeft, rows, cols, levels) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  setLevels = (topLeft, rows, cols, levels) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.setLevels(levels)
     );
-  }
+  };
 
-  setMaskTiles(x, y, maskTiles) {
+  setMaskTiles = (x, y, maskTiles) => {
     var oldTile = this._mapTiles[x][y].copy();
     this._mapTiles[x][y].setMaskTiles(maskTiles);
     return [[oldTile]];
-  }
+  };
 
-  doStuff(topLeft, rows, cols, func) {
+  _applyMutation = (topLeft, rows, cols, func) => {
     var oldTiles = new Array(cols);
     for (var i = 0; i < cols; i++) {
       oldTiles[i] = new Array(rows);
@@ -404,21 +400,21 @@ class RpgMap {
       }
     }
     return oldTiles;
-  }
+  };
 
-  copy() {
+  copy = () => {
     return new RpgMap(
       this._id,
       this._name,
       this._copyInternal(0, 0, this.getRows(), this.getCols())
     );
-  }
+  };
 
-  getDto() {
+  getDto = () => {
     return this.getDtoWithName(this._name);
-  }
+  };
 
-  getDtoWithName(name) {
+  getDtoWithName = name => {
     var rows = this.getRows();
     var cols = this.getCols();
     var mapTiles = [];
@@ -438,7 +434,7 @@ class RpgMap {
       mapTiles: mapTiles,
       sprites: sprites
     };
-  }
+  };
 }
 
 /* =============================================================================
@@ -455,7 +451,7 @@ class RpgMapService {
     return instance;
   }
 
-  loadMaps() {
+  loadMaps = () => {
     var deferred = Q.defer();
     var p = Q($.ajax({
       url: rpgMapsApi,
@@ -467,9 +463,9 @@ class RpgMapService {
       xhr => deferred.reject(this.handleLoadError(xhr))
     ).done();
     return deferred.promise;
-  }
+  };
 
-  loadMap(mapId) {
+  loadMap = mapId => {
     console.log("Loading map [" + mapId + "]");
     var deferred = Q.defer();
     var mapUrl = rpgMapsApi + "/" + mapId;
@@ -483,27 +479,27 @@ class RpgMapService {
       xhr => deferred.reject(this.handleLoadError(xhr))
     ).done();
     return deferred.promise;
-  }
+  };
 
-  handleLoadError(xhr) {
+  handleLoadError = xhr => {
     var data = xhr.responseJSON;
     if (data) {
       // known errors go here
       return { err: data.err, status: xhr.status };
     }
     return { err: xhr.statusText, status: xhr.status };
-  }
+  };
 
-  saveMap(rpgMap) {
+  saveMap = rpgMap => {
     var mapUrl = rpgMapsApi + "/" + rpgMap.getId();
     return this.doSave(mapUrl, "PUT", rpgMap, rpgMap.getDto());
-  }
+  };
 
-  saveMapAs(rpgMap, mapName) {
+  saveMapAs = (rpgMap, mapName) => {
     return this.doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName));
-  }
+  };
 
-  doSave(mapUrl, reqType, rpgMap, mapDef) {
+  doSave = (mapUrl, reqType, rpgMap, mapDef) => {
     console.log("Saving map [" + reqType + " " + mapUrl + "]");
     var deferred = Q.defer();
     var p = Q($.ajax({
@@ -517,9 +513,9 @@ class RpgMapService {
       xhr => deferred.reject(this.handleSaveError(mapDef, xhr))
     ).done();
     return deferred.promise;
-  }
+  };
 
-  mapSaved(rpgMap, mapDef, data) {
+  mapSaved = (rpgMap, mapDef, data) => {
     // console.log(data.message);
     rpgMap.setId(data.mapId);
     rpgMap.setName(mapDef.name);
@@ -528,9 +524,9 @@ class RpgMapService {
       mapId: rpgMap.getId(),
       mapName: rpgMap.getName()
     };
-  }
+  };
 
-  handleSaveError(mapDef, xhr) {
+  handleSaveError = (mapDef, xhr) => {
     var data = xhr.responseJSON;
     if (data) {
       // known errors go here
@@ -549,9 +545,9 @@ class RpgMapService {
       }
     }
     return { err: xhr.statusText, status: xhr.status };
-  }
+  };
 
-  newMap(rows, cols) {
+  newMap = (rows, cols) => {
     var data = {
       rows: rows,
       cols: cols,
@@ -560,9 +556,9 @@ class RpgMapService {
     var deferred = Q.defer();
     this.initRpgMap(data, deferred, function() {});
     return deferred.promise;
-  }
+  };
 
-  resizeMap(rpgMap, left, right, top, bottom) {
+  resizeMap = (rpgMap, left, right, top, bottom) => {
     var newRows = rpgMap.getRows() + top + bottom;
     var newCols = rpgMap.getCols() + left + right;
     var newMap = this.newMap(newRows, newCols);
@@ -571,9 +567,9 @@ class RpgMapService {
       newRpgMap.resize(rpgMap, left, top);
       return { map: newRpgMap, oldMap: rpgMap };
     });
-  }
+  };
 
-  initRpgMap(rpgMapDef, deferred) {
+  initRpgMap = (rpgMapDef, deferred) => {
     var progress = 0;
     deferred.notify(progress += 20);
     // var tileSetPromises = this.tileSetPromises(rpgMapDef, (percent) => {
@@ -601,12 +597,12 @@ class RpgMapService {
       var increment = progress < 80 ? percent / 10 : 0;
       deferred.notify(progress += increment);
     }).done();
-  }
+  };
 
   /*
    * Returns an array of tileset promises representing the tilesets used in the given map definition.
    */
-  tileSetPromises(rpgMapDef) {
+  tileSetPromises = rpgMapDef => {
     var tileSets = new Map();
     rpgMapDef.mapTiles.forEach(mapTileDef => {
       mapTileDef.tiles.forEach(tileDef => {
@@ -617,9 +613,9 @@ class RpgMapService {
       });
     });
     return Array.from(tileSets.values());
-  }
+  };
 
-  tileSetLoadErr(data) {
+  tileSetLoadErr = data => {
     if (data.err) {
       return {
         err: "Could not load tileset '" + data.id + "' : " + data.err,
@@ -627,17 +623,17 @@ class RpgMapService {
       };
     }
     console.log("Something went wrong...");
-  }
+  };
 
-  buildRpgMap(tileSets, rpgMapDef, deferred) {
+  buildRpgMap = (tileSets, rpgMapDef, deferred) => {
     // console.log("buildRpgMap: " + tileSetMappings.size);
     var mapTiles = this.initMapTiles(tileSets, rpgMapDef);
     var sprites = this.initSprites(rpgMapDef);
     deferred.notify(100);
     return new RpgMap(rpgMapDef.id, rpgMapDef.name, mapTiles, sprites);
-  }
+  };
 
-  initMapTiles(tileSets, rpgMapDef) {
+  initMapTiles = (tileSets, rpgMapDef) => {
     var tileDefKey = (x, y) => x + "-" + y;
     var tileDefMappings = {};
     rpgMapDef.mapTiles.forEach(mapTileDef => {
@@ -664,28 +660,28 @@ class RpgMapService {
       }
     }
     return tiles;
-  }
+  };
 
-  initSprites(rpgMapDef) {
+  initSprites = rpgMapDef => {
     if (rpgMapDef.sprites) {
       return rpgMapDef.sprites.map(spriteDef =>
           new Sprite(spriteDef.type, spriteDef.level, spriteDef.location)
       )
     }
     return [];
-  }
+  };
 
   /*
    * So map canvas doesn't need to know about clipboards.
    */
-  emptyClipboard() {
+  emptyClipboard = () => {
     return new Clipboard();
-  }
+  };
 
   /*
    * So sprites modal doesn't need to know about sprites.
    */
-  newSprite(type, level, location) {
+  newSprite = (type, level, location) => {
     return new Sprite(type, level, location);
   }
 }

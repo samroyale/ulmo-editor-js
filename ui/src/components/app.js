@@ -1,135 +1,107 @@
 import React from 'react';
 import { Grid, Row, Col, PageHeader, Button } from 'react-bootstrap';
-import { Router, Route, IndexRoute, browserHistory } from 'react-router';
-import TilePalette from './tile-palette';
-import MapEditor from './map-editor';
-import './app.css';
+// import { Router, Route, IndexRoute, browserHistory } from 'react-router';
+import { BrowserRouter as Router, Switch, Route, IndexRoute } from 'react-router-dom'
+import TilePalette from './TilePalette';
+import MapEditor from './MapEditor';
+import './App.css';
 
 /* =============================================================================
  * COMPONENT: MAIN
  * =============================================================================
  */
-function Main(props) {
- return (
-   <Grid>
-     <Row>
-       <Col lg={12}>
-         <PageHeader className="app-header">Ulmo Editor <small>v0.5.0</small></PageHeader>
-       </Col>
-     </Row>
-     {props.children}
-   </Grid>
- );
-};
+const App = () => (
+  <Router>
+  <Grid>
+    <Row>
+      <Col lg={12}>
+        <PageHeader className="app-header">Ulmo Editor <small>v0.5.0</small></PageHeader>
+      </Col>
+    </Row>
+    <Route exact path="/" component={Home} />
+    <Route path="/tiles-admin" component={TileSetAdminView} />
+    <Route path="/maps-admin" component={MapAdminView} />
+  </Grid>
+  </Router>
+);
 
 /* =============================================================================
-* COMPONENT: EDITOR VIEW
-* =============================================================================
-*/
-const EditorView  = React.createClass({
-  getInitialState() {
-    return { selectedTile: null };
-  },
+ * COMPONENT: EDITOR VIEW
+ * =============================================================================
+ */
+class Home extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedTile: null
+    };
+  }
 
-  tileSelected(tile) {
-    this.setState({ selectedTile: tile });
-  },
+  tileSelected = tile => this.setState({ selectedTile: tile });
 
   render() {
+    const { route } = this.props;
     return (
       <Row>
         <Col className="tile-palette-col" lg={4}>
           <TilePalette
-            onTileSelected={this.tileSelected}
-            onAdmin={this.props.route.onTileSetAdmin} />
+            onTileSelected={this.tileSelected} />
         </Col>
         <Col className="map-editor-col" lg={8}>
           <MapEditor
-            selectedTile={this.state.selectedTile}
-            onAdmin={this.props.route.onMapAdmin} />
+            selectedTile={this.state.selectedTile} />
         </Col>
       </Row>
     );
   }
-});
+}
 
 /* =============================================================================
 * COMPONENT: TILE SET ADMIN VIEW
 * =============================================================================
 */
-const TileSetAdminView = React.createClass({
-  getInitialState() {
-    return {};
-  },
-
-  render() {
-    return (
-      <Row>
-        <Col lg={12}>
-          <h3>Tileset Admin goes here</h3>
-          <Button onClick={this.props.route.onBack}>Back</Button>
-        </Col>
-      </Row>
-    );
-  }
-});
+const TileSetAdminView = ({ route }) => (
+  <Row>
+    <Col lg={12}>
+      <h3>Tileset Admin goes here</h3>
+      <Button onClick={console.log('back')}>Back</Button>
+    </Col>
+  </Row>
+);
 
 /* =============================================================================
 * COMPONENT: MAP ADMIN VIEW
 * =============================================================================
 */
-const MapAdminView = React.createClass({
-  getInitialState() {
-    return {};
-  },
-
-  render() {
-    return (
-      <Row>
-        <Col lg={12}>
-          <h3>Map Admin goes here</h3>
-          <Button onClick={this.props.route.onBack}>Back</Button>
-        </Col>
-      </Row>
-    );
-  }
-});
+const MapAdminView = ({ route }) => (
+  <Row>
+    <Col lg={12}>
+      <h3>Map Admin goes here</h3>
+      <Button onClick={console.log('back')}>Back</Button>
+    </Col>
+  </Row>
+);
 
 /* =============================================================================
  * COMPONENT: APP
  * =============================================================================
  */
-const App = React.createClass({
-  showEditorView() {
-    browserHistory.push("/");
-  },
-
-  showTileSetAdminView() {
-    browserHistory.push("/tiles-admin");
-  },
-
-  showMapAdminView() {
-    browserHistory.push("/maps-admin");
-  },
-
-  render() {
-    return (
-      <Router history={browserHistory}>
-        <Route path="/" component={Main}>
-          <IndexRoute
-            component={EditorView}
-            onTileSetAdmin={this.showTileSetAdminView}
-            onMapAdmin={this.showMapAdminView} />
-          <Route path="/tiles-admin"
-            component={TileSetAdminView}
-            onBack={this.showEditorView} />
-          <Route path="/maps-admin"
-            component={MapAdminView}
-            onBack={this.showEditorView} />
-        </Route>
-      </Router>
-    );
-  }
-});
+// class App extends React.Component {
+//   // showEditorView = () => browserHistory.push("/");
+//   //
+//   // showTileSetAdminView = () => browserHistory.push("/tiles-admin");
+//   //
+//   // showMapAdminView = () => browserHistory.push("/maps-admin");
+//
+//   render = () => {
+//     return (
+//       <Switch>
+//         <Route exact path='/' component={Main} />
+//         <Route path='/tiles-admin' component={TileSetAdminView} />
+//         <Route path='/maps-admin' component={MapAdminView} />
+//       </Switch>
+//     );
+//   }
+// }
 
 export default App;

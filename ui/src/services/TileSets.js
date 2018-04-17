@@ -21,21 +21,21 @@ class Tile {
     this._imageData = ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);
   }
 
-  getTileSetName() {
+  getTileSetName = () => {
     return this._tileSetName;
-  }
+  };
 
-  getTileName() {
+  getTileName = () => {
     return this._tileName;
-  }
+  };
 
-  getImage() {
+  getImage = () => {
     return this._imageData;
-  }
+  };
 
-  getCanvas() {
+  getCanvas = () => {
     return this._canvas;
-  }
+  };
 }
 
 /* =============================================================================
@@ -56,29 +56,29 @@ class TileSet {
     }
   }
 
-  getId() {
+  getId = () => {
     return this._id;
-  }
+  };
 
-  getName() {
+  getName = () => {
     return this._name;
-  }
+  };
 
-  getTile(x, y) {
+  getTile = (x, y) => {
     return this._tiles[x][y];
-  }
+  };
 
-  getTileByName(name) {
+  getTileByName = name => {
     return this._tileNameMappings[name];
-  }
+  };
 
-  getCols() {
+  getCols = () => {
     return this._tiles.length;
-  }
+  };
 
-  getRows() {
+  getRows = () => {
     return this._tiles[0].length;
-  }
+  };
 }
 
 /* =============================================================================
@@ -97,7 +97,7 @@ class TileSetService {
     return instance;
   }
 
-  loadTileSets() {
+  loadTileSets = () => {
     var deferred = Q.defer();
     var p = Q($.get(tileSetsApi).promise());
     p.then(
@@ -105,9 +105,9 @@ class TileSetService {
       xhr => deferred.reject(this.handleError(xhr))
     ).done();
     return deferred.promise;
-  }
+  };
 
-  loadTileSetByName(name) {
+  loadTileSetByName = name => {
     if (this.nameToIdMappings[name]) {
       return this.loadTileSet(this.nameToIdMappings[name]);
     }
@@ -122,9 +122,9 @@ class TileSetService {
       deferred.reject(this.handleError(xhr, name));
     }).done();
     return deferred.promise;
-  }
+  };
 
-  loadTileSet(tileSetId) {
+  loadTileSet = tileSetId => {
     if (this.cache[tileSetId]) {
       return this.cache[tileSetId].promise;
     }
@@ -139,18 +139,18 @@ class TileSetService {
       deferred.reject(this.handleError(xhr, tileSetId));
     }).done();
     return deferred.promise;
-  }
+  };
 
-  handleError(xhr, id) {
+  handleError = (xhr, id) => {
     var data = xhr.responseJSON;
     if (data) {
       // known errors go here
       return { err: data.err, status: xhr.status, id: id };
     }
     return { err: xhr.statusText, status: xhr.status, id: id };
-  }
+  };
 
-  initTileSet(tileSetDef, deferred) {
+  initTileSet = (tileSetDef, deferred) => {
     var tilesImageUrl = tilesImgPath + "/" + tileSetDef.image;
     loadImage(tilesImageUrl, data => {
       if (data.err) {
@@ -159,15 +159,15 @@ class TileSetService {
       }
       deferred.resolve({ tileSet: this.buildTileSet(tileSetDef, data.img, deferred) });
     });
-  }
+  };
 
-  buildTileSet(tileSetDef, tileSetImage, deferred) {
+  buildTileSet = (tileSetDef, tileSetImage, deferred) => {
     var tiles = this.initTiles(tileSetDef, tileSetImage);
     deferred.notify(100);
     return new TileSet(tileSetDef.id, tileSetDef.name, tiles);
-  }
+  };
 
-  initTiles(tileSetDef, tileSetImage) {
+  initTiles = (tileSetDef, tileSetImage) => {
     // parse the tile names
     var tileDefKey = (x, y) => x + "-" + y;
     var tileDefMappings = {};
@@ -202,7 +202,7 @@ class TileSetService {
       }
     }
     return tiles;
-  }
+  };
 }
 
 export default TileSetService;

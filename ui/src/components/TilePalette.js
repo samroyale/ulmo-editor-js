@@ -1,10 +1,10 @@
 import React from 'react';
 import { Panel, Modal, ButtonToolbar, Button, Collapse, Alert } from 'react-bootstrap';
-import TileSetService from '../services/tile-sets';
-import tilePositionMixin from './tile-position-mixin';
+import TileSetService from '../services/TileSets';
+import { TilePosition } from '../utils';
 import { tileSize } from '../config';
 import { errorMessage, initTile } from '../utils';
-import './tile-palette.css';
+import './TilePalette.css';
 
 const emptyTile = initTile('white');
 
@@ -14,11 +14,11 @@ const tileSetService = new TileSetService();
  * COMPONENT: TILE INFO
  * =============================================================================
  */
-function TileInfo(props) {
-  if (props.tilePosition && props.tile) {
+const TileInfo = ({ tilePosition, tile }) => {
+  if (tilePosition && tile) {
     return (
       <p className="with-top-margin">
-        {props.tilePosition.x},{props.tilePosition.y} :: {props.tile.getTileSetName()}:{props.tile.getTileName()}
+        {tilePosition.x},{tilePosition.y} :: {tile.getTileSetName()}:{tile.getTileName()}
       </p>
     );
   }
@@ -29,53 +29,55 @@ function TileInfo(props) {
  * COMPONENT: TILE SET TOOLBAR
  * =============================================================================
  */
-function TileSetToolbar(props) {
-  return (
-    <ButtonToolbar className="component-buttons">
-      <Button onClick={props.onLoadTileSetsFromServer}>Open</Button>
-      { /* <Button bsStyle="link" onClick={props.onAdmin}>Admin</Button> */ }
-    </ButtonToolbar>
-  );
-}
+const TileSetToolbar = ({ onLoadTileSetsFromServer, onAdmin }) => (
+  <ButtonToolbar className="component-buttons">
+    <Button onClick={onLoadTileSetsFromServer}>Open</Button>
+    { /* <Button bsStyle="link" onClick={onAdmin}>Admin</Button> */ }
+  </ButtonToolbar>
+);
 
 /* =============================================================================
  * COMPONENT: TILE SET ITEM
  * =============================================================================
  */
-function TileSetItem(props) {
-  return (<li><a href="#" onClick={function(event) {
-    event.preventDefault();
-    props.onTileSetSelected(props.tileSet.id);
-  }}>{props.tileSet.name}</a></li>);
-}
+const TileSetItem = ({ onTileSetSelected, tileSet }) => (
+  <li>
+    <a href="#" onClick={evt => {
+      evt.preventDefault();
+      onTileSetSelected(tileSet.id);}}>
+      {tileSet.name}
+    </a>
+  </li>
+);
+
 
 /* =============================================================================
  * COMPONENT: OPEN TILE SET MODAL
  * =============================================================================
  */
-function OpenTileSetModal(props) {
-  var showError = props.error && props.error.length > 0;
+const OpenTileSetModal = ({ error, tileSets, onTileSetSelected, showModal, onClose }) => {
+  var showError = error && error.length > 0;
 
-  var items = props.tileSets.map(
+  var items = tileSets.map(
     tileSet => <TileSetItem key={tileSet.id} tileSet={tileSet}
-        onTileSetSelected={props.onTileSetSelected} />
+        onTileSetSelected={onTileSetSelected} />
   );
 
   return (
-    <Modal show={props.showModal} onHide={props.onClose}>
+    <Modal show={showModal} onHide={onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Open Tileset</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Collapse in={showError}>
           <div>
-            <Alert bsStyle="danger">{props.error}</Alert>
+            <Alert bsStyle="danger">{error}</Alert>
           </div>
         </Collapse>
         <ul>{items}</ul>
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={props.onClose}>Cancel</Button>
+        <Button onClick={onClose}>Cancel</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -85,19 +87,16 @@ function OpenTileSetModal(props) {
  * COMPONENT: TILE SET CANVAS
  * =============================================================================
  */
-const TileSetCanvas = React.createClass({
-  mixins: [tilePositionMixin],
-
-  _tileSet: null,
-  _canvas: null,
-
-  getInitialState() {
-    return {
+class TileSetCanvas extends React.Component {
+  constructor(props) {
+    super(props);
+    this._canvas = null;
+    this.state = {
       showTileset: false,
     };
-  },
+  }
 
-  loadTileSet(tilesetId) {
+  loadTileSet = tilesetId => {
     var p = tileSetService.loadTileSet(tilesetId);
     return p.then(data => {
       if (data.tileSet) {
@@ -107,9 +106,9 @@ const TileSetCanvas = React.createClass({
       }
       return data;
     });
-  },
+  };
 
-  drawTileSet() {
+  drawTileSet = () => {
     var cols = this._tileSet.getCols();
     var rows = this._tileSet.getRows();
     this._canvas.width = cols * tileSize;
@@ -127,51 +126,49 @@ const TileSetCanvas = React.createClass({
         }
       }
     }
-  },
+  };
 
-  handleMouseMove(evt) {
-    var tilePosition = this.getCurrentTilePosition(evt);
+  handleMouseMove = evt => {
+    var tilePosition = TilePosition.getCurrentTilePosition(evt);
     var tile = this._tileSet.getTile([tilePosition.x], [tilePosition.y]);
     this.props.onTilePositionUpdated(tilePosition, tile);
-  },
+  };
 
-  handleMouseOut: function(evt) {
-    if (this.isTilePositionWithinCanvasView(evt)) {
+  handleMouseOut = evt => {
+    if (TilePosition.isTilePositionWithinCanvasView(evt)) {
       return;
     }
     this.props.onTilePositionUpdated();
-  },
+  };
 
-  handleSelectionOut: function(evt) {
-    if (this.isTilePositionWithinCanvasView(evt, evt.target.previousSibling)) {
+  handleSelectionOut = evt => {
+    if (TilePosition.isTilePositionWithinCanvasView(evt, evt.target.previousSibling)) {
       return;
     }
     this.props.onTilePositionUpdated();
-  },
+  };
 
-  handleMouseClick() {
+  handleMouseClick = () => {
     if (this.props.tile) {
       console.log("tile selected: " + this.props.tile);
       this.props.onTileSelected(this.props.tile);
     }
-  },
+  };
 
-  suppress(evt) {
-    evt.preventDefault();
-  },
+  suppress = evt => evt.preventDefault();
 
-  highlightStyle: function() {
-    if (this.props.tilePosition) {
+  highlightStyle = ({ tilePosition }) => {
+    if (tilePosition) {
       return {
-        left: this.props.tilePosition.x * tileSize,
-        top: this.props.tilePosition.y * tileSize,
+        left: tilePosition.x * tileSize,
+        top: tilePosition.y * tileSize,
         display: 'block'
       };
     }
     return {};
-  },
+  };
 
-  render() {
+  render = () => {
     var bsClass = this.state.showTileset ? "show tiles" : "hidden";
     return (
       <div className="canvas-container">
@@ -181,7 +178,7 @@ const TileSetCanvas = React.createClass({
                   onMouseOut={this.handleMouseOut}
                   ref={cvs => this._canvas = cvs} />
 
-          <div className="highlight" style={this.highlightStyle()}
+          <div className="highlight" style={this.highlightStyle(this.props)}
                onMouseOut={this.handleSelectionOut}
                onClick={this.handleMouseClick}
                onContextMenu={this.suppress} />
@@ -189,17 +186,17 @@ const TileSetCanvas = React.createClass({
       </div>
     );
   }
-});
+}
 
 /* =============================================================================
  * COMPONENT: TILE PALETTE
  * =============================================================================
  */
-const TilePalette = React.createClass({
-  _tileSetCanvas: null,
-
-  getInitialState() {
-    return {
+class TilePalette extends React.Component {
+  constructor(props) {
+    super(props);
+    this._tileSetCanvas= null;
+    this.state = {
       showModal: false,
       tileSets: [],
       tileSetId: null,
@@ -207,13 +204,11 @@ const TilePalette = React.createClass({
       currentTilePosition: null,
       currentTile: null
     };
-  },
+  }
 
-  closeModal() {
-    this.setState({ showModal: false });
-  },
+  closeModal = () => this.setState({ showModal: false });
 
-  tileSetSelected(tsid) {
+  tileSetSelected = tsid => {
     var p = this._tileSetCanvas.loadTileSet(tsid);
     p.then(data => {
       if (data.tileSet) {
@@ -224,9 +219,9 @@ const TilePalette = React.createClass({
         });
       }
     }, this.tileSetLoadErr).done();
-  },
+  };
 
-  tileSetLoadErr(data) {
+  tileSetLoadErr = data => {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({
@@ -235,9 +230,9 @@ const TilePalette = React.createClass({
       return;
     }
     console.log("Something went wrong...");
-  },
+  };
 
-  loadTileSetsFromServer(event) {
+  loadTileSetsFromServer = evt => {
     var p = tileSetService.loadTileSets();
     p.then(data => {
       if (data.tileSets) {
@@ -248,9 +243,9 @@ const TilePalette = React.createClass({
         });
       }
     }, this.tileSetsLoadErr).done();
-  },
+  };
 
-  tileSetsLoadErr(data) {
+  tileSetsLoadErr = data => {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({
@@ -261,21 +256,20 @@ const TilePalette = React.createClass({
       return;
     }
     console.log("Something went wrong...");
-  },
+  };
 
-  updateCurrentTile(tilePosition, tile) {
-    this.setState({ currentTilePosition: tilePosition, currentTile: tile});
-  },
+  updateCurrentTile = (tilePosition, tile) => this.setState({ currentTilePosition: tilePosition, currentTile: tile});
 
-  render() {
+  render = () => {
+    const { onAdmin, onTileSelected } = this.props;
     return (
       <div>
         <Panel className="component" bsClass="component-panel">
           <TileSetToolbar
               onLoadTileSetsFromServer={this.loadTileSetsFromServer}
-              onAdmin={this.props.onAdmin} />
+              onAdmin={onAdmin} />
           <TileSetCanvas
-              onTileSelected={this.props.onTileSelected}
+              onTileSelected={onTileSelected}
               onTilePositionUpdated={this.updateCurrentTile}
               tilePosition={this.state.currentTilePosition}
               tile={this.state.currentTile}
@@ -294,6 +288,6 @@ const TilePalette = React.createClass({
       </div>
     );
   }
-});
+}
 
 export default TilePalette;

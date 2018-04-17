@@ -2,12 +2,12 @@ import React from 'react';
 import { Panel, Modal, Grid, Row, Col, ButtonToolbar, Button, DropdownButton,
     Dropdown, MenuItem, Collapse, Alert, Form, FormGroup, FormControl, ControlLabel,
     ProgressBar, Glyphicon } from 'react-bootstrap';
-import SpritesModal from './sprites-modal';
-import MapCanvas from './map-canvas';
-import RpgMapService from '../services/rpg-maps';
+import SpritesModal from './SpritesModal';
+import MapCanvas from './MapCanvas';
+import RpgMapService from '../services/RpgMaps';
 import { tileSize } from '../config';
 import { errorMessage, initRect, getDrawingContext } from '../utils';
-import './map-editor.css';
+import './MapEditor.css';
 
 const rpgMapService = new RpgMapService();
 
@@ -17,11 +17,13 @@ const whiteSquare = initRect('white', 9, 9);
  * COMPONENT: MAP EDITOR
  * =============================================================================
  */
-const MapEditor = React.createClass({
-  _mapCanvas: null,
+class MapEditor extends React.Component {
+  constructor(props) {
+    super(props);
 
-  getInitialState: function() {
-    return {
+    this._mapCanvas = null;
+
+    this.state = {
       showModal: null,
       showProgressModal: false,
       showWarningModal: false,
@@ -40,52 +42,45 @@ const MapEditor = React.createClass({
       tileMode: null,
       changeHistory: []
     };
-  },
+  }
 
-  closeModal: function() {
+  closeModal = () => {
     this.setState({
       showModal: null,
       showProgressModal: false,
       serviceError: null
     });
-  },
+  };
 
-  closeProgressModal: function() {
-    this.setState({ showProgressModal: false });
-  },
+  closeProgressModal = () => this.setState({ showProgressModal: false });
 
-  showProgressModal: function(title) {
+  showProgressModal = title => {
     this.setState({
       showProgressModal: true,
       progressTitle: title,
       progressPercent: 0
     });
-  },
+  };
 
-  closeWarningModal: function() {
-    this.setState({ showWarningModal: false });
-  },
+  closeWarningModal = ()  => this.setState({ showWarningModal: false });
 
-  closeErrorModal: function() {
+  closeErrorModal = () => {
     this.setState({
       serviceError: null,
       showErrorModal: false
     });
-  },
+  };
 
-  showWarningModal: function(callback) {
+  showWarningModal = callback => {
     this.setState({
       showWarningModal: true,
       continue: callback
     });
-  },
+  };
 
-  updateProgress: function(percent) {
-    // console.log(percent);
-    this.setState({ progressPercent: percent });
-  },
+  updateProgress = percent => this.setState({ progressPercent: percent });
 
-  mapSelected: function(mid) {
+  mapSelected = mid => {
     if (this.state.mapDirty) {
       this.showWarningModal(() =>
         this.continueMapSelected(mid)
@@ -93,22 +88,20 @@ const MapEditor = React.createClass({
       return;
     }
     this.continueMapSelected(mid);
-  },
+  };
 
-  continueMapSelected: function(mid) {
+  continueMapSelected = mid => {
     this.showProgressModal("Loading map...");
     var p = this._mapCanvas.loadMap(mid);
     p.then(
       data => this.mapLoaded(data, false), this.mapLoadErr,
       percent => this.updateProgress(percent)
     ).done();
-  },
+  };
 
-  newMap: function(event) {
-    this.setState({ showModal: "NEW" });
-  },
+  newMap = event => this.setState({ showModal: "NEW" });
 
-  newMapOfSize: function(rows, cols) {
+  newMapOfSize = (rows, cols) => {
     if (this.state.mapDirty) {
       this.showWarningModal(() =>
         this.continueNewMapOfSize(rows, cols)
@@ -116,29 +109,29 @@ const MapEditor = React.createClass({
       return;
     }
     this.continueNewMapOfSize(rows, cols);
-  },
+  };
 
-  continueNewMapOfSize: function(rows, cols) {
+  continueNewMapOfSize = (rows, cols) => {
     var p = this._mapCanvas.newMap(rows, cols);
     p.then(
       data => this.mapLoaded(data, true)
     ).done();
-  },
+  };
 
-  resizeMap: function(event) {
+  resizeMap = event => {
     if (this.isMapPresent()) {
       this.setState({ showModal: "RESIZE" });
     }
-  },
+  };
 
-  resizeMapToSize: function(left, right, top, bottom) {
+  resizeMapToSize = (left, right, top, bottom) => {
     var p = this._mapCanvas.resizeMap(left, right, top, bottom);
     p.then(
       data => this.mapLoaded(data, true)
     ).done();
-  },
+  };
 
-  mapLoaded: function(data, dirty) {
+  mapLoaded = (data, dirty) => {
     console.log("map loaded: " + data.map.getId());
     if (data.map) {
       this.closeModal();
@@ -154,9 +147,9 @@ const MapEditor = React.createClass({
       return;
     }
     this.setState({ changeHistory: [] });
-  },
+  };
 
-  mapLoadErr: function(data) {
+  mapLoadErr = data => {
     this.closeProgressModal();
     if (data.err) {
       // console.log("Error [" + data.err + "]");
@@ -166,9 +159,9 @@ const MapEditor = React.createClass({
       return;
     }
     console.log("Something went wrong...");
-  },
+  };
 
-  loadMapsFromServer: function(event) {
+  loadMapsFromServer = event => {
     var p = rpgMapService.loadMaps();
     p.then(data => {
       if (data.maps) {
@@ -179,9 +172,9 @@ const MapEditor = React.createClass({
         });
       }
     }, this.mapsLoadErr).done();
-  },
+  };
 
-  mapsLoadErr: function(data) {
+  mapsLoadErr = data => {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({
@@ -192,35 +185,35 @@ const MapEditor = React.createClass({
       return;
     }
     console.log("Something went wrong...");
-  },
+  };
 
-  showSaveModal: function() {
+  showSaveModal = () => {
     if (this.isMapPresent()) {
       this.setState({ showModal: "SAVE" });
     }
-  },
+  }
 
-  isMapPresent: function() {
+  isMapPresent = () => {
     // a mapId of undefined or something indicates that we have a map, whereas
     // null indicates that we don't
     return this.state.mapId !== null;
-  },
+  };
 
-  saveMap: function() {
+  saveMap = () => {
     if (!this.state.mapId) {
       this.showSaveModal();
       return;
     }
     var p = this._mapCanvas.saveMap();
     p.then(this.mapSaved, this.mapSaveErr).done();
-  },
+  };
 
-  saveMapAs: function(mapName) {
+  saveMapAs = mapName => {
     var p = this._mapCanvas.saveMapAs(mapName);
     p.then(this.mapSaved, this.mapSaveErr).done();
-  },
+  };
 
-  mapSaved: function(data) {
+  mapSaved = data => {
     if (data.mapId) {
       // console.log("Map saved [" + data.mapName + "/" + data.mapId + "]");
       this.closeModal();
@@ -230,9 +223,9 @@ const MapEditor = React.createClass({
         serviceError: null
       });
     }
-  },
+  };
 
-  mapSaveErr: function(data) {
+  mapSaveErr = data => {
     if (data.err) {
       // console.log("Error [" + data.err + "]");
       this.setState({
@@ -247,9 +240,9 @@ const MapEditor = React.createClass({
       return;
     }
     console.log("Something went wrong...");
-  },
+  };
 
-  mapUpdated: function(topLeft, oldTiles) {
+  mapUpdated = (topLeft, oldTiles) => {
     this.setState({ mapDirty: true });
     if (!topLeft || !oldTiles) {
       return;
@@ -258,15 +251,15 @@ const MapEditor = React.createClass({
       topLeft: topLeft,
       tiles: oldTiles
     });
-  },
+  };
 
-  addToChangeHistory: function(item) {
+  addToChangeHistory = item => {
     var history = this.state.changeHistory;
     history.push(item);
     this.setState( { changeHistory: history });
-  },
+  };
 
-  undo: function() {
+  undo = () => {
     var history = this.state.changeHistory;
     var lastChange = history.pop();
     this.setState( { changeHistory: history });
@@ -283,48 +276,48 @@ const MapEditor = React.createClass({
       return;
     }
     console.log("Could not undo [unknown change]");
-  },
+  };
 
-  updateCurrentTile: function(tilePosition, tile) {
+  updateCurrentTile = (tilePosition, tile) => {
     this.setState({
       currentTilePosition: tilePosition,
       currentTile: tile
     });
-  },
+  };
 
-  setTileControlMode: function(mode) {
-    this.setState({ tileMode: mode });
-  },
+  setTileControlMode = mode => this.setState({ tileMode: mode });
 
-  editSprites: function() {
+  editSprites = () => {
     if (this.isMapPresent()) {
       this.setState({
         showModal: "SPRITES",
         sprites: this._mapCanvas.getSpritesFromMap()
       });
     }
-  },
+  };
 
-  applySpritesEdit: function(newSprites) {
+  applySpritesEdit = newSprites => {
     this.closeModal();
     var oldSprites = this._mapCanvas.applySpritesEdit(newSprites);
     this.mapUpdated();
     this.addToChangeHistory({ sprites: oldSprites })
-  },
+  };
 
-  componentWillReceiveProps: function(nextProps) {
+  componentWillReceiveProps = nextProps => {
+    const { selectedTile } = nextProps;
     // if selecting a tile for the first time, set the tile mode to INSERT
-    if (!this.props.selectedTile && nextProps.selectedTile) {
+    if (!selectedTile && selectedTile) {
       this.setState({ tileMode: "INSERT" });
     }
-  },
+  };
 
-  render: function() {
+  render = () => {
+    const { selectedTile, onAdmin } = this.props;
     return (
       <div>
         <Panel className="component" bsClass="component-panel">
           <MapToolbar
-              selectedTile={this.props.selectedTile}
+              selectedTile={selectedTile}
               tileMode={this.state.tileMode}
               mapDirty={this.state.mapDirty}
               mapPresent={this.state.mapId !== null}
@@ -337,9 +330,9 @@ const MapEditor = React.createClass({
               onEditSprites={this.editSprites}
               onUndo={this.undo}
               noHistory={this.state.changeHistory.length === 0}
-              onAdmin={this.props.onAdmin} />
+              onAdmin={onAdmin} />
           <MapCanvas
-              selectedTile={this.props.selectedTile}
+              selectedTile={selectedTile}
               tileMode={this.state.tileMode}
               tilePosition={this.state.currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
@@ -397,96 +390,113 @@ const MapEditor = React.createClass({
       </div>
     );
   }
-});
+}
 
 /* =============================================================================
  * COMPONENT: MAP TOOLBAR
  * =============================================================================
  */
-function MapToolbar(props) {
-  return (
-    <ButtonToolbar className="component-buttons">
-      <TileControl
-          selectedTile={props.selectedTile}
-          tileMode={props.tileMode}
-          onModeChange={props.onModeChange} />
-      <Button onClick={props.onLoadMapsFromServer}>Open</Button>
-      <Button onClick={props.onNewMap}>New</Button>
-      <Button onClick={props.onResizeMap} disabled={!props.mapPresent}>Resize</Button>
-      <DropdownButton title="File" id="file" disabled={!props.mapPresent}>
-        <MenuItem onClick={props.onSaveMap} disabled={!props.mapDirty}>Save</MenuItem>
-        <MenuItem onClick={props.onShowSaveModal}>Save as</MenuItem>
-        <MenuItem onClick={props.onExport}>Export</MenuItem>
-      </DropdownButton>
-      <Button onClick={props.onEditSprites} disabled={!props.mapPresent}>Sprites</Button>
-      <Button onClick={props.onUndo} disabled={props.noHistory}>
-        <div className="reverse"><Glyphicon glyph="repeat" /></div>
-      </Button>
-      { /*<Button bsStyle="link" onClick={props.onAdmin}>Admin</Button>*/ }
-    </ButtonToolbar>
-  );
-}
+const MapToolbar = ({
+  selectedTile,
+  tileMode,
+  onModeChange,
+  onLoadMapsFromServer,
+  onNewMap,
+  onResizeMap,
+  mapPresent,
+  onSaveMap,
+  mapDirty,
+  onShowSaveModal,
+  onExport,
+  onEditSprites,
+  onUndo,
+  noHistory
+  }) => (
+  <ButtonToolbar className="component-buttons">
+    <TileControl
+      selectedTile={selectedTile}
+      tileMode={tileMode}
+      onModeChange={onModeChange} />
+    <Button onClick={onLoadMapsFromServer}>Open</Button>
+    <Button onClick={onNewMap}>New</Button>
+    <Button onClick={onResizeMap} disabled={!mapPresent}>Resize</Button>
+    <DropdownButton title="File" id="file" disabled={!mapPresent}>
+      <MenuItem onClick={onSaveMap} disabled={!mapDirty}>Save</MenuItem>
+      <MenuItem onClick={onShowSaveModal}>Save as</MenuItem>
+      <MenuItem onClick={onExport}>Export</MenuItem>
+    </DropdownButton>
+    <Button onClick={onEditSprites} disabled={!mapPresent}>Sprites</Button>
+    <Button onClick={onUndo} disabled={noHistory}>
+      <div className="reverse"><Glyphicon glyph="repeat" /></div>
+    </Button>
+    { /*<Button bsStyle="link" onClick={onAdmin}>Admin</Button>*/ }
+  </ButtonToolbar>
+);
 
 /* =============================================================================
  * COMPONENT: TILE CONTROL
  * =============================================================================
  */
-const TileControl = React.createClass({
-  _canvas: null,
-
-  getInitialState: function() {
-    return {
+class TileControl extends React.Component {
+  constructor(props) {
+    super(props);
+    this._canvas = null;
+    this.state = {
       disabled: true
     };
-  },
+  }
 
-  componentWillReceiveProps: function(nextProps) {
+  componentWillReceiveProps = nextProps => {
     // if selecting a tile for the first time, set the tile mode to INSERT
     if (nextProps.tileMode) {
       this.setState({ disabled: false });
     }
-  },
+  };
 
-  componentDidUpdate: function(oldProps, oldState) {
-    if (this.props.selectedTile) {
+  componentDidUpdate = (oldProps, oldState) => {
+    const { selectedTile, tileMode } = this.props;
+    if (selectedTile) {
       var ctx = getDrawingContext(this._canvas);
       ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
       ctx.fillStyle = 'rgba(0, 255, 0, 1)';
       ctx.fillRect(0, 0, tileSize, tileSize);
-      ctx.drawImage(this.props.selectedTile.getCanvas(), 0, 0);
-      if (this.props.tileMode !== "SELECT") {
+      ctx.drawImage(selectedTile.getCanvas(), 0, 0);
+      if (tileMode !== "SELECT") {
         ctx.drawImage(whiteSquare, 23, 23);
       }
     }
-  },
+  };
 
-  suffixIcon: function() {
-    if (!this.props.selectedTile) {
+  suffixIcon = () => {
+    const { selectedTile, tileMode } = this.props;
+    if (!selectedTile) {
       return '';
     }
-    if (this.props.tileMode === "INSERT") {
+    if (tileMode === "INSERT") {
       return (<Glyphicon className="suffix" glyph="circle-arrow-right" />);
     }
-    if (this.props.tileMode === "ADD") {
+    if (tileMode === "ADD") {
       return (<Glyphicon className="suffix" glyph="plus-sign" />);
     }
-    if (this.props.tileMode === "SELECT") {
+    if (tileMode === "SELECT") {
       return (<Glyphicon className="select-suffix" glyph="ban-circle" />);
     }
     return '';
-  },
+  };
 
-  menuItem: function(mode, label) {
+  menuItem = (mode, label) => {
+    const { tileMode } = this.props;
     return (
-      <MenuItem eventKey={mode} active={mode === this.props.tileMode}>
+      <MenuItem eventKey={mode} active={mode === tileMode}>
         {label}
       </MenuItem>
     );
-  },
+  };
 
-  render: function() {
+  render = () => {
+    const { onModeChange } = this.props;
     return (
-      <Dropdown id="tile-control-dropdown" onSelect={this.props.onModeChange}>
+      <Dropdown id="tile-control-dropdown" onSelect={onModeChange}>
         <Button className="tile-button" disabled={this.state.disabled}>
           <div className="tile-button-container">
             <canvas className="tile-button-cvs" width={tileSize} height={tileSize}
@@ -503,87 +513,89 @@ const TileControl = React.createClass({
       </Dropdown>
     );
   }
-});
+};
 
 /* =============================================================================
  * COMPONENT: OPEN MAP MODAL
  * =============================================================================
  */
-function OpenMapModal(props) {
-  var showError = props.error && props.error.length > 0;
-  var items = props.maps.map(
+const OpenMapModal = ({ error, maps, onMapSelected, showModal, onClose }) => {
+  var showError = error && error.length > 0;
+  var items = maps.map(
     map => <MapItem key={map.id} map={map}
-        onMapSelected={props.onMapSelected} />
+                    onMapSelected={onMapSelected} />
   );
   return (
-    <Modal show={props.showModal} onHide={props.onClose}>
+    <Modal show={showModal} onHide={onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Open Map</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Collapse in={showError}>
           <div>
-            <Alert bsStyle="danger">{props.error}</Alert>
+            <Alert bsStyle="danger">{error}</Alert>
           </div>
         </Collapse>
         <ul>{items}</ul>
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={props.onClose}>Cancel</Button>
+        <Button onClick={onClose}>Cancel</Button>
       </Modal.Footer>
     </Modal>
   );
-}
+};
 
 /* =============================================================================
  * COMPONENT: MAP ITEM
  * =============================================================================
  */
-function MapItem(props) {
-  return (<li><a href="#" onClick={function(event) {
-    event.preventDefault();
-    props.onMapSelected(props.map.id);
-  }}>{props.map.name}</a></li>);
-}
+const MapItem = ({ onMapSelected, map }) => (
+  <li>
+    <a href="#" onClick={evt => {
+      evt.preventDefault();
+      onMapSelected(map.id);
+      }}>
+      {map.name}
+    </a>
+  </li>
+);
 
 /* =============================================================================
  * COMPONENT: NEW MAP MODAL
  * =============================================================================
  */
-const NewMapModal = React.createClass({
-  _regex: /\D/g,
-
-  getInitialState: function() {
-    return {
+class NewMapModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this._regex = /\D/g;
+    this.state = {
       rowsVal: '',
       colsVal: ''
     };
-  },
+  }
 
-  handleRowsChange: function(event) {
-    this.setState({ rowsVal: event.target.value.replace(this._regex, '') });
-  },
+  handleRowsChange = evt => this.setState({ rowsVal: evt.target.value.replace(this._regex, '') });
 
-  handleColsChange: function(event) {
-    this.setState({ colsVal: event.target.value.replace(this._regex, '') });
-  },
+  handleColsChange = evt => this.setState({ colsVal: evt.target.value.replace(this._regex, '') });
 
-  handleSubmit: function(e) {
-    e.preventDefault();
+  handleSubmit = evt => {
+    evt.preventDefault();
     this.newMap();
-  },
+  };
 
-  newMap: function() {
+  newMap = () => {
+    const { onNewMap } = this.props;
     var rows = parseInt(this.state.rowsVal, 10);
     var cols = parseInt(this.state.colsVal, 10);
     if (rows > 0 && cols > 0) {
-      this.props.onNewMap(rows, cols);
+      onNewMap(rows, cols);
     }
-  },
+  };
 
-  render: function() {
+  render = () => {
+    const { showModal, onClose } = this.props;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} bsSize="small">
+      <Modal show={showModal} onHide={onClose} bsSize="small">
         <Modal.Header closeButton>
           <Modal.Title>New Map</Modal.Title>
         </Modal.Header>
@@ -603,52 +615,43 @@ const NewMapModal = React.createClass({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.newMap} bsStyle="primary">OK</Button>
-          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
   }
-});
+};
 
 /* =============================================================================
  * COMPONENT: RESIZE MAP MODAL
  * =============================================================================
  */
-const ResizeMapModal = React.createClass({
-  // allows negative numbers
-  _regex: /[^0-9\-]/g,
-
-  getInitialState: function() {
-    return {
+class ResizeMapModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this._regex = /[^0-9\-]/g;
+    this.state = {
       leftVal: '',
       rightVal: '',
       topVal: '',
       bottomVal: ''
     };
-  },
+  }
 
-  handleLeftChange: function(event) {
-    this.setState({ leftVal: event.target.value.replace(this._regex, '') });
-  },
+  handleLeftChange = evt => this.setState({ leftVal: evt.target.value.replace(this._regex, '') });
 
-  handleRightChange: function(event) {
-    this.setState({ rightVal: event.target.value.replace(this._regex, '') });
-  },
+  handleRightChange = evt => this.setState({ rightVal: evt.target.value.replace(this._regex, '') });
 
-  handleTopChange: function(event) {
-    this.setState({ topVal: event.target.value.replace(this._regex, '') });
-  },
+  handleTopChange = evt => this.setState({ topVal: evt.target.value.replace(this._regex, '') });
 
-  handleBottomChange: function(event) {
-    this.setState({ bottomVal: event.target.value.replace(this._regex, '') });
-  },
+  handleBottomChange = evt => this.setState({ bottomVal: evt.target.value.replace(this._regex, '') });
 
-  handleSubmit: function(e) {
-    e.preventDefault();
+  handleSubmit = evt => {
+    evt.preventDefault();
     this.newMap();
-  },
+  };
 
-  resizeMap: function() {
+  resizeMap = () => {
     var vals = [this.state.leftVal, this.state.rightVal, this.state.topVal, this.state.bottomVal]
         .map(val => {
           var n = parseInt(val, 10);
@@ -658,11 +661,12 @@ const ResizeMapModal = React.createClass({
     if (vals.some(val => val !== 0)) {
       this.props.onResizeMap(vals[0], vals[1], vals[2], vals[3]);
     }
-  },
+  };
 
-  render: function() {
+  render = () => {
+    const { showModal, onClose } = this.props;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="resize-map-modal">
+      <Modal show={showModal} onHide={onClose} dialogClassName="resize-map-modal">
         <Modal.Header closeButton>
           <Modal.Title>Resize Map</Modal.Title>
         </Modal.Header>
@@ -708,53 +712,52 @@ const ResizeMapModal = React.createClass({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.resizeMap} bsStyle="primary">OK</Button>
-          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
   }
-});
+}
 
 /* =============================================================================
  * COMPONENT: SAVE AS MODAL
  * =============================================================================
  */
-const SaveAsModal = React.createClass({
-  _regex: /\W/g,
-
-  getInitialState: function() {
-    return {
+class SaveAsModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this._regex = /\W/g;
+    this.state = {
       mapName: '',
     };
-  },
+  }
 
-  handleNameChange: function(event) {
-    this.setState({ mapName: event.target.value.replace(this._regex, '') });
-  },
+  handleNameChange = evt => this.setState({ mapName: evt.target.value.replace(this._regex, '') });
 
-  handleSubmit: function(e) {
-    e.preventDefault();
+  handleSubmit = evt => {
+    evt.preventDefault();
     this.saveMap();
-  },
+  };
 
-  saveMap: function() {
+  saveMap = () => {
     var mapName = this.state.mapName;
     if (mapName.length > 0) {
       this.props.onSaveAs(mapName);
     }
-  },
+  };
 
-  render: function() {
-    var showError = this.props.error && this.props.error.length > 0;
+  render = () => {
+    const { error, showModal, onClose } = this.props;
+    var showError = error && error.length > 0;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose}>
+      <Modal show={showModal} onHide={onClose}>
         <Modal.Header closeButton>
           <Modal.Title>Save As</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Collapse in={showError}>
             <div>
-              <Alert bsStyle="danger">Could not save map: {this.props.error}</Alert>
+              <Alert bsStyle="danger">Could not save map: {error}</Alert>
             </div>
           </Collapse>
           <form onSubmit={this.handleSubmit}>
@@ -767,83 +770,76 @@ const SaveAsModal = React.createClass({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.saveMap} bsStyle="primary">OK</Button>
-          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
   }
-});
+}
 
 /* =============================================================================
  * COMPONENT: PROGRESS MODAL
  * =============================================================================
  */
-function ProgressModal(props) {
-  return (
-    <Modal show={props.showModal}>
-      <Modal.Header>
-        <Modal.Title>{props.title}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <ProgressBar now={props.percent} />
-      </Modal.Body>
-    </Modal>
-  );
-}
+const ProgressModal = ({ showModal, title, percent }) => (
+  <Modal show={showModal}>
+    <Modal.Header>
+      <Modal.Title>{title}</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <ProgressBar now={percent} />
+    </Modal.Body>
+  </Modal>
+);
 
 /* =============================================================================
  * COMPONENT: WARNING MODAL
  * =============================================================================
  */
-function WarningModal(props) {
-  const onContinue = () => {
-    props.onClose();
-    props.onContinue();
-  };
-  return (
-    <Modal show={props.showModal} onHide={props.onClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>Warning</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Alert bsStyle="warning">This will lose all unsaved changes. Continue?</Alert>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={onContinue} bsStyle="primary">OK</Button>
-        <Button onClick={props.onClose}>Cancel</Button>
-      </Modal.Footer>
-    </Modal>
-  );
-}
+const WarningModal = ({ showModal, onClose, onContinue, percent }) => (
+  <Modal show={showModal} onHide={onClose}>
+    <Modal.Header closeButton>
+      <Modal.Title>Warning</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <Alert bsStyle="warning">This will lose all unsaved changes. Continue?</Alert>
+    </Modal.Body>
+    <Modal.Footer>
+      <Button onClick={() => {
+        onClose();
+        onContinue();
+      }} bsStyle="primary">OK</Button>
+      <Button onClick={onClose}>Cancel</Button>
+    </Modal.Footer>
+  </Modal>
+)
 
 /* =============================================================================
  * COMPONENT: ERROR MODAL
  * =============================================================================
  */
-function ErrorModal(props) {
-  return (
-    <Modal show={props.showModal} onHide={props.onClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>{props.title}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Alert bsStyle="danger">{props.error}</Alert>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={props.onClose}>Close</Button>
-      </Modal.Footer>
-    </Modal>
-  );
-}
+const ErrorModal = ({ showModal, onClose, title, error }) => (
+  <Modal show={showModal} onHide={onClose}>
+    <Modal.Header closeButton>
+      <Modal.Title>{title}</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <Alert bsStyle="danger">{error}</Alert>
+    </Modal.Body>
+    <Modal.Footer>
+      <Button onClick={onClose}>Close</Button>
+    </Modal.Footer>
+  </Modal>
+)
 
 /* =============================================================================
  * COMPONENT: MAP TILE INFO
  * =============================================================================
  */
-function MapTileInfo(props) {
-  if (props.tilePosition && props.mapTile) {
-    var levelsInfo = "[" + props.mapTile.getLevels().toString() + "]";
-    var masks = props.mapTile.getMaskTiles().filter(maskTile => {
+const MapTileInfo = ({ tilePosition, mapTile }) => {
+  if (tilePosition && mapTile) {
+    var levelsInfo = "[" + mapTile.getLevels().toString() + "]";
+    var masks = mapTile.getMaskTiles().filter(maskTile => {
       return maskTile.getMaskLevel() ? true : false;
     }).map( maskTile => {
       return maskTile.getMaskLevel();
@@ -851,11 +847,11 @@ function MapTileInfo(props) {
     var masksInfo = "[" + masks.toString() + "]";
     return (
       <p className="with-top-margin">
-        {props.tilePosition.x},{props.tilePosition.y} :: {props.mapTile.getMaskTiles().length} {levelsInfo} {masksInfo}
+        {tilePosition.x},{tilePosition.y} :: {mapTile.getMaskTiles().length} {levelsInfo} {masksInfo}
       </p>
     );
   }
   return (<p className="with-top-margin">-</p>);
-}
+};
 
 export default MapEditor;
