@@ -18,10 +18,10 @@ const numRegex = /\D/g;
 export class EditLevelsModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = this.initialState();
+    this.state = EditLevelsModal.initialState();
   }
 
-  initialState = () => {
+  static initialState = () => {
     return {
       levelVal: '',
       levels: [],
@@ -93,19 +93,15 @@ export class EditLevelsModal extends React.Component {
     });
   };
 
-  componentWillMount = () => this.populateStateFromProps(this.props);
-
-  componentWillReceiveProps = nextProps => this.populateStateFromProps(nextProps);
-
-  populateStateFromProps = ({ showModal, editableTile }) => {
+  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
     if (showModal) {
-      var initialState = this.initialState();
-      initialState.levels = this.getLevels(editableTile);
-      this.setState(initialState);
+      var initialState = EditLevelsModal.initialState();
+      return {...initialState, levels: EditLevelsModal.getLevels(editableTile)};
     }
+    return null;
   };
 
-  getLevels = editableTile => {
+  static getLevels = editableTile => {
     if (!editableTile) {
       return [];
     }
@@ -257,21 +253,17 @@ export class EditImagesModal extends React.Component {
     });
   };
 
-  componentWillMount = () => this.populateStateFromProps(this.props);
-
-  componentWillReceiveProps = nextProps => this.populateStateFromProps(nextProps);
-
-  populateStateFromProps = ({ showModal, editableTile }) => {
+  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
     if (showModal) {
-      this.setState({ maskTiles: this.getMaskTiles(editableTile) });
+      return { maskTiles: EditImagesModal.getMaskTiles(editableTile) };
     }
+    return null;
   };
 
-  getMaskTiles = editableTile => {
+  static getMaskTiles = editableTile => {
     if (!editableTile) {
       return [];
     }
-    // return a copy of the mask tiles array
     return editableTile.getMaskTiles();
   };
 
@@ -466,21 +458,17 @@ export class EditMasksModal extends React.Component {
     return maskLevel.toString();
   };
 
-  componentWillMount = () => this.populateStateFromProps(this.props);
-
-  componentWillReceiveProps = nextProps => this.populateStateFromProps(nextProps);
-
-  populateStateFromProps = ({ showModal, editableTile }) => {
+  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
     if (showModal) {
-      this.setState({ maskTiles: this.getMaskTiles(editableTile) });
+      return { maskTiles: EditMasksModal.getMaskTiles(editableTile) };
     }
+    return null;
   };
 
-  getMaskTiles = editableTile => {
+  static getMaskTiles = editableTile => {
     if (!editableTile) {
       return [];
     }
-    // return a reversed copy of the mask tiles array
     return editableTile.getMaskTiles().reverse();
   };
 
@@ -568,15 +556,11 @@ class TileMaskItem extends React.Component {
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, canvas.width, canvas.height);
   };
 
-  componentWillMount = () => this.populateStateFromProps(this.props);
-
-  componentWillReceiveProps = nextProps => this.populateStateFromProps(nextProps);
-
-  populateStateFromProps = ({ level, vertical }) => {
-    this.setState({
+  static getDerivedStateFromProps = ({ level, vertical }) => {
+    return {
       levelVal: level,
       verticalVal: vertical
-    });
+    };
   };
 
   render = () => {

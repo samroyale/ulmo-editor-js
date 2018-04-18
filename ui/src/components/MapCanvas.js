@@ -31,18 +31,6 @@ class MapCanvas extends React.Component {
     };
   }
 
-  getInitialState = () => {
-    return {
-      showMap: false,
-      showOverlay: false,
-      overlayPosition: {x: 0, y: 0},
-      showModal: null,
-      editableTile: null,
-      startPosition: null,
-      playLevel: null
-    };
-  };
-
   loadMap = mapId => {
     return this.mapLoaded(rpgMapService.loadMap(mapId));
   };

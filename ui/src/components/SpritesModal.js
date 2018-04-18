@@ -74,14 +74,11 @@ class SpritesModal extends React.Component {
 
   closeEditModal = () => this.setState({ showEditModal: false });
 
-  componentWillMount = () => this.populateStateFromProps(this.props);
-
-  componentWillReceiveProps = nextProps => this.populateStateFromProps(nextProps);
-
-  populateStateFromProps = ({ showModal, sprites }) => {
+  static getDerivedStateFromProps = ({ showModal, sprites }) => {
     if (showModal) {
-      this.setState({ sprites: [...sprites] });
+      return { sprites: [...sprites] };
     }
+    return null;
   };
 
   sprites = () => {
@@ -188,10 +185,10 @@ class SpriteItem extends React.Component {
 class SpriteEditModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = this._initialState();
+    this.state = SpriteEditModal._initialState();
   };
 
-  _initialState = () => {
+  static _initialState = () => {
     return {
       sprite: null,
       typeVal: '',
@@ -273,21 +270,16 @@ class SpriteEditModal extends React.Component {
 
   addLocation = (x, y) => this.setState({ locations: [...this.state.locations, [x, y]] });
 
-  componentWillMount = () => this.populateStateFromProps(this.props);
-
-  componentWillReceiveProps = nextProps => this.populateStateFromProps(nextProps);
-
-  populateStateFromProps = ({ sprite }) => {
+  static getDerivedStateFromProps = ({ sprite }) => {
     if (sprite) {
-      this.setState({
+      return {
         sprite: sprite,
         typeVal: sprite.getType(),
         levelVal: '' + sprite.getLevel(),
         locations: [...sprite.getLocation()]
-      });
-      return;
+      };
     }
-    this.setState(this._initialState());
+    return SpriteEditModal._initialState();
   };
 
   typeText = spriteType => {
