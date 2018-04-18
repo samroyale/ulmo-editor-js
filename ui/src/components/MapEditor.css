@@ -6,8 +6,8 @@ div.component {
   background-color: #eee;
 }
 
-div.component-panel-body {
-  padding: 12px;
+div.component-panel {
+  padding: 10px;
 }
 
 div.component-buttons {

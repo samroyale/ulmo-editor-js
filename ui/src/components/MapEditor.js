@@ -39,7 +39,7 @@ class MapEditor extends React.Component {
       serviceError: null,
       currentTilePosition: null,
       currentTile: null,
-      tileMode: null,
+      tileMode: 'INSERT',
       changeHistory: []
     };
   }
@@ -194,8 +194,7 @@ class MapEditor extends React.Component {
   }
 
   isMapPresent = () => {
-    // a mapId of undefined or something indicates that we have a map, whereas
-    // null indicates that we don't
+    // a mapId of undefined or something indicates that we have a map, whereas null indicates that we don't
     return this.state.mapId !== null;
   };
 
@@ -440,7 +439,7 @@ const MapToolbar = ({
 class TileControl extends React.Component {
   constructor(props) {
     super(props);
-    this._canvas = null;
+    this._canvas = React.createRef();
     this.state = {
       disabled: true
     };
@@ -456,8 +455,9 @@ class TileControl extends React.Component {
   componentDidUpdate = (oldProps, oldState) => {
     const { selectedTile, tileMode } = this.props;
     if (selectedTile) {
-      var ctx = getDrawingContext(this._canvas);
-      ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+      const canvas = this._canvas.current;
+      var ctx = getDrawingContext(canvas);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'rgba(0, 255, 0, 1)';
       ctx.fillRect(0, 0, tileSize, tileSize);
       ctx.drawImage(selectedTile.getCanvas(), 0, 0);
@@ -467,8 +467,7 @@ class TileControl extends React.Component {
     }
   };
 
-  suffixIcon = () => {
-    const { selectedTile, tileMode } = this.props;
+  suffixIcon = ({ selectedTile, tileMode }) => {
     if (!selectedTile) {
       return '';
     }
@@ -500,8 +499,8 @@ class TileControl extends React.Component {
         <Button className="tile-button" disabled={this.state.disabled}>
           <div className="tile-button-container">
             <canvas className="tile-button-cvs" width={tileSize} height={tileSize}
-                ref={cvs => this._canvas = cvs} />
-            {this.suffixIcon()}
+                ref={this._canvas} />
+            {this.suffixIcon(this.props)}
           </div>
         </Button>
         <Dropdown.Toggle className="tile-dropdown" disabled={this.state.disabled} />

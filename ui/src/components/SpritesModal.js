@@ -57,7 +57,7 @@ class SpritesModal extends React.Component {
     if (this.state.editableSprite) {
       var index = sprites.indexOf(this.state.editableSprite);
       if (index > -1) {
-        var newSprites = sprites.slice();
+        var newSprites = [...sprites]
         newSprites[index] = newSprite;
         this.setState({
           sprites: newSprites,
@@ -105,7 +105,7 @@ class SpritesModal extends React.Component {
         </Modal.Header>
         <Modal.Body>
           <Panel className="sprites-panel">
-            <ListGroup fill>
+            <ListGroup>
               {this.sprites()}
               <ListGroupItem className="sprite-list-item">
                 <ButtonToolbar>
@@ -283,7 +283,7 @@ class SpriteEditModal extends React.Component {
         sprite: sprite,
         typeVal: sprite.getType(),
         levelVal: '' + sprite.getLevel(),
-        locations: sprite.getLocation().slice()
+        locations: [...sprite.getLocation()]
       });
       return;
     }
@@ -363,7 +363,7 @@ class SpriteEditModal extends React.Component {
       <FormGroup className="location-panel" controlId="spriteType">
         <ControlLabel>Location</ControlLabel>
         <Panel className="location-panel">
-          <ListGroup fill>
+          <ListGroup>
             {this.locationItems()}
             <AddLocationItem
                 onAddLocation={this.addLocation} />

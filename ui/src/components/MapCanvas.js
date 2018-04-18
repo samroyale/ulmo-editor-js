@@ -183,7 +183,7 @@ class MapCanvas extends React.Component {
   applyLevelsEdit = newLevels => {
     // levels edit applies to all selected tiles
     this.processHighlightedTiles((topLeft, rows, cols) => {
-      return this._rpgMap.setLevels(topLeft, rows, cols, newLevels.slice());
+      return this._rpgMap.setLevels(topLeft, rows, cols, [...newLevels]);
     });
     this.closeModal();
   };

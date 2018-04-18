@@ -134,7 +134,7 @@ export class EditLevelsModal extends React.Component {
         </Modal.Header>
         <Modal.Body>
           <Panel className="edit-levels-panel" header="Levels">
-            <ListGroup fill>
+            <ListGroup>
               {this.levels()}
               <ListGroupItem>
                 <Grid>
@@ -283,7 +283,7 @@ export class EditImagesModal extends React.Component {
     if (this.updateRequired()) {
       this.forceUpdate(); // need this to populate refs
     }
-    var maskTiles = this.state.maskTiles.slice().reverse(); // copy + reverse the array
+    var maskTiles = [...this.state.maskTiles].reverse(); // copy + reverse the array
     maskTiles.forEach((maskTile, i) => {
       var item = this.refs[`item${i}`];
       if (item) {
@@ -343,12 +343,12 @@ export class EditImagesModal extends React.Component {
             <Row>
               <Col className="tile-images-col" lg={4}>
                 <Panel className="tile-images-panel" header="Images">
-                  <ListGroup fill>{this.tileItems(this.state)}</ListGroup>
+                  <ListGroup>{this.tileItems(this.state)}</ListGroup>
                 </Panel>
               </Col>
               <Col className="edit-tiles-col" lg={2}>
                 <Panel className="tile-preview-panel" header="Preview">
-                  <ListGroup fill>
+                  <ListGroup>
                     <ListGroupItem className="tile-list-item">
                       <canvas className="tile-preview"
                               width={tileSize * 2}
@@ -532,7 +532,7 @@ export class EditMasksModal extends React.Component {
         </Modal.Header>
         <Modal.Body>
           <Panel className="tile-masks-panel" header="Masks">
-            <ListGroup fill>{this.tileItems()}</ListGroup>
+            <ListGroup>{this.tileItems()}</ListGroup>
           </Panel>
         </Modal.Body>
         <Modal.Footer>
