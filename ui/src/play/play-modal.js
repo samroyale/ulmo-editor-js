@@ -14,7 +14,7 @@ export class PlayMapModal extends React.Component {
     constructor(props) {
         super(props);
 
-        this._canvas = null;
+        this._canvas = React.createRef();
         this._stage = null;
         this._requestId = null; // only set if using requestAnimationFrame
         this._intervalId = null, // only set if using setInterval
@@ -53,14 +53,11 @@ export class PlayMapModal extends React.Component {
         return (value === 'live');
     };
 
-    componentWillMount = () => this.populateStateFromProps(this.props);
-
-    componentWillReceiveProps = nextProps => this.populateStateFromProps(nextProps);
-
-    populateStateFromProps = ({ showModal, rpgMap }) => {
+    static getDerivedStateFromProps = ({ showModal, rpgMap }) => {
         if (showModal) {
-            this.setState({ rpgMap: rpgMap });
+            return { rpgMap: rpgMap };
         }
+        return null;
     };
 
     componentDidUpdate = (oldProps, oldState) => {
@@ -76,7 +73,7 @@ export class PlayMapModal extends React.Component {
             p.then(
                 () => {
                     let onEachFrame = this.assignOnEachFrame();
-                    onEachFrame(() => this._stage.executeMain(this._canvas, this._keys));
+                    onEachFrame(() => this._stage.executeMain(this._canvas.current, this._keys));
                     this.setState({
                         playReady: true,
                         playError: false
@@ -115,25 +112,26 @@ export class PlayMapModal extends React.Component {
     };
 
     modalBody = ({ showModal }) => {
-        if (showModal && this.state.rpgMap) {
-            let showError = this.state.playError && this.state.playError.length > 0;
+        const {rpgMap, playError, playReady, modeVal } = this.state;
+        if (showModal && rpgMap) {
+            let showError = playError && playError.length > 0;
             return (
                 <Modal.Body>
                     <Collapse in={showError}>
                         <div>
-                            <Alert bsStyle="danger">Could not initiate play mode: {this.state.playError}</Alert>
+                            <Alert bsStyle="danger">Could not initiate play mode: {playError}</Alert>
                         </div>
                     </Collapse>
-                    <Collapse in={this.state.playReady}>
+                    <Collapse in={playReady}>
                         <div>
                             <canvas className="play-canvas" width={viewWidth} height={viewHeight}
-                                ref={cvs => this._canvas = cvs} />
+                                ref={this._canvas} />
                         </div>
                     </Collapse>
                     <ButtonToolbar className="play-buttons">
                         <ToggleButtonGroup type="radio"
                                            name="options"
-                                           value={this.state.modeVal}
+                                           value={modeVal}
                                            onChange={this.handleModeChange}
                                            justified>
                             <ToggleButton type="radio" value={'live'}>Live Mode</ToggleButton>
