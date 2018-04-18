@@ -90,7 +90,7 @@ const OpenTileSetModal = ({ error, tileSets, onTileSetSelected, showModal, onClo
 class TileSetCanvas extends React.Component {
   constructor(props) {
     super(props);
-    this._canvas = null;
+    this._canvas = React.createRef();
     this.state = {
       showTileset: false,
     };
@@ -109,12 +109,13 @@ class TileSetCanvas extends React.Component {
   };
 
   drawTileSet = () => {
-    var cols = this._tileSet.getCols();
-    var rows = this._tileSet.getRows();
-    this._canvas.width = cols * tileSize;
-    this._canvas.height = rows * tileSize;
-    var ctx = this._canvas.getContext('2d');
-    ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    const cols = this._tileSet.getCols();
+    const rows = this._tileSet.getRows();
+    const canvas = this._canvas.current;
+    canvas.width = cols * tileSize;
+    canvas.height = rows * tileSize;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (var x = 0; x < cols; x++) {
       for (var y = 0; y < rows; y++) {
         var tile = this._tileSet.getTile(x, y);
@@ -176,7 +177,7 @@ class TileSetCanvas extends React.Component {
           <canvas className={bsClass}
                   onMouseMove={this.handleMouseMove}
                   onMouseOut={this.handleMouseOut}
-                  ref={cvs => this._canvas = cvs} />
+                  ref={this._canvas} />
 
           <div className="highlight" style={this.highlightStyle(this.props)}
                onMouseOut={this.handleSelectionOut}
@@ -195,7 +196,7 @@ class TileSetCanvas extends React.Component {
 class TilePalette extends React.Component {
   constructor(props) {
     super(props);
-    this._tileSetCanvas= null;
+    this._tileSetCanvas = React.createRef();
     this.state = {
       showModal: false,
       tileSets: [],
@@ -209,7 +210,7 @@ class TilePalette extends React.Component {
   closeModal = () => this.setState({ showModal: false });
 
   tileSetSelected = tsid => {
-    var p = this._tileSetCanvas.loadTileSet(tsid);
+    var p = this._tileSetCanvas.current.loadTileSet(tsid);
     p.then(data => {
       if (data.tileSet) {
         this.closeModal();
@@ -273,7 +274,7 @@ class TilePalette extends React.Component {
               onTilePositionUpdated={this.updateCurrentTile}
               tilePosition={this.state.currentTilePosition}
               tile={this.state.currentTile}
-              ref={comp => this._tileSetCanvas = comp} />
+              ref={this._tileSetCanvas} />
           <TileInfo
               tilePosition={this.state.currentTilePosition}
               tile={this.state.currentTile} />

@@ -20,9 +20,7 @@ const whiteSquare = initRect('white', 9, 9);
 class MapEditor extends React.Component {
   constructor(props) {
     super(props);
-
-    this._mapCanvas = null;
-
+    this._mapCanvas = React.createRef();
     this.state = {
       showModal: null,
       showProgressModal: false,
@@ -39,7 +37,7 @@ class MapEditor extends React.Component {
       serviceError: null,
       currentTilePosition: null,
       currentTile: null,
-      tileMode: 'INSERT',
+      tileMode: null,
       changeHistory: []
     };
   }
@@ -92,7 +90,7 @@ class MapEditor extends React.Component {
 
   continueMapSelected = mid => {
     this.showProgressModal("Loading map...");
-    var p = this._mapCanvas.loadMap(mid);
+    var p = this._mapCanvas.current.loadMap(mid);
     p.then(
       data => this.mapLoaded(data, false), this.mapLoadErr,
       percent => this.updateProgress(percent)
@@ -112,7 +110,7 @@ class MapEditor extends React.Component {
   };
 
   continueNewMapOfSize = (rows, cols) => {
-    var p = this._mapCanvas.newMap(rows, cols);
+    var p = this._mapCanvas.current.newMap(rows, cols);
     p.then(
       data => this.mapLoaded(data, true)
     ).done();
@@ -125,7 +123,7 @@ class MapEditor extends React.Component {
   };
 
   resizeMapToSize = (left, right, top, bottom) => {
-    var p = this._mapCanvas.resizeMap(left, right, top, bottom);
+    var p = this._mapCanvas.current.resizeMap(left, right, top, bottom);
     p.then(
       data => this.mapLoaded(data, true)
     ).done();
@@ -203,12 +201,12 @@ class MapEditor extends React.Component {
       this.showSaveModal();
       return;
     }
-    var p = this._mapCanvas.saveMap();
+    var p = this._mapCanvas.current.saveMap();
     p.then(this.mapSaved, this.mapSaveErr).done();
   };
 
   saveMapAs = mapName => {
-    var p = this._mapCanvas.saveMapAs(mapName);
+    var p = this._mapCanvas.current.saveMapAs(mapName);
     p.then(this.mapSaved, this.mapSaveErr).done();
   };
 
@@ -262,16 +260,17 @@ class MapEditor extends React.Component {
     var history = this.state.changeHistory;
     var lastChange = history.pop();
     this.setState( { changeHistory: history });
+    const mapCanvas = this._mapCanvas.current;
     if (lastChange.topLeft) {
-      this._mapCanvas.restoreTiles(lastChange.topLeft, lastChange.tiles);
+      mapCanvas.restoreTiles(lastChange.topLeft, lastChange.tiles);
       return;
     }
     if (lastChange.map) {
-      this._mapCanvas.restoreMap(lastChange.map);
+      mapCanvas.restoreMap(lastChange.map);
       return;
     }
     if (lastChange.sprites) {
-      this._mapCanvas.restoreSprites(lastChange.sprites);
+      mapCanvas.restoreSprites(lastChange.sprites);
       return;
     }
     console.log("Could not undo [unknown change]");
@@ -290,22 +289,21 @@ class MapEditor extends React.Component {
     if (this.isMapPresent()) {
       this.setState({
         showModal: "SPRITES",
-        sprites: this._mapCanvas.getSpritesFromMap()
+        sprites: this._mapCanvas.current.getSpritesFromMap()
       });
     }
   };
 
   applySpritesEdit = newSprites => {
     this.closeModal();
-    var oldSprites = this._mapCanvas.applySpritesEdit(newSprites);
+    var oldSprites = this._mapCanvas.current.applySpritesEdit(newSprites);
     this.mapUpdated();
     this.addToChangeHistory({ sprites: oldSprites })
   };
 
-  componentWillReceiveProps = nextProps => {
-    const { selectedTile } = nextProps;
+  componentWillReceiveProps = ({ selectedTile }) => {
     // if selecting a tile for the first time, set the tile mode to INSERT
-    if (!selectedTile && selectedTile) {
+    if (!this.props.selectedTile && selectedTile) {
       this.setState({ tileMode: "INSERT" });
     }
   };
@@ -336,7 +334,7 @@ class MapEditor extends React.Component {
               tilePosition={this.state.currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
               onMapUpdated={this.mapUpdated}
-              ref={comp => this._mapCanvas = comp} />
+              ref={this._mapCanvas} />
           <MapTileInfo
               tilePosition={this.state.currentTilePosition}
               mapTile={this.state.currentTile} />
@@ -445,9 +443,8 @@ class TileControl extends React.Component {
     };
   }
 
-  componentWillReceiveProps = nextProps => {
-    // if selecting a tile for the first time, set the tile mode to INSERT
-    if (nextProps.tileMode) {
+  componentWillReceiveProps = ({ tileMode }) => {
+    if (!this.props.tileMode && tileMode) {
       this.setState({ disabled: false });
     }
   };
@@ -495,7 +492,7 @@ class TileControl extends React.Component {
   render = () => {
     const { onModeChange } = this.props;
     return (
-      <Dropdown id="tile-control-dropdown" onSelect={onModeChange}>
+      <Dropdown id="tile-control-dropdown" onSelect={onModeChange} disabled={this.state.disabled}>
         <Button className="tile-button" disabled={this.state.disabled}>
           <div className="tile-button-container">
             <canvas className="tile-button-cvs" width={tileSize} height={tileSize}
@@ -503,7 +500,7 @@ class TileControl extends React.Component {
             {this.suffixIcon(this.props)}
           </div>
         </Button>
-        <Dropdown.Toggle className="tile-dropdown" disabled={this.state.disabled} />
+        <Dropdown.Toggle className="tile-dropdown" />
         <Dropdown.Menu>
           {this.menuItem("INSERT", "Insert")}
           {this.menuItem("ADD", "Add")}

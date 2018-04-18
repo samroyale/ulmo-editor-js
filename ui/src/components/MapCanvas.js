@@ -16,12 +16,10 @@ const rpgMapService = new RpgMapService();
 class MapCanvas extends React.Component {
   constructor(props) {
     super(props);
-
+    this._canvas = React.createRef();
     this._rpgMap = null;
-    this._canvas = null;
     this._mouseDown = null;
     this._clipboard = rpgMapService.emptyClipboard();
-    
     this.state = {
       showMap: false,
       showOverlay: false,
@@ -90,11 +88,12 @@ class MapCanvas extends React.Component {
   };
 
   drawMap = () => {
-    var cols = this._rpgMap.getCols();
-    var rows = this._rpgMap.getRows();
-    this._canvas.width = cols * tileSize;
-    this._canvas.height = rows * tileSize;
-    var ctx = this._canvas.getContext('2d');
+    const cols = this._rpgMap.getCols();
+    const rows = this._rpgMap.getRows();
+    const canvas = this._canvas.current;
+    canvas.width = cols * tileSize;
+    canvas.height = rows * tileSize;
+    var ctx = canvas.getContext('2d');
     for (var x = 0; x < cols; x++) {
       for (var y = 0; y < rows; y++) {
         ctx.putImageData(this._rpgMap.getMapTile(x, y).getImage(), x * tileSize, y * tileSize)
@@ -219,7 +218,7 @@ class MapCanvas extends React.Component {
     if (!toPosition) {
       return;
     }
-    var ctx = this._canvas.getContext('2d');
+    var ctx = this._canvas.current.getContext('2d');
     var tr = this.getTileRange(fromPosition, toPosition);
     func(tr.topLeft, tr.rows, tr.cols, ctx);
   };
@@ -460,7 +459,7 @@ class MapCanvas extends React.Component {
           <canvas className={bsClass}
               onMouseMove={this.handleMouseMove}
               onMouseOut={this.handleMouseOut}
-              ref={cvs => this._canvas = cvs} />
+              ref={this._canvas} />
 
           <div className="highlight" style={this.highlightStyle()}
               onMouseMove={this.handleSelectionMove}
