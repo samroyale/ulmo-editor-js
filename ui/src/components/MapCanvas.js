@@ -252,11 +252,11 @@ class MapCanvas extends React.Component {
     onMapUpdated();
   };
 
-  buttonsMetadata = () => {
+  buttonsMetadata = props => {
     if (!this.state.showOverlay) {
       return [];
     }
-    var multipleSelected = this.multipleTilesSelected();
+    var multipleSelected = this.multipleTilesSelected(props);
     var pasteInvalid = this._clipboard === null || multipleSelected;
     return [
       {label: 'Send to back', onClick: this.sendToBack},
@@ -272,12 +272,12 @@ class MapCanvas extends React.Component {
         {label: 'Copy', onClick: this.copyTiles},
         {label: 'Paste', onClick: this.pasteTiles, disabled: pasteInvalid}
       ]},
-      this.playButtonMetadata(multipleSelected)
+      this.playButtonMetadata(props, multipleSelected)
     ];
   };
 
-  playButtonMetadata = multipleSelected => {
-    var availableLevels = this.currentTile().getLevels();
+  playButtonMetadata = (props, multipleSelected) => {
+    var availableLevels = this.currentTile(props).getLevels();
     if (multipleSelected || availableLevels.length === 0) {
       return {label: 'PLAY!', onClick: this.playMap, disabled: true};
     }
@@ -295,8 +295,7 @@ class MapCanvas extends React.Component {
     }
   };
 
-  multipleTilesSelected = () => {
-    const { tilePosition } = this.props;
+  multipleTilesSelected = ({ tilePosition }) => {
     var toPosition = tilePosition;
     var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
     return (toPosition.x !== fromPosition.x || toPosition.y !== fromPosition.y);
@@ -395,8 +394,7 @@ class MapCanvas extends React.Component {
 
   hideOverlay = () => this.setState({ showOverlay: false });
 
-  currentTile = () => {
-    const { tilePosition } = this.props;
+  currentTile = ({ tilePosition }) => {
     return this._rpgMap.getMapTile(tilePosition.x, tilePosition.y);
   };
 
@@ -404,7 +402,7 @@ class MapCanvas extends React.Component {
     this.setState({
       showModal: name,
       showOverlay: false,
-      editableTile: this.currentTile().copy()
+      editableTile: this.currentTile(this.props).copy()
     });
   };
 
@@ -415,8 +413,7 @@ class MapCanvas extends React.Component {
     });
   };
 
-  highlightStyle = () => {
-    const { tilePosition } = this.props;
+  highlightStyle = ({ tilePosition }) => {
     if (this.state.startPosition) {
       var tr = this.getTileRange(this.state.startPosition, tilePosition);
       return {
@@ -449,7 +446,7 @@ class MapCanvas extends React.Component {
               onMouseOut={this.handleMouseOut}
               ref={this._canvas} />
 
-          <div className="highlight" style={this.highlightStyle()}
+          <div className="highlight" style={this.highlightStyle(this.props)}
               onMouseMove={this.handleSelectionMove}
               onMouseDown={this.handleMouseDown}
               onMouseUp={this.handleMouseUp}
@@ -459,7 +456,7 @@ class MapCanvas extends React.Component {
           <SelectionPopup
               showOverlay={showOverlay}
               target={overlayTarget}
-              buttons={this.buttonsMetadata()}
+              buttons={this.buttonsMetadata(this.props)}
               onHide={this.hideOverlay} />
         </div>
 

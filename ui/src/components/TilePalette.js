@@ -211,23 +211,22 @@ class TilePalette extends React.Component {
 
   tileSetSelected = tsid => {
     var p = this._tileSetCanvas.current.loadTileSet(tsid);
-    p.then(data => {
-      if (data.tileSet) {
-        this.closeModal();
-        this.setState({
-          tileSetId: data.tileSet.getId(),
-          serviceError: null
-        });
-      }
-    }, this.tileSetLoadErr).done();
+    p.then(
+      data => {
+        if (data.tileSet) {
+          this.closeModal();
+          this.setState({
+            tileSetId: data.tileSet.getId(),
+            serviceError: null
+          });
+        }
+      }, 
+      this.tileSetLoadErr);
   };
 
-  tileSetLoadErr = data => {
-    if (data.err) {
-      // console.log("Error [" + data.err + "]");
-      this.setState({
-        serviceError: errorMessage("Could not load tileset", data)
-      });
+  tileSetLoadErr = ({ err }) => {
+    if (err) {
+      this.setState({ serviceError: err });
       return;
     }
     console.log("Something went wrong...");
@@ -235,23 +234,24 @@ class TilePalette extends React.Component {
 
   loadTileSetsFromServer = evt => {
     var p = tileSetService.loadTileSets();
-    p.then(data => {
-      if (data.tileSets) {
-        this.setState({
-          tileSets: data.tileSets,
-          serviceError: null,
-          showModal: true
-        });
-      }
-    }, this.tileSetsLoadErr).done();
+    p.then(
+      data => {
+        if (data.tileSets) {
+          this.setState({
+            tileSets: data.tileSets,
+            serviceError: null,
+            showModal: true
+          });
+        }
+      }, 
+      this.tileSetsLoadErr);
   };
 
-  tileSetsLoadErr = data => {
-    if (data.err) {
-      // console.log("Error [" + data.err + "]");
+  tileSetsLoadErr = ({ err }) => {
+    if (err) {
       this.setState({
         tileSets: [],
-        serviceError: errorMessage("Could not load tilesets", data),
+        serviceError: err,
         showModal: true
       });
       return;

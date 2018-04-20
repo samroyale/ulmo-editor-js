@@ -98,49 +98,115 @@ class TileSetService {
   }
 
   loadTileSets = () => {
-    var deferred = Q.defer();
-    var p = Q($.get(tileSetsApi).promise());
-    p.then(
-      data => deferred.resolve({ tileSets: data }),
-      xhr => deferred.reject(this.handleError(xhr))
-    ).done();
-    return deferred.promise;
+    var p = new Promise((resolve, reject) => {
+      fetch(tileSetsApi, { method: 'get' })
+      .then(response => {
+        if(response.ok) {
+          return response.json();
+        }
+        throw new Error(`Could not load tilesets [${response.status}: ${response.statusText}]`);
+      })
+      .then(data => resolve({ tileSets: data }))
+      .catch(err => reject({ err: err }))
+    });
+    return p;
   };
+  // loadTileSets = () => {
+  //   var deferred = Q.defer();
+  //   var p = Q($.get(tileSetsApi).promise());
+  //   p.then(
+  //     data => deferred.resolve({ tileSets: data }),
+  //     xhr => deferred.reject(this.handleError(xhr))
+  //   ).done();
+  //   return deferred.promise;
+  // };
 
   loadTileSetByName = name => {
-    if (this.nameToIdMappings[name]) {
-      return this.loadTileSet(this.nameToIdMappings[name]);
-    }
-    var deferred = Q.defer();
-    var tileSetUrl = tileSetsApi + "/tileset?name=" + name;
-    var p = Q($.get(tileSetUrl).promise());
-    p.then(data => {
-      this.cache[data.id] = deferred;
-      this.nameToIdMappings[name] = data.id;
-      this.initTileSet(data, deferred);
-    }, xhr => {
-      deferred.reject(this.handleError(xhr, name));
-    }).done();
-    return deferred.promise;
+    // if (this.nameToIdMappings[name]) {
+    //   return this.loadTileSet(this.nameToIdMappings[name]);
+    // }
+    var p = new Promise((resolve, reject) => {
+      fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'get' })
+        .then(response => {
+          if(response.ok) {
+            return response.json();
+          }
+          throw new Error(`Could not load tileset [${response.status}: ${response.statusText}]`);
+        })
+        .then(data => {
+          // this.cache[data.id] = deferred;
+          // this.nameToIdMappings[name] = data.id;
+          this.initTileSet(data, resolve, reject);
+        })
+        .catch(err => reject({ err: err }))
+    });
+    return p;
   };
+  // loadTileSetByName = name => {
+  //   if (this.nameToIdMappings[name]) {
+  //     return this.loadTileSet(this.nameToIdMappings[name]);
+  //   }
+  //   var deferred = Q.defer();
+  //   var tileSetUrl = tileSetsApi + "/tileset?name=" + name;
+  //   var p = Q($.get(tileSetUrl).promise());
+  //   p.then(data => {
+  //     this.cache[data.id] = deferred;
+  //     this.nameToIdMappings[name] = data.id;
+  //     this.initTileSet(data, deferred);
+  //   }, xhr => {
+  //     deferred.reject(this.handleError(xhr, name));
+  //   }).done();
+  //   return deferred.promise;
+  // };
 
+  // TODO: put caching back
   loadTileSet = tileSetId => {
-    if (this.cache[tileSetId]) {
-      return this.cache[tileSetId].promise;
-    }
-    var deferred = Q.defer();
-    var tileSetUrl = tileSetsApi + "/" + tileSetId;
-    var p = Q($.get(tileSetUrl).promise());
-    p.then(data => {
-      this.cache[tileSetId] = deferred;
-      this.nameToIdMappings[data.name] = tileSetId;
-      this.initTileSet(data, deferred);
-    }, xhr => {
-      deferred.reject(this.handleError(xhr, tileSetId));
-    }).done();
-    return deferred.promise;
+    // if (this.cache[tileSetId]) {
+    //   return this.cache[tileSetId].promise;
+    // }
+    var p = new Promise((resolve, reject) => {
+      fetch(`${tileSetsApi}/${tileSetId}`, { method: 'get' })
+        .then(response => {
+          if(response.ok) {
+            return response.json();
+          }
+          throw new Error(`Could not load tileset [${response.status}: ${response.statusText}]`);
+        })
+        .then(data => {
+          // this.cache[tileSetId] = deferred;
+          // this.nameToIdMappings[data.name] = tileSetId;
+          this.initTileSet(data, resolve, reject);
+        })
+        .catch(err => reject({ err: err }))
+    });
+    return p;
   };
+  // loadTileSet = tileSetId => {
+  //   if (this.cache[tileSetId]) {
+  //     return this.cache[tileSetId].promise;
+  //   }
+  //   var deferred = Q.defer();
+  //   var tileSetUrl = tileSetsApi + "/" + tileSetId;
+  //   var p = Q($.get(tileSetUrl).promise());
+  //   p.then(data => {
+  //     this.cache[tileSetId] = deferred;
+  //     this.nameToIdMappings[data.name] = tileSetId;
+  //     this.initTileSet(data, deferred);
+  //   }, xhr => {
+  //     deferred.reject(this.handleError(xhr, tileSetId));
+  //   }).done();
+  //   return deferred.promise;
+  // };
 
+  // handleFetchError = (err, id) => {
+  //   // var data = xhr.responseJSON;
+  //   // if (data) {
+  //   //   // known errors go here
+  //   //   return { err: data.err, status: xhr.status, id: id };
+  //   // }
+  //   return { err: err.message, id: id };
+  // };
+  
   handleError = (xhr, id) => {
     var data = xhr.responseJSON;
     if (data) {
@@ -150,20 +216,20 @@ class TileSetService {
     return { err: xhr.statusText, status: xhr.status, id: id };
   };
 
-  initTileSet = (tileSetDef, deferred) => {
-    var tilesImageUrl = tilesImgPath + "/" + tileSetDef.image;
+  initTileSet = (tileSetDef, resolve, reject) => {
+    var tilesImageUrl = `${tilesImgPath}/${tileSetDef.image}`;
     loadImage(tilesImageUrl, data => {
       if (data.err) {
-        deferred.reject({ err: data.err, id: tileSetDef.name });
+        reject({ err: `Could not load tileset [${data.err}]` });
         return;
       }
-      deferred.resolve({ tileSet: this.buildTileSet(tileSetDef, data.img, deferred) });
+      resolve({ tileSet: this.buildTileSet(tileSetDef, data.img) });
     });
   };
 
   buildTileSet = (tileSetDef, tileSetImage, deferred) => {
     var tiles = this.initTiles(tileSetDef, tileSetImage);
-    deferred.notify(100);
+    // deferred.notify(100);
     return new TileSet(tileSetDef.id, tileSetDef.name, tiles);
   };
 

@@ -585,7 +585,7 @@ class RpgMapService {
     }
     // wait for all tilesets to load and then continue
     var tileSets = {};
-    Q.all(tileSetPromises).then(values => {
+    Promise.all(tileSetPromises).then(values => {
       deferred.notify(80);
       values.forEach(value => {
         tileSets[value.tileSet.getName()] = value.tileSet;
@@ -596,7 +596,7 @@ class RpgMapService {
     }, percent => {
       var increment = progress < 80 ? percent / 10 : 0;
       deferred.notify(progress += increment);
-    }).done();
+    });
   };
 
   /*
