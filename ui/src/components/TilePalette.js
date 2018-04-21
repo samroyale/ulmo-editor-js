@@ -96,16 +96,14 @@ class TileSetCanvas extends React.Component {
     };
   }
 
-  loadTileSet = tilesetId => {
-    var p = tileSetService.loadTileSet(tilesetId);
-    return p.then(data => {
-      if (data.tileSet) {
-        this._tileSet = data.tileSet;
-        this.drawTileSet();
-        this.setState({ showTileset: true });
-      }
-      return data;
-    });
+  loadTileSet = async (tilesetId) => {
+    var data = await tileSetService.loadTileSet(tilesetId);
+    if (data.tileSet) {
+      this._tileSet = data.tileSet;
+      this.drawTileSet();
+      this.setState({ showTileset: true });
+    }
+    return data;
   };
 
   drawTileSet = () => {
@@ -209,19 +207,17 @@ class TilePalette extends React.Component {
 
   closeModal = () => this.setState({ showModal: false });
 
-  tileSetSelected = tsid => {
-    var p = this._tileSetCanvas.current.loadTileSet(tsid);
-    p.then(
-      data => {
-        if (data.tileSet) {
-          this.closeModal();
-          this.setState({
-            tileSetId: data.tileSet.getId(),
-            serviceError: null
-          });
-        }
-      }, 
-      this.tileSetLoadErr);
+  tileSetSelected = async (tsid) => {
+    try {
+      var { tileSet } = await this._tileSetCanvas.current.loadTileSet(tsid);
+      this.closeModal();
+      this.setState({
+        tileSetId: tileSet.getId(),
+        serviceError: null
+      });
+    } catch(e) {
+      this.tileSetLoadErr(e);
+    }
   };
 
   tileSetLoadErr = ({ err }) => {
@@ -232,20 +228,18 @@ class TilePalette extends React.Component {
     console.log("Something went wrong...");
   };
 
-  loadTileSetsFromServer = evt => {
-    var p = tileSetService.loadTileSets();
-    p.then(
-      data => {
-        if (data.tileSets) {
-          this.setState({
-            tileSets: data.tileSets,
-            serviceError: null,
-            showModal: true
-          });
-        }
-      }, 
-      this.tileSetsLoadErr);
-  };
+  loadTileSetsFromServer = async (evt) => {
+    try {
+      var { tileSets } = await tileSetService.loadTileSets();
+      this.setState({
+        tileSets: tileSets,
+        serviceError: null,
+        showModal: true
+      });
+    } catch(e) {
+      this.tileSetsLoadErr(e);
+    }
+  }
 
   tileSetsLoadErr = ({ err }) => {
     if (err) {

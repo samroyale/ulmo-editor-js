@@ -207,14 +207,14 @@ class TileSetService {
   //   return { err: err.message, id: id };
   // };
   
-  handleError = (xhr, id) => {
-    var data = xhr.responseJSON;
-    if (data) {
-      // known errors go here
-      return { err: data.err, status: xhr.status, id: id };
-    }
-    return { err: xhr.statusText, status: xhr.status, id: id };
-  };
+  // handleError = (xhr, id) => {
+  //   var data = xhr.responseJSON;
+  //   if (data) {
+  //     // known errors go here
+  //     return { err: data.err, status: xhr.status, id: id };
+  //   }
+  //   return { err: xhr.statusText, status: xhr.status, id: id };
+  // };
 
   initTileSet = (tileSetDef, resolve, reject) => {
     var tilesImageUrl = `${tilesImgPath}/${tileSetDef.image}`;
