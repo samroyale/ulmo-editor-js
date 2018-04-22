@@ -458,10 +458,10 @@ class RpgMapService {
           if(response.ok) {
             return response.json();
           }
-          throw new Error(`Could not load maps [${response.status}: ${response.statusText}]`);
+          throw new Error(`${response.status}: ${response.statusText}`);
         })
         .then(data => resolve({ maps: data }))
-        .catch(err => reject({ err: err.message }))
+        .catch(err => reject({ err: `Could not load maps [${err.message}]` }))
     });
     return p;
   };
@@ -473,10 +473,10 @@ class RpgMapService {
           if(response.ok) {
             return response.json();
           }
-          throw new Error(`Could not load map [${response.status}: ${response.statusText}]`);
+          throw new Error(`${response.status}: ${response.statusText}`);
         })
         .then(data => this.initRpgMap(data, resolve, reject))
-        .catch(err => reject({ err: err.message }))
+        .catch(err => reject({ err: `Could not load map [${err.message}]` }))
     });
     return p;
     //
@@ -591,16 +591,16 @@ class RpgMapService {
     //   progressCallback(progress += increment);
     // });
     var tileSetPromises = this.tileSetPromises(rpgMapDef);
-    if (tileSetPromises.size === 0) {
-      // no tilesets to load - either a new or empty map
-      // deferred.notify(80);
-      resolve({ map: this.buildRpgMap({}, rpgMapDef) });
-      return;
-    }
+    // if (tileSetPromises.size === 0) {
+    //   // no tilesets to load - either a new or empty map
+    //   // deferred.notify(80);
+    //   resolve({ map: this.buildRpgMap({}, rpgMapDef) });
+    //   return;
+    // }
     // wait for all tilesets to load and then continue
-    var tileSets = {};
     Promise.all(tileSetPromises)
       .then(values => {
+        var tileSets = {};
         // deferred.notify(80);
         values.forEach(value => {
           tileSets[value.tileSet.getName()] = value.tileSet;

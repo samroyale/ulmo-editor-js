@@ -84,18 +84,14 @@ export function copyCanvas(canvas) {
 //   });
 //   return p;
 // };
-export function loadImage(imageUrl, callback) {
-  let image = new Image();
-  image.onerror = () => {
-    callback({
-      err: imageUrl + ' failed to load'
-    });
-  };
-  image.onload = () => {
-    callback({ img: image });
-  };
-  //tileSetImage.crossOrigin = "Anonymous"; // CORS
-  image.src = imageUrl;
+export function loadImage(imageUrl, data) {
+  var p = new Promise((resolve, reject) => {
+    let image = new Image();
+    image.onerror = () => reject({ message: `${imageUrl} failed to load` });
+    image.onload = () => resolve({ img: image, data: data });
+    image.src = imageUrl;
+  });
+  return p;
 };
 
 export function parseLevel(levelStr) {

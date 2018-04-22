@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import Q from 'q';
-import { getDrawingContext, loadImage } from '../utils';
+import { getDrawingContext, loadImage, fetchImage } from '../utils';
 import { tileSetsApi, tilesImgPath, tileSize } from '../config';
 
 var instance = null;
@@ -104,10 +104,10 @@ class TileSetService {
         if(response.ok) {
           return response.json();
         }
-        throw new Error(`Could not load tilesets [${response.status}: ${response.statusText}]`);
+        throw new Error(`${response.status}: ${response.statusText}`);
       })
       .then(data => resolve({ tileSets: data }))
-      .catch(err => reject({ err: err.message }))
+      .catch(err => reject({ err: `Could not load tilesets [${err.message}]` }));
     });
     return p;
   };
@@ -121,6 +121,7 @@ class TileSetService {
   //   return deferred.promise;
   // };
 
+  // TODO: put caching back
   loadTileSetByName = name => {
     // if (this.nameToIdMappings[name]) {
     //   return this.loadTileSet(this.nameToIdMappings[name]);
@@ -131,14 +132,15 @@ class TileSetService {
           if(response.ok) {
             return response.json();
           }
-          throw new Error(`Could not load tileset [${response.status}: ${response.statusText}]`);
+          throw new Error(`${response.status}: ${response.statusText}`);
         })
         .then(data => {
-          // this.cache[data.id] = deferred;
-          // this.nameToIdMappings[name] = data.id;
-          this.initTileSet(data, resolve, reject);
+          // this.cache[tileSetId] = deferred;
+          // this.nameToIdMappings[data.name] = tileSetId;
+          return loadImage(`${tilesImgPath}/${data.image}`, data);
         })
-        .catch(err => reject({ err: err.message }))
+        .then(data => resolve({ tileSet: this.buildTileSet(data) }))
+        .catch(err => reject({ err: `Could not load tileset [${err.message}]` }));
     });
     return p;
   };
@@ -170,14 +172,15 @@ class TileSetService {
           if(response.ok) {
             return response.json();
           }
-          throw new Error(`Could not load tileset [${response.status}: ${response.statusText}]`);
+          throw new Error(`${response.status}: ${response.statusText}`);
         })
         .then(data => {
           // this.cache[tileSetId] = deferred;
           // this.nameToIdMappings[data.name] = tileSetId;
-          this.initTileSet(data, resolve, reject);
+          return loadImage(`${tilesImgPath}/${data.image}`, data);
         })
-        .catch(err => reject({ err: err }))
+        .then(data => resolve({ tileSet: this.buildTileSet(data) }))
+        .catch(err => reject({ err: `Could not load tileset [${err.message}]` }));
     });
     return p;
   };
@@ -218,19 +221,34 @@ class TileSetService {
 
   initTileSet = (tileSetDef, resolve, reject) => {
     var tilesImageUrl = `${tilesImgPath}/${tileSetDef.image}`;
-    loadImage(tilesImageUrl, data => {
-      if (data.err) {
-        reject({ err: `Could not load tileset [${data.err}]` });
-        return;
-      }
-      resolve({ tileSet: this.buildTileSet(tileSetDef, data.img) });
-    });
+    loadImage(tilesImageUrl)
+      .then(data => resolve({ tileSet: this.buildTileSet(tileSetDef, data.img) }))
+      .catch(err => {
+        // reject({ err: `Could not load tileset [${err.err}]` })
+        throw new Error(`Could not load tileset [${err.err}]`);
+      });
   };
+  // initTileSet = (tileSetDef, resolve, reject) => {
+  //   var tilesImageUrl = `${tilesImgPath}/${tileSetDef.image}`;
+  //   loadImage(tilesImageUrl)
+  //     .then(data => resolve({ tileSet: this.buildTileSet(tileSetDef, data.img) }))
+  //     .catch(err => reject({ err: `Could not load tileset [${err.err}]` }));
+  // };
+  // initTileSet = (tileSetDef, resolve, reject) => {
+  //   var tilesImageUrl = `${tilesImgPath}/${tileSetDef.image}`;
+  //   loadImage(tilesImageUrl, data => {
+  //     if (data.err) {
+  //       reject({ err: `Could not load tileset [${data.err}]` });
+  //       return;
+  //     }
+  //     resolve({ tileSet: this.buildTileSet(tileSetDef, data.img) });
+  //   });
+  // };
 
-  buildTileSet = (tileSetDef, tileSetImage, deferred) => {
-    var tiles = this.initTiles(tileSetDef, tileSetImage);
+  buildTileSet = ({ data, img }) => {
+    var tiles = this.initTiles(data, img);
     // deferred.notify(100);
-    return new TileSet(tileSetDef.id, tileSetDef.name, tiles);
+    return new TileSet(data.id, data.name, tiles);
   };
 
   initTiles = (tileSetDef, tileSetImage) => {

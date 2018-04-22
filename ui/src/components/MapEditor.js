@@ -150,9 +150,11 @@ class MapEditor extends React.Component {
   };
 
   mapLoadErr = ({ err }) => {
-    this.closeProgressModal();
     if (err) {
-      this.setState({ serviceError: err });
+      this.setState({
+        showProgressModal: false,
+        serviceError: err
+      });
       return;
     }
     console.log("Something went wrong...");
