@@ -75,6 +75,15 @@ export function copyCanvas(canvas) {
   return copy;
 };
 
+// export function loadImage(imageUrl) {
+//   var p = new Promise((resolve, reject) => {
+//     let image = new Image();
+//     image.onerror = () => reject({ err: `${imageUrl} failed to load` });
+//     image.onload = () => resolve({ img: image });
+//     image.src = imageUrl;
+//   });
+//   return p;
+// };
 export function loadImage(imageUrl, callback) {
   let image = new Image();
   image.onerror = () => {

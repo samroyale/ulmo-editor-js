@@ -3,7 +3,7 @@ import { Panel, Modal, ButtonToolbar, Button, Collapse, Alert } from 'react-boot
 import TileSetService from '../services/TileSets';
 import { TilePosition } from '../utils';
 import { tileSize } from '../config';
-import { errorMessage, initTile } from '../utils';
+import { initTile } from '../utils';
 import './TilePalette.css';
 
 const emptyTile = initTile('white');
@@ -96,7 +96,7 @@ class TileSetCanvas extends React.Component {
     };
   }
 
-  loadTileSet = async (tilesetId) => {
+  loadTileSet = async tilesetId => {
     var data = await tileSetService.loadTileSet(tilesetId);
     if (data.tileSet) {
       this._tileSet = data.tileSet;
@@ -207,7 +207,7 @@ class TilePalette extends React.Component {
 
   closeModal = () => this.setState({ showModal: false });
 
-  tileSetSelected = async (tsid) => {
+  tileSetSelected = async tsid => {
     try {
       var { tileSet } = await this._tileSetCanvas.current.loadTileSet(tsid);
       this.closeModal();
@@ -228,7 +228,7 @@ class TilePalette extends React.Component {
     console.log("Something went wrong...");
   };
 
-  loadTileSetsFromServer = async (evt) => {
+  loadTileSetsFromServer = async evt => {
     try {
       var { tileSets } = await tileSetService.loadTileSets();
       this.setState({

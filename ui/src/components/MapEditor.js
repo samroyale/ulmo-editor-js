@@ -88,13 +88,15 @@ class MapEditor extends React.Component {
     this.continueMapSelected(mid);
   };
 
-  continueMapSelected = mid => {
+  continueMapSelected = async mid => {
     this.showProgressModal("Loading map...");
-    var p = this._mapCanvas.current.loadMap(mid);
-    p.then(
-      data => this.mapLoaded(data, false), this.mapLoadErr,
-      percent => this.updateProgress(percent)
-    ).done();
+    try {
+      var data = await this._mapCanvas.current.loadMap(mid);
+      this.mapLoaded(data, false);
+    }
+    catch(e) {
+      this.mapLoadErr(e);
+    }
   };
 
   newMap = event => this.setState({ showModal: "NEW" });
@@ -129,54 +131,52 @@ class MapEditor extends React.Component {
     ).done();
   };
 
-  mapLoaded = (data, dirty) => {
-    console.log("map loaded: " + data.map.getId());
-    if (data.map) {
+  mapLoaded = ({ map, oldMap }, dirty) => {
+    if (map) {
+      console.log("map loaded: " + map.getId());
       this.closeModal();
       this.setState({
-        mapId: data.map.getId(),
+        mapId: map.getId(),
         mapDirty: dirty,
         serviceError: null
       });
     }
     // oldMap is present only on resize
-    if (data.oldMap) {
-      this.addToChangeHistory({ map: data.oldMap });
+    if (oldMap) {
+      this.addToChangeHistory({ map: oldMap });
       return;
     }
     this.setState({ changeHistory: [] });
   };
 
-  mapLoadErr = data => {
+  mapLoadErr = ({ err }) => {
     this.closeProgressModal();
-    if (data.err) {
-      // console.log("Error [" + data.err + "]");
-      this.setState({
-        serviceError: errorMessage("Could not load map", data)
-      });
+    if (err) {
+      this.setState({ serviceError: err });
       return;
     }
     console.log("Something went wrong...");
   };
 
-  loadMapsFromServer = event => {
-    var p = rpgMapService.loadMaps();
-    p.then(data => {
-      if (data.maps) {
-        this.setState({
-          maps: data.maps,
-          serviceError: null,
-          showModal: "OPEN"
-        });
-      }
-    }, this.mapsLoadErr).done();
+  loadMapsFromServer = async evt => {
+    try {
+      var { maps } = await rpgMapService.loadMaps();
+      this.setState({
+        maps: maps,
+        serviceError: null,
+        showModal: "OPEN"
+      });
+    }
+    catch(e) {
+      this.mapsLoadErr(e);
+    }
   };
 
-  mapsLoadErr = data => {
-    if (data.err) {
-      // console.log("Error [" + data.err + "]");
+  mapsLoadErr = ({ err }) => {
+    if (err) {
       this.setState({
-        serviceError: errorMessage("Could not load maps", data),
+        maps: [],
+        serviceError: err,
         showErrorModal: true,
         errorModalTitle: "Open Map"
       });

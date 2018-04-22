@@ -31,8 +31,9 @@ class MapCanvas extends React.Component {
     };
   }
 
-  loadMap = mapId => {
-    return this.mapLoaded(rpgMapService.loadMap(mapId));
+  loadMap = async mapId => {
+    var data = await rpgMapService.loadMap(mapId);
+    return this.mapLoaded(data);
   };
 
   newMap = (rows, cols) => {
@@ -45,14 +46,12 @@ class MapCanvas extends React.Component {
     }
   };
 
-  mapLoaded = rpgMap => {
+  mapLoaded = async data => {
     this.removeHighlight(); // resets tile positions
-    return rpgMap.then(data => {
-      if (data.map) {
-        this.applyMap(data.map);
-      }
-      return data;
-    });
+    if (data.map) {
+      this.applyMap(data.map);
+    }
+    return data;
   };
 
   restoreMap = rpgMap => this.applyMap(rpgMap);

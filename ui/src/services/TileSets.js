@@ -107,7 +107,7 @@ class TileSetService {
         throw new Error(`Could not load tilesets [${response.status}: ${response.statusText}]`);
       })
       .then(data => resolve({ tileSets: data }))
-      .catch(err => reject({ err: err }))
+      .catch(err => reject({ err: err.message }))
     });
     return p;
   };
@@ -138,7 +138,7 @@ class TileSetService {
           // this.nameToIdMappings[name] = data.id;
           this.initTileSet(data, resolve, reject);
         })
-        .catch(err => reject({ err: err }))
+        .catch(err => reject({ err: err.message }))
     });
     return p;
   };
