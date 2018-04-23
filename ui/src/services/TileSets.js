@@ -96,16 +96,18 @@ class TileSetService {
   }
 
   loadTileSets = () => {
-    var p = new Promise((resolve, reject) => {
-      fetch(tileSetsApi, { method: 'get' })
-      .then(response => {
-        if(response.ok) {
-          return response.json();
+    var p = new Promise(async (resolve, reject) => {
+      try {
+        var response = await fetch(tileSetsApi, { method: 'get' });
+        if (!response.ok) {
+          throw new Error(`${response.status}: ${response.statusText}`);
         }
-        throw new Error(`${response.status}: ${response.statusText}`);
-      })
-      .then(data => resolve({ tileSets: data }))
-      .catch(err => reject({ message: `Could not load tilesets [${err.message}]` }));
+        var json = await response.json();
+        resolve({ tileSets: json });
+      }
+      catch(e) {
+        reject({ message: `Could not load tilesets [${e.message}]` })
+      }
     });
     return p;
   };
@@ -115,21 +117,19 @@ class TileSetService {
     // if (this.nameToIdMappings[name]) {
     //   return this.loadTileSet(this.nameToIdMappings[name]);
     // }
-    var p = new Promise((resolve, reject) => {
-      fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'get' })
-        .then(response => {
-          if(response.ok) {
-            return response.json();
-          }
+    var p = new Promise(async (resolve, reject) => {
+      try {
+        var response = await fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'get' });
+        if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
-        })
-        .then(data => {
-          // this.cache[tileSetId] = deferred;
-          // this.nameToIdMappings[data.name] = tileSetId;
-          return loadImage(`${tilesImgPath}/${data.image}`, data);
-        })
-        .then(data => resolve({ tileSet: this.buildTileSet(data) }))
-        .catch(err => reject({ message: `Could not load tileset [${err.message}]` }));
+        }
+        var json = await response.json();
+        var img = await loadImage(`${tilesImgPath}/${json.image}`);
+        resolve({ tileSet: this.buildTileSet(json, img) });
+      }
+      catch (e) {
+        reject({ message: `Could not load tileset [${e.message}]` })
+      }
     });
     return p;
   };
@@ -139,26 +139,24 @@ class TileSetService {
     // if (this.cache[tileSetId]) {
     //   return this.cache[tileSetId].promise;
     // }
-    var p = new Promise((resolve, reject) => {
-      fetch(`${tileSetsApi}/${tileSetId}`, { method: 'get' })
-        .then(response => {
-          if(response.ok) {
-            return response.json();
-          }
+    var p = new Promise(async (resolve, reject) => {
+      try {
+        var response = await fetch(`${tileSetsApi}/${tileSetId}`, { method: 'get' });
+        if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
-        })
-        .then(data => {
-          // this.cache[tileSetId] = deferred;
-          // this.nameToIdMappings[data.name] = tileSetId;
-          return loadImage(`${tilesImgPath}/${data.image}`, data);
-        })
-        .then(data => resolve({ tileSet: this.buildTileSet(data) }))
-        .catch(err => reject({ message: `Could not load tileset [${err.message}]` }));
+        }
+        var json = await response.json();
+        var img = await loadImage(`${tilesImgPath}/${json.image}`);
+        resolve({ tileSet: this.buildTileSet(json, img) });
+      }
+      catch (e) {
+        reject({ message: `Could not load tileset [${e.message}]` })
+      }
     });
     return p;
   };
 
-  buildTileSet = ({ data, img }) => {
+  buildTileSet = (data, { img }) => {
     var tiles = this.initTiles(data, img);
     // deferred.notify(100);
     return new TileSet(data.id, data.name, tiles);

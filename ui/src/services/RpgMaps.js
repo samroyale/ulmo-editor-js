@@ -452,34 +452,36 @@ class RpgMapService {
   }
 
   loadMaps = () => {
-    var p = new Promise((resolve, reject) => {
-      fetch(rpgMapsApi, { method: 'get', cache: 'no-store' })
-        .then(response => {
-          if(response.ok) {
-            return response.json();
-          }
+    var p = new Promise(async (resolve, reject) => {
+      try {
+        var response = await fetch(rpgMapsApi, { method: 'get', cache: 'no-store' });
+        if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
-        })
-        .then(data => resolve({ maps: data }))
-        .catch(err => reject({ err: `Could not load maps [${err.message}]` }))
+        }
+        var json = await response.json();
+        resolve({ maps: json });
+      }
+      catch(e) {
+        reject({ message: `Could not load maps [${e.message}]` })
+      }
     });
     return p;
   };
 
   loadMap = mapId => {
-    var p = new Promise((resolve, reject) => {
-      fetch(`${rpgMapsApi}/${mapId}`, { method: 'get', cache: 'no-store' })
-        .then(response => {
-          if(response.ok) {
-            return response.json();
-          }
+    var p = new Promise(async (resolve, reject) => {
+      try {
+        var response = await fetch(`${rpgMapsApi}/${mapId}`, { method: 'get', cache: 'no-store' });
+        if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
-        })
-        .then(data => {
-          return Promise.all([data, ...this.tileSetPromises(data)]);
-        })
-        .then(values => resolve({map: this.buildRpgMap(values[0], values.slice(1))}))
-        .catch(err => reject({ err: `Could not load map [${err.message}]` }));
+        }
+        var json = await response.json();
+        var tileSets = await Promise.all([...this.tileSetPromises(json)]);
+        resolve({ map: this.buildRpgMap(json, tileSets) })
+      }
+      catch(e) {
+        reject({ message: `Could not load map [${e.message}]` })
+      }
     });
     return p;
   };
@@ -585,7 +587,6 @@ class RpgMapService {
     tileSetsArray.forEach(value => {
       tileSets[value.tileSet.getName()] = value.tileSet;
     });
-    // console.log("buildRpgMap: " + tileSetMappings.size);
     var mapTiles = this.initMapTiles(tileSets, rpgMapDef);
     var sprites = this.initSprites(rpgMapDef);
     // deferred.notify(100);

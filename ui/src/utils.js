@@ -84,11 +84,11 @@ export function copyCanvas(canvas) {
 //   });
 //   return p;
 // };
-export function loadImage(imageUrl, data) {
+export function loadImage(imageUrl) {
   var p = new Promise((resolve, reject) => {
     let image = new Image();
     image.onerror = () => reject({ message: `${imageUrl} failed to load` });
-    image.onload = () => resolve({ img: image, data: data });
+    image.onload = () => resolve({ img: image });
     image.src = imageUrl;
   });
   return p;

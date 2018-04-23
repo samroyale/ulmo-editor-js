@@ -149,11 +149,11 @@ class MapEditor extends React.Component {
     this.setState({ changeHistory: [] });
   };
 
-  mapLoadErr = ({ err }) => {
-    if (err) {
+  mapLoadErr = ({ message }) => {
+    if (message) {
       this.setState({
         showProgressModal: false,
-        serviceError: err
+        serviceError: message
       });
       return;
     }
@@ -174,11 +174,11 @@ class MapEditor extends React.Component {
     }
   };
 
-  mapsLoadErr = ({ err }) => {
-    if (err) {
+  mapsLoadErr = ({ message }) => {
+    if (message) {
       this.setState({
         maps: [],
-        serviceError: err,
+        serviceError: message,
         showErrorModal: true,
         errorModalTitle: "Open Map"
       });
