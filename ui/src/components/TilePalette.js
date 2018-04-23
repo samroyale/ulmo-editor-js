@@ -220,9 +220,9 @@ class TilePalette extends React.Component {
     }
   };
 
-  tileSetLoadErr = ({ err }) => {
-    if (err) {
-      this.setState({ serviceError: err });
+  tileSetLoadErr = ({ message }) => {
+    if (message) {
+      this.setState({ serviceError: message });
       return;
     }
     console.log("Something went wrong...");
@@ -241,11 +241,11 @@ class TilePalette extends React.Component {
     }
   }
 
-  tileSetsLoadErr = ({ err }) => {
-    if (err) {
+  tileSetsLoadErr = ({ message }) => {
+    if (message) {
       this.setState({
         tileSets: [],
-        serviceError: err,
+        serviceError: message,
         showModal: true
       });
       return;
