@@ -544,25 +544,20 @@ class RpgMapService {
   };
 
   newMap = (rows, cols) => {
-    var data = {
+    var emptyTileSetDef = {
       rows: rows,
       cols: cols,
       mapTiles: []
     };
-    var deferred = Q.defer();
-    this.initRpgMap(data, deferred, function() {});
-    return deferred.promise;
+    return { map: this.buildRpgMap(emptyTileSetDef, []) };
   };
 
-  resizeMap = (rpgMap, left, right, top, bottom) => {
+  resizeMap = async (rpgMap, left, right, top, bottom) => {
     var newRows = rpgMap.getRows() + top + bottom;
     var newCols = rpgMap.getCols() + left + right;
-    var newMap = this.newMap(newRows, newCols);
-    return newMap.then(data => {
-      var newRpgMap = data.map;
-      newRpgMap.resize(rpgMap, left, top);
-      return { map: newRpgMap, oldMap: rpgMap };
-    });
+    var { map } = await this.newMap(newRows, newCols);
+    map.resize(rpgMap, left, top);
+    return { map: map, oldMap: rpgMap };
   };
 
   /*
@@ -582,24 +577,25 @@ class RpgMapService {
   };
 
   buildRpgMap = (rpgMapDef, tileSetsArray) => {
-    var tileSets = {};
-    // deferred.notify(80);
-    tileSetsArray.forEach(value => {
-      tileSets[value.tileSet.getName()] = value.tileSet;
-    });
-    var mapTiles = this.initMapTiles(tileSets, rpgMapDef);
+    // convert tilesets array to map of tilesets keyed on name
+    const tileSets = tileSetsArray.reduce((map, { tileSet }) => {
+      map[tileSet.getName()] = tileSet;
+      return map;
+    }, {});
+    var mapTiles = this.initMapTiles(rpgMapDef, tileSets);
     var sprites = this.initSprites(rpgMapDef);
     // deferred.notify(100);
     return new RpgMap(rpgMapDef.id, rpgMapDef.name, mapTiles, sprites);
   };
 
-  initMapTiles = (tileSets, rpgMapDef) => {
-    var tileDefKey = (x, y) => x + "-" + y;
-    var tileDefMappings = {};
-    rpgMapDef.mapTiles.forEach(mapTileDef => {
-      var key = tileDefKey(mapTileDef.xy[0], mapTileDef.xy[1]);
-      tileDefMappings[key] = mapTileDef;
-    });
+  initMapTiles = (rpgMapDef, tileSets) => {
+    const tileDefKey = (x, y) => `${x}-${y}`;
+
+    const tileDefMappings = rpgMapDef.mapTiles.reduce((map, mapTileDef) => {
+      map[tileDefKey(mapTileDef.xy[0], mapTileDef.xy[1])] = mapTileDef;
+      return map;
+    }, {});
+
     var rows = rpgMapDef.rows, cols = rpgMapDef.cols;
     var tiles = new Array(cols);
     for (var x = 0; x < cols; x++) {

@@ -99,7 +99,7 @@ class MapEditor extends React.Component {
     }
   };
 
-  newMap = event => this.setState({ showModal: "NEW" });
+  newMap = evt => this.setState({ showModal: "NEW" });
 
   newMapOfSize = (rows, cols) => {
     if (this.state.mapDirty) {
@@ -111,24 +111,20 @@ class MapEditor extends React.Component {
     this.continueNewMapOfSize(rows, cols);
   };
 
-  continueNewMapOfSize = (rows, cols) => {
-    var p = this._mapCanvas.current.newMap(rows, cols);
-    p.then(
-      data => this.mapLoaded(data, true)
-    ).done();
+  continueNewMapOfSize = async (rows, cols) => {
+    var data = await this._mapCanvas.current.newMap(rows, cols);
+    this.mapLoaded(data, true);
   };
 
-  resizeMap = event => {
+  resizeMap = evt => {
     if (this.isMapPresent()) {
       this.setState({ showModal: "RESIZE" });
     }
   };
 
-  resizeMapToSize = (left, right, top, bottom) => {
-    var p = this._mapCanvas.current.resizeMap(left, right, top, bottom);
-    p.then(
-      data => this.mapLoaded(data, true)
-    ).done();
+  resizeMapToSize = async (left, right, top, bottom) => {
+    var data = await this._mapCanvas.current.resizeMap(left, right, top, bottom);
+    this.mapLoaded(data, true);
   };
 
   mapLoaded = ({ map, oldMap }, dirty) => {
