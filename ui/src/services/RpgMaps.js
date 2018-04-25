@@ -450,13 +450,13 @@ class RpgMapService {
   }
 
   loadMaps = () => {
-    var p = new Promise(async (resolve, reject) => {
+    const p = new Promise(async (resolve, reject) => {
       try {
-        var response = await fetch(rpgMapsApi, { method: 'GET', cache: 'no-store' });
+        const response = await fetch(rpgMapsApi, { method: 'GET', cache: 'no-store' });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
-        var json = await response.json();
+        const json = await response.json();
         resolve({ maps: json });
       }
       catch(e) {
@@ -474,8 +474,8 @@ class RpgMapService {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
         const json = await response.json();
-        const tileSets = await Promise.all([...this.tileSetPromises(json)]);
-        resolve({ map: this.buildRpgMap(json, tileSets) })
+        const tileSets = await Promise.all(this._tileSetPromises(json));
+        resolve({ map: this._buildRpgMap(json, tileSets) })
       }
       catch(e) {
         reject({ message: `Could not load map [${e.message}]` })
@@ -555,26 +555,6 @@ class RpgMapService {
     }
     return { status: status, err: statusText };
   };
-  // handleSaveError = (mapDef, xhr) => {
-  //   var data = xhr.responseJSON;
-  //   if (data) {
-  //     // known errors go here
-  //     console.log(data.err);
-  //     if (data.code === 11000) {
-  //       return {
-  //         err: "Name already in use [" + mapDef.name + "]",
-  //         status: xhr.status
-  //       };
-  //     }
-  //     if (data.err) {
-  //       return { err: data.err, status: xhr.status };
-  //     }
-  //     if (data.message) {
-  //       return { err: data.message, status: xhr.status };
-  //     }
-  //   }
-  //   return { err: xhr.statusText, status: xhr.status };
-  // };
 
   newMap = (rows, cols) => {
     var emptyTileSetDef = {
@@ -586,42 +566,41 @@ class RpgMapService {
   };
 
   resizeMap = (rpgMap, left, right, top, bottom) => {
-    var newRows = rpgMap.getRows() + top + bottom;
-    var newCols = rpgMap.getCols() + left + right;
-    var { map } = this.newMap(newRows, newCols);
+    const newRows = rpgMap.getRows() + top + bottom;
+    const newCols = rpgMap.getCols() + left + right;
+    const { map } = this.newMap(newRows, newCols);
     map.resize(rpgMap, left, top);
     return { map: map, oldMap: rpgMap };
   };
 
   /*
-   * Returns an iterable of tileset promises representing the tilesets used in the given map definition.
+   * Returns an array of tileset promises representing the tilesets used in the given map definition.
    */
-  tileSetPromises = ({ mapTiles }) => {
-    var tileSets = new Map();
-    mapTiles.forEach(({ tiles }) => {
+  _tileSetPromises = ({ mapTiles }) => {
+    const tileSets = mapTiles.reduce((map, { tiles }) => {
       tiles.forEach(({ tileSet }) => {
-        // var tsName = tileDef.tileSet;
-        if (!tileSets.has(tileSet)) {
-          tileSets.set(tileSet, tileSetService.loadTileSetByName(tileSet));
+        if (!map[tileSet]) {
+          map[tileSet] = tileSetService.loadTileSetByName(tileSet);
         }
       });
-    });
-    return tileSets.values();
+      return map;
+    }, {});
+    return Object.values(tileSets);
   };
 
-  buildRpgMap = (rpgMapDef, tileSetsArray) => {
+  _buildRpgMap = (rpgMapDef, tileSetsArray) => {
     // convert tilesets array to map of tilesets keyed on name
     const tileSets = tileSetsArray.reduce((map, { tileSet }) => {
       map[tileSet.getName()] = tileSet;
       return map;
     }, {});
-    var mapTiles = this.initMapTiles(rpgMapDef, tileSets);
-    var sprites = this.initSprites(rpgMapDef);
+    const mapTiles = this._initMapTiles(rpgMapDef, tileSets);
+    const sprites = this._initSprites(rpgMapDef);
     // deferred.notify(100);
     return new RpgMap(rpgMapDef.id, rpgMapDef.name, mapTiles, sprites);
   };
 
-  initMapTiles = (rpgMapDef, tileSets) => {
+  _initMapTiles = (rpgMapDef, tileSets) => {
     const tileDefKey = (x, y) => `${x}-${y}`;
 
     const tileDefMappings = rpgMapDef.mapTiles.reduce((map, mapTileDef) => {
@@ -629,16 +608,17 @@ class RpgMapService {
       return map;
     }, {});
 
-    var rows = rpgMapDef.rows, cols = rpgMapDef.cols;
-    var tiles = new Array(cols);
+    const rows = rpgMapDef.rows;
+    const cols = rpgMapDef.cols;
+    const tiles = new Array(cols);
     for (var x = 0; x < cols; x++) {
       tiles[x] = new Array(rows);
       for (var y = 0; y < rows; y++) {
-        var mapTileDef = tileDefMappings[tileDefKey(x, y)];
-        var baseCanvas = baseTiles[(x + y) % baseTiles.length];
+        const mapTileDef = tileDefMappings[tileDefKey(x, y)];
+        const baseCanvas = baseTiles[(x + y) % baseTiles.length];
         if (mapTileDef) {
           var maskTiles = mapTileDef.tiles.map(tileDef => {
-            var tile = tileSets[tileDef.tileSet].getTileByName(tileDef.tile);
+            const tile = tileSets[tileDef.tileSet].getTileByName(tileDef.tile);
             return new MaskTile(tile, tileDef.maskLevel);
           });
           tiles[x][y] = new MapTile(baseCanvas, maskTiles, mapTileDef.levels);
@@ -651,7 +631,7 @@ class RpgMapService {
     return tiles;
   };
 
-  initSprites = rpgMapDef => {
+  _initSprites = rpgMapDef => {
     if (rpgMapDef.sprites) {
       return rpgMapDef.sprites.map(spriteDef =>
           new Sprite(spriteDef.type, spriteDef.level, spriteDef.location)
