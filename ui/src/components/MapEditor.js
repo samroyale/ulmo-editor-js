@@ -111,8 +111,8 @@ class MapEditor extends React.Component {
     this.continueNewMapOfSize(rows, cols);
   };
 
-  continueNewMapOfSize = async (rows, cols) => {
-    var data = await this._mapCanvas.current.newMap(rows, cols);
+  continueNewMapOfSize = (rows, cols) => {
+    var data = this._mapCanvas.current.newMap(rows, cols);
     this.mapLoaded(data, true);
   };
 
@@ -122,8 +122,8 @@ class MapEditor extends React.Component {
     }
   };
 
-  resizeMapToSize = async (left, right, top, bottom) => {
-    var data = await this._mapCanvas.current.resizeMap(left, right, top, bottom);
+  resizeMapToSize = (left, right, top, bottom) => {
+    var data = this._mapCanvas.current.resizeMap(left, right, top, bottom);
     this.mapLoaded(data, true);
   };
 
@@ -194,37 +194,46 @@ class MapEditor extends React.Component {
     return this.state.mapId !== null;
   };
 
-  saveMap = () => {
+  saveMap = async () => {
     if (!this.state.mapId) {
       this.showSaveModal();
       return;
     }
-    var p = this._mapCanvas.current.saveMap();
-    p.then(this.mapSaved, this.mapSaveErr).done();
+    try {
+      var data = await this._mapCanvas.current.saveMap();
+      this.mapSaved(data);
+    }
+    catch(e) {
+      this.mapSaveErr(e);
+    }
   };
 
-  saveMapAs = mapName => {
-    var p = this._mapCanvas.current.saveMapAs(mapName);
-    p.then(this.mapSaved, this.mapSaveErr).done();
+  saveMapAs = async (mapName) => {
+    try {
+      var data = await this._mapCanvas.current.saveMapAs(mapName);
+      this.mapSaved(data);
+    }
+    catch(e) {
+      this.mapSaveErr(e);
+    }
   };
 
-  mapSaved = data => {
-    if (data.mapId) {
+  mapSaved = ({ mapId }) => {
+    if (mapId) {
       // console.log("Map saved [" + data.mapName + "/" + data.mapId + "]");
       this.closeModal();
       this.setState({
-        mapId: data.mapId,
+        mapId: mapId,
         mapDirty: false,
         serviceError: null
       });
     }
   };
 
-  mapSaveErr = data => {
-    if (data.err) {
-      // console.log("Error [" + data.err + "]");
+  mapSaveErr = ({ message }) => {
+    if (message) {
       this.setState({
-        serviceError: errorMessage("Could not save map", data)
+        serviceError: message
       });
       if (this.state.showModal !== "SAVE") {
         this.setState({
@@ -751,7 +760,7 @@ class SaveAsModal extends React.Component {
         <Modal.Body>
           <Collapse in={showError}>
             <div>
-              <Alert bsStyle="danger">Could not save map: {error}</Alert>
+              <Alert bsStyle="danger">{error}</Alert>
             </div>
           </Collapse>
           <form onSubmit={this.handleSubmit}>

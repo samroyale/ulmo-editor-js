@@ -1,5 +1,3 @@
-import $ from 'jquery';
-import Q from 'q';
 import TileSetService from './TileSets';
 import { drawTile, initTile } from '../utils';
 import { rpgMapsApi, baseTileColours } from '../config';
@@ -454,7 +452,7 @@ class RpgMapService {
   loadMaps = () => {
     var p = new Promise(async (resolve, reject) => {
       try {
-        var response = await fetch(rpgMapsApi, { method: 'get', cache: 'no-store' });
+        var response = await fetch(rpgMapsApi, { method: 'GET', cache: 'no-store' });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
@@ -469,14 +467,14 @@ class RpgMapService {
   };
 
   loadMap = mapId => {
-    var p = new Promise(async (resolve, reject) => {
+    const p = new Promise(async (resolve, reject) => {
       try {
-        var response = await fetch(`${rpgMapsApi}/${mapId}`, { method: 'get', cache: 'no-store' });
+        const response = await fetch(`${rpgMapsApi}/${mapId}`, { method: 'GET', cache: 'no-store' });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
-        var json = await response.json();
-        var tileSets = await Promise.all([...this.tileSetPromises(json)]);
+        const json = await response.json();
+        const tileSets = await Promise.all([...this.tileSetPromises(json)]);
         resolve({ map: this.buildRpgMap(json, tileSets) })
       }
       catch(e) {
@@ -487,61 +485,96 @@ class RpgMapService {
   };
 
   saveMap = rpgMap => {
-    var mapUrl = rpgMapsApi + "/" + rpgMap.getId();
-    return this.doSave(mapUrl, "PUT", rpgMap, rpgMap.getDto());
+    return this._doSave(`${rpgMapsApi}/${rpgMap.getId()}`, "PUT", rpgMap, rpgMap.getDto());
   };
 
   saveMapAs = (rpgMap, mapName) => {
-    return this.doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName));
+    return this._doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName));
   };
 
-  doSave = (mapUrl, reqType, rpgMap, mapDef) => {
-    console.log("Saving map [" + reqType + " " + mapUrl + "]");
-    var deferred = Q.defer();
-    var p = Q($.ajax({
-      type: reqType,
-      url: mapUrl,
-      dataType: 'json',
-      data: mapDef,
-    }).promise());
-    p.then(
-      data => deferred.resolve(this.mapSaved(rpgMap, mapDef, data)),
-      xhr => deferred.reject(this.handleSaveError(mapDef, xhr))
-    ).done();
-    return deferred.promise;
+  _doSave = (mapUrl, reqType, rpgMap, rpgMapDef) => {
+    const p = new Promise(async (resolve, reject) => {
+      try {
+        const response = await fetch(mapUrl, {
+          method: reqType,
+          body: JSON.stringify(rpgMapDef), // data can be `string` or {object}!
+          // body: rpgMapDef, // data can be `string` or {object}!
+          headers: new Headers({
+            'Content-Type': 'application/json'
+          })
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          const { status, err } = this._saveError(response, text, rpgMapDef);
+          throw new Error(`${status}: ${err}`);
+        }
+        const json = await response.json();
+        resolve(this._mapSaved(rpgMap, rpgMapDef, json))
+      }
+      catch(e) {
+        reject({ message: `Could not save map [${e.message}]` })
+      }
+    });
+    return p;
   };
 
-  mapSaved = (rpgMap, mapDef, data) => {
+  _mapSaved = (rpgMap, { name }, { mapId, message } ) => {
     // console.log(data.message);
-    rpgMap.setId(data.mapId);
-    rpgMap.setName(mapDef.name);
+    rpgMap.setId(mapId);
+    rpgMap.setName(name);
     return {
-      message: data.message,
-      mapId: rpgMap.getId(),
-      mapName: rpgMap.getName()
+      message: message,
+      mapId: mapId,
+      mapName: name
     };
   };
 
-  handleSaveError = (mapDef, xhr) => {
-    var data = xhr.responseJSON;
-    if (data) {
-      // known errors go here
-      console.log(data.err);
-      if (data.code === 11000) {
-        return {
-          err: "Name already in use [" + mapDef.name + "]",
-          status: xhr.status
-        };
-      }
-      if (data.err) {
-        return { err: data.err, status: xhr.status };
-      }
-      if (data.message) {
-        return { err: data.message, status: xhr.status };
+  _saveError(response, text, rpgMapDef) {
+    try {
+      const json = JSON.parse(text);
+      return this._saveErrorFromJson(response, json, rpgMapDef);
+    }
+    catch(e) {
+      // error response was not valid json
+    }
+    return { status: response.status, err: response.statusText };
+  }
+
+  _saveErrorFromJson = ({ status, statusText }, { code, err, message}, { name }) => {
+    if (code === 11000) {
+      return {
+        status: status,
+        err: `Name already in use '${name}'`,
       }
     }
-    return { err: xhr.statusText, status: xhr.status };
+    if (err) {
+      return { status: status, err: err };
+    }
+    if (message) {
+      return { status: status, err: message };
+    }
+    return { status: status, err: statusText };
   };
+  // handleSaveError = (mapDef, xhr) => {
+  //   var data = xhr.responseJSON;
+  //   if (data) {
+  //     // known errors go here
+  //     console.log(data.err);
+  //     if (data.code === 11000) {
+  //       return {
+  //         err: "Name already in use [" + mapDef.name + "]",
+  //         status: xhr.status
+  //       };
+  //     }
+  //     if (data.err) {
+  //       return { err: data.err, status: xhr.status };
+  //     }
+  //     if (data.message) {
+  //       return { err: data.message, status: xhr.status };
+  //     }
+  //   }
+  //   return { err: xhr.statusText, status: xhr.status };
+  // };
 
   newMap = (rows, cols) => {
     var emptyTileSetDef = {
@@ -552,10 +585,10 @@ class RpgMapService {
     return { map: this.buildRpgMap(emptyTileSetDef, []) };
   };
 
-  resizeMap = async (rpgMap, left, right, top, bottom) => {
+  resizeMap = (rpgMap, left, right, top, bottom) => {
     var newRows = rpgMap.getRows() + top + bottom;
     var newCols = rpgMap.getCols() + left + right;
-    var { map } = await this.newMap(newRows, newCols);
+    var { map } = this.newMap(newRows, newCols);
     map.resize(rpgMap, left, top);
     return { map: map, oldMap: rpgMap };
   };
@@ -563,13 +596,13 @@ class RpgMapService {
   /*
    * Returns an iterable of tileset promises representing the tilesets used in the given map definition.
    */
-  tileSetPromises = rpgMapDef => {
+  tileSetPromises = ({ mapTiles }) => {
     var tileSets = new Map();
-    rpgMapDef.mapTiles.forEach(mapTileDef => {
-      mapTileDef.tiles.forEach(tileDef => {
-        var tsName = tileDef.tileSet;
-        if (!tileSets.has(tsName)) {
-          tileSets.set(tsName, tileSetService.loadTileSetByName(tsName));
+    mapTiles.forEach(({ tiles }) => {
+      tiles.forEach(({ tileSet }) => {
+        // var tsName = tileDef.tileSet;
+        if (!tileSets.has(tileSet)) {
+          tileSets.set(tileSet, tileSetService.loadTileSetByName(tileSet));
         }
       });
     });

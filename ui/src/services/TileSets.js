@@ -98,7 +98,7 @@ class TileSetService {
   loadTileSets = () => {
     var p = new Promise(async (resolve, reject) => {
       try {
-        var response = await fetch(tileSetsApi, { method: 'get' });
+        var response = await fetch(tileSetsApi, { method: 'GET' });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
@@ -119,7 +119,7 @@ class TileSetService {
     // }
     var p = new Promise(async (resolve, reject) => {
       try {
-        var response = await fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'get' });
+        var response = await fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'GET' });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
@@ -141,7 +141,7 @@ class TileSetService {
     // }
     var p = new Promise(async (resolve, reject) => {
       try {
-        var response = await fetch(`${tileSetsApi}/${tileSetId}`, { method: 'get' });
+        var response = await fetch(`${tileSetsApi}/${tileSetId}`, { method: 'GET' });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }

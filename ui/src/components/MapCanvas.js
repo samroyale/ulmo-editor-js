@@ -36,19 +36,17 @@ class MapCanvas extends React.Component {
     return this.mapLoaded(data);
   };
 
-  newMap = async (rows, cols) => {
-    var data = await rpgMapService.newMap(rows, cols);
-    return this.mapLoaded(data);
+  newMap = (rows, cols) => {
+    return this.mapLoaded(rpgMapService.newMap(rows, cols));
   };
 
-  resizeMap = async (left, right, top, bottom) => {
+  resizeMap = (left, right, top, bottom) => {
     if (this._rpgMap) {
-      var data = await rpgMapService.resizeMap(this._rpgMap, left, right, top, bottom);
-      return this.mapLoaded(data);
+      return this.mapLoaded(rpgMapService.resizeMap(this._rpgMap, left, right, top, bottom));
     }
   };
 
-  mapLoaded = async data => {
+  mapLoaded = data => {
     this.removeHighlight(); // resets tile positions
     if (data.map) {
       this.applyMap(data.map);
