@@ -112,11 +112,10 @@ class TileSetService {
     return p;
   };
 
-  // TODO: put caching back
   loadTileSetByName = name => {
-    // if (this.nameToIdMappings[name]) {
-    //   return this.loadTileSet(this.nameToIdMappings[name]);
-    // }
+    if (this.nameToIdMappings[name]) {
+      return this.loadTileSet(this.nameToIdMappings[name]);
+    }
     const p = new Promise(async (resolve, reject) => {
       try {
         const response = await fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'GET' });
@@ -134,11 +133,10 @@ class TileSetService {
     return p;
   };
 
-  // TODO: put caching back
   loadTileSet = tileSetId => {
-    // if (this.cache[tileSetId]) {
-    //   return this.cache[tileSetId].promise;
-    // }
+    if (this.cache[tileSetId]) {
+      return this.cache[tileSetId];
+    }
     const p = new Promise(async (resolve, reject) => {
       try {
         const response = await fetch(`${tileSetsApi}/${tileSetId}`, { method: 'GET' });
@@ -153,7 +151,14 @@ class TileSetService {
         reject({ message: `Could not load tileset [${e.message}]` })
       }
     });
-    return p;
+    // cache promise on success
+    return p.then(({ tileSet }) => {
+      if (tileSet) {
+        this.cache[tileSetId] = p;
+        this.nameToIdMappings[tileSet.getName()] = tileSetId;
+        return p;
+      }
+    });
   };
 
   _buildTileSet = (data, { img }) => {
@@ -170,7 +175,7 @@ class TileSetService {
       map[tileDefKey(tileDef.xy[0], tileDef.xy[1])] = tileDef;
       return map;
     }, {});
-    
+
     // draw tileSet image to canvas and scale it x2
     const tileSetCanvas = document.createElement("canvas");
     tileSetCanvas.width = tileSetImage.width * 2;
