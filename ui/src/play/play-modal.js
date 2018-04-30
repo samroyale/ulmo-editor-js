@@ -80,7 +80,7 @@ export class PlayMapModal extends React.Component {
                     });
                 },
                 data => this.setState({ playReady: false, playError: data.err })
-            ).done();
+            );
         }
     };
 

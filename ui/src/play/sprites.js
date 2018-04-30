@@ -1,4 +1,3 @@
-import Q from 'q';
 import { tileSize, viewWidth, viewHeight } from '../config';
 import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
 import {
@@ -53,20 +52,35 @@ export class MovingFrames {
         this._tick = 0;
     }
 
-    load() {
-        let deferred = Q.defer();
-        loadImage(this._imageUrl, data => {
-            if (data.err) {
-                deferred.reject({ err: data.err });
-                return;
+    // static async loadFrames(imageUrl, directions) {
+    //     const p = new Promise(async (resolve, reject) => {
+    //         try {
+    //             const img = await loadImage(imageUrl);
+    //             this._processFrames(img, directions);
+    //             resolve(new MovingFrames());
+    //         }
+    //         catch (e) {
+    //             reject({ message: e.message })
+    //         }
+    //     });
+    //     return p;
+    // }
+
+    async load() {
+        const p = new Promise(async (resolve, reject) => {
+            try {
+                const img = await loadImage(this._imageUrl);
+                this._processFrames(img, this._directions);
+                resolve({ currentFrame: this.currentFrame() });
             }
-            this._processFrames(data.img, this._directions);
-            deferred.resolve({ currentFrame: this.currentFrame() });
+            catch (e) {
+                reject({ message: e.message })
+            }
         });
-        return deferred.promise;
+        return p;
     }
 
-    _processFrames(img, directions) {
+    _processFrames({ img }, directions) {
         this._frames = new Map();
         let spriteWidth = img.width / this._frameCount;
         let spriteHeight = img.height / directions.length;
@@ -131,20 +145,21 @@ export class StaticFrames {
         this._tick = 0;
     }
 
-    load() {
-        let deferred = Q.defer();
-        loadImage(this._imageUrl, data => {
-            if (data.err) {
-                deferred.reject({ err: data.err });
-                return;
+    async load() {
+        const p = new Promise(async (resolve, reject) => {
+            try {
+                const img = await loadImage(this._imageUrl);
+                this._processFrames(img);
+                resolve({ currentFrame: this.currentFrame() });
             }
-            this._processFrames(data.img, this._directions);
-            deferred.resolve({ currentFrame: this.currentFrame() });
+            catch (e) {
+                reject({ message: e.message })
+            }
         });
-        return deferred.promise;
+        return p;
     }
 
-    _processFrames(img, directions) {
+    _processFrames({ img }) {
         let spriteWidth = img.width / this._frameCount;
         let spriteHeight = img.height;
         let frames = [];
@@ -206,20 +221,21 @@ export class SingleFrame {
         this._frame = null;
     }
 
-    load() {
-        let deferred = Q.defer();
-        loadImage(this._imageUrl, data => {
-            if (data.err) {
-                deferred.reject({ err: data.err });
-                return;
+    async load() {
+        const p = new Promise(async (resolve, reject) => {
+            try {
+                const img = await loadImage(this._imageUrl);
+                this._processFrames(img);
+                resolve({ currentFrame: this.currentFrame() });
             }
-            this._processFrame(data.img);
-            deferred.resolve({ currentFrame: this.currentFrame() });
+            catch (e) {
+                reject({ message: e.message })
+            }
         });
-        return deferred.promise;
+        return p;
     }
 
-    _processFrame(img, directions) {
+    _processFrames({ img }) {
         let spriteWidth = img.width * 2
         let spriteHeight = img.height * 2;
         let frameCanvas = document.createElement('canvas');
@@ -228,7 +244,7 @@ export class SingleFrame {
         let frameCtx = getDrawingContext(frameCanvas);
         frameCtx.drawImage(img, 0, 0, spriteWidth, spriteHeight);
         this._frame = frameCanvas;
-    }
+    };
 
     advanceFrame() {
         return this._frame;
@@ -303,22 +319,20 @@ export class Sprite {
         this._toRemove = false;
     }
 
-    loadFrames(spriteFrames, marginY) {
+    async loadFrames(spriteFrames, marginY) {
         this._frames = spriteFrames;
-        let p = this._frames.load();
-        return p.then(data => {
-            this._canvas = data.currentFrame;
-            if (this._isPositionValid()) {
-                let marginX = (tileSize - this._canvas.width) / 2;
-                if (!Number.isInteger(marginY)) {
-                    marginY = this._canvas.height / -2;
-                }
-                let px = this._tx * tileSize + marginX;
-                let py = this._ty * tileSize + marginY;
-                this.setPosition(this._level, px, py);
+        const frames = await this._frames.load();
+        this._canvas = frames.currentFrame;
+        if (this._isPositionValid()) {
+            let marginX = (tileSize - this._canvas.width) / 2;
+            if (!Number.isInteger(marginY)) {
+                marginY = this._canvas.height / -2;
             }
-            return data;
-        });
+            let px = this._tx * tileSize + marginX;
+            let py = this._ty * tileSize + marginY;
+            this.setPosition(this._level, px, py);
+        }
+        return frames;
     }
 
     _isPositionValid() {
@@ -717,7 +731,7 @@ export class Blades extends Sprite {
         return new Rect(this._tx * tileSize, this._ty * tileSize, tileSize, tileSize);
     }
 
-    _getMovement(player) {
+    _getMovement() {
         if (this._active) {
             let frameIndex = this._frames.getFrameIndex();
             if (frameIndex === 0) {

@@ -168,7 +168,6 @@ class TileSetService {
   };
 
   _initTiles = (tileSetDef, tileSetImage) => {
-    // parse the tile names
     const tileDefKey = (x, y) => x + "-" + y;
 
     const tileDefMappings = tileSetDef.tiles.reduce((map, tileDef) => {

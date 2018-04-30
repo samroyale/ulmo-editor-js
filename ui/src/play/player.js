@@ -1,4 +1,3 @@
-import Q from 'q';
 import { tileSize } from '../config';
 import { Sprite, MovingFrames, StaticFrames, SingleFrame } from './sprites';
 import { Rect } from '../utils';
@@ -74,7 +73,7 @@ export class Keys {
     }
     // _flush() {
     //     // do nothing
-    // }
+    // };
 };
 
 /* =============================================================================
@@ -89,7 +88,7 @@ export class Shadow extends Sprite {
         this._canvas = frames.currentFrame();
     }
 
-    setPosition(playerRect, playerLevel, downLevel) {
+    setRelativePosition(playerRect, playerLevel, downLevel) {
         let px = playerRect.left;
         let py = playerRect.top + downLevel * tileSize + playerRect.height - this._canvas.height;
         super.setPosition(playerLevel - downLevel, px, py);
@@ -112,7 +111,7 @@ export class Player extends Sprite {
     }
 
     load() {
-        return Q.all([
+        return Promise.all([
             this.loadFrames(this._movingFrames),
             this._fallingFrames.load(),
             this._shadowFrames.load()
@@ -279,7 +278,7 @@ export class Player extends Sprite {
         this._falling = downLevel * tileSize;
         this._frames = this._fallingFrames.withFrameIndex(this._frames.getFrameIndex());
         this._shadow = new Shadow(this._playMap, this._shadowFrames);
-        this._shadow.setPosition(this._rect, this._level, downLevel);
+        this._shadow.setRelativePosition(this._rect, this._level, downLevel);
         mapSprites.add(this._shadow);
     }
 

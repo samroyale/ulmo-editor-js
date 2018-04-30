@@ -1,4 +1,3 @@
-import Q from 'q';
 import { SpriteGroup, Beetle, Blades, Checkpoint, Coin, Door, Flames, Key, Rock, Wasp } from './sprites';
 import { copyCanvas, initRect } from '../utils';
 import { viewWidth, viewHeight } from '../config';
@@ -51,7 +50,7 @@ class Stage {
         let sprites = this._toGameSprites(this._rpgMap.getSprites());
         sprites.push(this._player);
         let spritePromises = sprites.map(sprite => sprite.load());
-        let p = Q.all(spritePromises);
+        let p = Promise.all(spritePromises);
         return p.then(() => {
             this._keys = new Keys();
             this._mapSprites = new SpriteGroup();
@@ -111,7 +110,7 @@ class Stage {
                     this._playMap.drawView(copyCtx, viewRect);
                     this._mapSprites.draw(copyCtx, viewRect);
                     this._execute = this._executeLoseLife;
-                }).done();
+                });
             }
             let viewCtx = canvas.getContext('2d');
             this._applyZoom(viewCtx, this._ticks);
@@ -141,7 +140,7 @@ class Stage {
     keyUp(keyCode) {
         this._keys.keyUp(keyCode);
     }
-    
+
     setLiveMode(liveMode) {
         this._liveMode = liveMode;
     }
