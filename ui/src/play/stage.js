@@ -4,16 +4,19 @@ import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
 import PlayMap from './play-map';
 
+// const spriteProvider = new Map([
+//     ['flames', (playMap, sprite) => new Flames(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['key', (playMap, sprite) => new Key(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['rock', (playMap, sprite) => new Rock(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['beetle', (playMap, sprite) => Beetle.loadSprite(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['wasp', (playMap, sprite) => new Wasp(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['door', (playMap, sprite) => new Door(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['blades', (playMap, sprite) => new Blades(playMap, sprite.getLevel(), sprite.getLocation())],
+//     ['checkpoint', (playMap, sprite) => new Checkpoint(playMap, sprite.getLevel(), sprite.getLocation())]
+// ]);
 const spriteProvider = new Map([
-    ['flames', (playMap, sprite) => new Flames(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['key', (playMap, sprite) => new Key(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['rock', (playMap, sprite) => new Rock(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['beetle', (playMap, sprite) => new Beetle(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['wasp', (playMap, sprite) => new Wasp(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['door', (playMap, sprite) => new Door(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['blades', (playMap, sprite) => new Blades(playMap, sprite.getLevel(), sprite.getLocation())],
-    ['checkpoint', (playMap, sprite) => new Checkpoint(playMap, sprite.getLevel(), sprite.getLocation())]
+    ['beetle', (playMap, sprite) => Beetle.loadSprite(playMap, sprite.getLevel(), sprite.getLocation())]
 ]);
 
 const blackScreen = initRect('black', viewWidth, viewHeight);
@@ -43,19 +46,21 @@ class Stage {
         this._execute = this._executePlay;
     }
 
-    initPlay() {
+    async initPlay() {
         this._playMap = new PlayMap(this._rpgMap);
-        this._player = new Player(this._playMap, this._playerLevel,
-            this._playerX, this._playerY);
-        let sprites = this._toGameSprites(this._rpgMap.getSprites());
-        sprites.push(this._player);
-        let spritePromises = sprites.map(sprite => sprite.load());
-        let p = Promise.all(spritePromises);
-        return p.then(() => {
+        const playerPromise = Player.loadSprite(this._playMap, this._playerLevel,
+            [this._playerX, this._playerY])
+        const spritePromises = [playerPromise, ...this._toGameSprites(this._rpgMap.getSprites())];
+        try {
+            const sprites = await Promise.all(spritePromises);
+            this._player = sprites[0];
             this._keys = new Keys();
             this._mapSprites = new SpriteGroup();
             this._mapSprites.addAll(sprites);
-        });
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
     _toGameSprites(sprites) {

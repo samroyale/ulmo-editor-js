@@ -100,22 +100,28 @@ export class Shadow extends Sprite {
  * =============================================================================
  */
 export class Player extends Sprite {
-    constructor(playMap, level, tx, ty) {
-        super(playMap, level, tx, ty, true);
-        this._movingFrames = new MovingFrames(playerFramesUrl, directions, 4, 6);
-        this._fallingFrames = new StaticFrames(playerFallingFramesUrl, 4, 0);
-        this._shadowFrames = new SingleFrame(shadowFramesUrl);
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0], location[1], true);
         this._deferredMovement = null;
         this._keyBits = 0;
         this._deferDiagonal = true;
     }
 
-    load() {
-        return Promise.all([
-            this.loadFrames(this._movingFrames),
-            this._fallingFrames.load(),
-            this._shadowFrames.load()
-        ]);
+    static async loadSprite(playMap, level, location) {
+        const frames = await Promise.all([
+            MovingFrames.loadFrames(playerFramesUrl, directions, 4, 6),
+            StaticFrames.loadFrames(playerFallingFramesUrl, 4, 0),
+            SingleFrame.loadFrames(shadowFramesUrl)
+        ])
+        const sprite = new Player(playMap, level, location);
+        return sprite._withPlayerFrames(frames, 0);
+    }
+
+    _withPlayerFrames([ movingFrames, fallingFrames, shadowFrames ]) {
+        this._movingFrames = movingFrames;
+        this._fallingFrames = fallingFrames;
+        this._shadowFrames = shadowFrames;
+        return this.withFrames(movingFrames);
     }
 
     _initBaseRect(spriteRect) {

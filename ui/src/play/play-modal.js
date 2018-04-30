@@ -73,7 +73,7 @@ export class PlayMapModal extends React.Component {
             p.then(
                 () => {
                     let onEachFrame = this.assignOnEachFrame();
-                    onEachFrame(() => this._stage.executeMain(this._canvas.current, this._keys));
+                    onEachFrame(() => this._stage.executeMain(this._canvas.current));
                     this.setState({
                         playReady: true,
                         playError: false
