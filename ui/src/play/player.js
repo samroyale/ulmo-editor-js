@@ -143,7 +143,7 @@ export class Player extends Sprite {
             return;
         }
         this._keyBits = keyBits;
-        let moves = movement.get(keyBits);
+        const moves = movement.get(keyBits);
         if (moves) {
             this._move(moves[0], moves[1], moves[2], moves[3]);
         }
@@ -151,14 +151,14 @@ export class Player extends Sprite {
 
     _move(direction, mx, my, diagonal) {
         // check requested movement falls within map boundary
-        var newRect = this._rect.move(mx, my);
+        const newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
             return;
         }
 
         // check requested movement is valid
-        let newBaseRect = this._baseRect.move(mx, my);
-        let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        const newBaseRect = this._baseRect.move(mx, my);
+        const [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
             if (diagonal) {
                 if (this._deferDiagonal) {
@@ -198,7 +198,7 @@ export class Player extends Sprite {
 
     _shuffleX(direction) {
         // see if we can shuffle horizontally
-        let [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
+        const [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
         if (valid) {
             this._deferMovement(direction, level, shuffle, 0);
         }
@@ -207,7 +207,7 @@ export class Player extends Sprite {
 
     _shuffleY(direction) {
         // see if we can shuffle vertically
-        var [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
+        const [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
         if (valid) {
             this._deferMovement(direction, level, 0, shuffle);
         }
@@ -216,8 +216,8 @@ export class Player extends Sprite {
 
     _slide(direction, mx, my) {
         // see if we can slide horizontally
-        var newBaseRect = this._baseRect.move(mx, 0);
-        var [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        let newBaseRect = this._baseRect.move(mx, 0);
+        let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
             this._deferMovement(direction, level, mx, 0);
             return valid;
@@ -233,7 +233,7 @@ export class Player extends Sprite {
 
     _applyDeferredMovement() {
         if (this._deferredMovement) {
-            var [direction, level, mx, my] = this._deferredMovement;
+            const [direction, level, mx, my] = this._deferredMovement;
             this._applyMovement(direction, level, mx, my);
             this._deferredMovement = null;
             return true;
@@ -270,7 +270,7 @@ export class Player extends Sprite {
             this._continueFalling();
             return;
         }
-        let event = this._playMap.getEvent(this._level, this._baseRect);
+        const event = this._playMap.getEvent(this._level, this._baseRect);
         if (event && event.eventType === 'falling') {
             this._startFalling(mapSprites, event.downLevel);
         }

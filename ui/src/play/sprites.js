@@ -155,7 +155,6 @@ export class StaticFrames {
     }
 
     currentFrame() {
-        // console.log(this._direction + ' ' + this._frameIndex);
         return this._frames[this._frameIndex];
     }
 
@@ -444,8 +443,10 @@ export class Rock extends Sprite {
         this._frames = new SingleFrame(rockFramesUrl);
     }
 
-    load() {
-        return this.loadFrames(this._frames, -8);
+    static async loadSprite(playMap, level, location) {
+        const frames = await SingleFrame.loadFrames(rockFramesUrl);
+        const sprite = new Rock(playMap, level, location);
+        return sprite.withFrames(frames, -8);
     }
 }
 
@@ -456,11 +457,12 @@ export class Rock extends Sprite {
 export class Flames extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(flameFramesUrl, 4, 6);
     }
 
-    load() {
-        return this.loadFrames(this._frames, 4);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(flameFramesUrl, 4, 6);
+        const sprite = new Flames(playMap, level, location);
+        return sprite.withFrames(frames, 4);
     }
 }
 
@@ -471,11 +473,12 @@ export class Flames extends Sprite {
 export class Key extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(keyFramesUrl, 6, 6);
     }
 
-    load() {
-        return this.loadFrames(this._frames, 4);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(keyFramesUrl, 6, 6);
+        const sprite = new Key(playMap, level, location);
+        return sprite.withFrames(frames, 4);
     }
 
     _initBaseRect() {
@@ -490,11 +493,12 @@ export class Key extends Sprite {
 export class Coin extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(coinFramesUrl, 4, 6);
     }
 
-    load() {
-        return this.loadFrames(this._frames, 4);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(coinFramesUrl, 4, 6);
+        const sprite = new Coin(playMap, level, location);
+        return sprite.withFrames(frames, 4);
     }
 
     _initBaseRect() {
@@ -509,11 +513,12 @@ export class Coin extends Sprite {
 export class Checkpoint extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(checkpointFramesUrl, 4, 12);
     }
 
-    load() {
-        return this.loadFrames(this._frames, -6);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(checkpointFramesUrl, 4, 12);
+        const sprite = new Checkpoint(playMap, level, location);
+        return sprite.withFrames(frames, -6);
     }
 
     _initBaseRect() {
@@ -528,11 +533,12 @@ export class Checkpoint extends Sprite {
 export class Door extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(doorFramesUrl, 10, 0);
     }
 
-    load() {
-        return this.loadFrames(this._frames, -32);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(doorFramesUrl, 10, 0);
+        const sprite = new Door(playMap, level, location);
+        return sprite.withFrames(frames, -32);
     }
 
     /* Base rect extends beyond the bottom of the sprite image so player's base
@@ -609,14 +615,15 @@ export class Beetle extends Sprite {
 export class Wasp extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], false);
-        this._frames = new MovingFrames(waspFramesUrl, directions, 2, 4);
         this._countdown = 12;
         this._zooming = false;
         this._direction = null; // this is also used to detect if the sprite has 'seen' the player
     }
 
-    load() {
-        return this.loadFrames(this._frames, 0);
+    static async loadSprite(playMap, level, location) {
+        const frames = await MovingFrames.loadFrames(waspFramesUrl, directions, 2, 4);
+        const sprite = new Wasp(playMap, level, location);
+        return sprite.withFrames(frames, 0);
     }
 
     _initBaseRect() {
@@ -678,12 +685,13 @@ export class Wasp extends Sprite {
 export class Blades extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], false);
-        this._frames = new StaticFrames(bladesFramesUrl, 10, 0);
-        this._deactivate();
     }
 
-    load() {
-        return this.loadFrames(this._frames, -28);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(bladesFramesUrl, 10, 0);
+        const sprite = new Blades(playMap, level, location);
+        sprite.withFrames(frames, -28)._deactivate();
+        return sprite;
     }
 
     _initBaseRect() {

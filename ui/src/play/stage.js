@@ -4,20 +4,17 @@ import { viewWidth, viewHeight } from '../config';
 import { Keys, Player } from './player';
 import PlayMap from './play-map';
 
-// const spriteProvider = new Map([
-//     ['flames', (playMap, sprite) => new Flames(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['key', (playMap, sprite) => new Key(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['rock', (playMap, sprite) => new Rock(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['coin', (playMap, sprite) => new Coin(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['beetle', (playMap, sprite) => Beetle.loadSprite(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['wasp', (playMap, sprite) => new Wasp(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['door', (playMap, sprite) => new Door(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['blades', (playMap, sprite) => new Blades(playMap, sprite.getLevel(), sprite.getLocation())],
-//     ['checkpoint', (playMap, sprite) => new Checkpoint(playMap, sprite.getLevel(), sprite.getLocation())]
-// ]);
-const spriteProvider = new Map([
-    ['beetle', (playMap, sprite) => Beetle.loadSprite(playMap, sprite.getLevel(), sprite.getLocation())]
-]);
+const spriteProvider = {
+    'rock': Rock.loadSprite,
+    'flames': Flames.loadSprite,
+    'key': Key.loadSprite,
+    'coin': Coin.loadSprite,
+    'door': Door.loadSprite,
+    'checkpoint': Checkpoint.loadSprite,
+    'beetle': Beetle.loadSprite,
+    'wasp': Wasp.loadSprite,
+    'blades': Blades.loadSprite
+};
 
 const blackScreen = initRect('black', viewWidth, viewHeight);
 
@@ -50,7 +47,7 @@ class Stage {
         this._playMap = new PlayMap(this._rpgMap);
         const playerPromise = Player.loadSprite(this._playMap, this._playerLevel,
             [this._playerX, this._playerY])
-        const spritePromises = [playerPromise, ...this._toGameSprites(this._rpgMap.getSprites())];
+        const spritePromises = [playerPromise, ...this._spritePromises(this._rpgMap.getSprites())];
         try {
             const sprites = await Promise.all(spritePromises);
             this._player = sprites[0];
@@ -63,18 +60,17 @@ class Stage {
         }
     }
 
-    _toGameSprites(sprites) {
+    _spritePromises(sprites) {
         if (!sprites) {
             return [];
         }
-        let gameSprites = [];
-        sprites.forEach(sprite => {
-            let spriteFunc = spriteProvider.get(sprite.getType());
-            if (spriteFunc) {
-                gameSprites.push(spriteFunc(this._playMap, sprite));
+        return sprites.reduce((arr, sprite) => {
+            const factoryFunc = spriteProvider[sprite.getType()];
+            if (factoryFunc) {
+                arr.push(factoryFunc(this._playMap, sprite.getLevel(), sprite.getLocation()));
             }
-        });
-        return gameSprites;
+            return arr;
+        }, [])
     }
 
     /*
@@ -87,10 +83,10 @@ class Stage {
 
     _executePlay(canvas) {
         // update stuff
-        let viewRect = this._player.handleInput(this._keys.processKeysDown());
+        const viewRect = this._player.handleInput(this._keys.processKeysDown());
         this._mapSprites.update(viewRect, this._mapSprites, this._player, true);
         // render the view
-        let viewCtx = canvas.getContext('2d');
+        const viewCtx = canvas.getContext('2d');
         this._playMap.drawView(viewCtx, viewRect);
         this._mapSprites.draw(viewCtx, viewRect);
         // see if player collided with anything
@@ -107,17 +103,17 @@ class Stage {
         if (this._ticks < 64) {
             if (this._ticks === 32) {
                 this._execute = () => {}; // temporary state
-                let p = this.initPlay();
+                const p = this.initPlay();
                 p.then(() => {
-                    let viewRect = this._player.handleInput();
+                    const viewRect = this._player.handleInput();
                     this._mapSprites.update(viewRect, this._mapSprites, this._player);
-                    let copyCtx = this._canvasCopy.getContext('2d');
+                    const copyCtx = this._canvasCopy.getContext('2d');
                     this._playMap.drawView(copyCtx, viewRect);
                     this._mapSprites.draw(copyCtx, viewRect);
                     this._execute = this._executeLoseLife;
                 });
             }
-            let viewCtx = canvas.getContext('2d');
+            const viewCtx = canvas.getContext('2d');
             this._applyZoom(viewCtx, this._ticks);
             this._ticks++;
             return;
@@ -126,13 +122,13 @@ class Stage {
     }
 
     _applyZoom(viewCtx, ticks) {
-        let xBorder = (ticks + 1) * xMultiplier;
-        let yBorder = xBorder * yxRatio;
+        const xBorder = (ticks + 1) * xMultiplier;
+        const yBorder = xBorder * yxRatio;
         if (ticks < 32) {
             viewCtx.drawImage(blackScreen, 0, 0);
         }
-        let extractWidth = viewWidth - xBorder * 2;
-        let extractHeight = viewHeight - yBorder * 2;
+        const extractWidth = viewWidth - xBorder * 2;
+        const extractHeight = viewHeight - yBorder * 2;
         viewCtx.drawImage(this._canvasCopy,
             xBorder, yBorder, extractWidth, extractHeight,
             xBorder, yBorder, extractWidth, extractHeight);

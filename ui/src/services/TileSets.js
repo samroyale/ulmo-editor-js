@@ -95,21 +95,20 @@ class TileSetService {
     return instance;
   }
 
-  loadTileSets = () => {
-    const p = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch(tileSetsApi, { method: 'GET' });
-        if (!response.ok) {
-          throw new Error(`${response.status}: ${response.statusText}`);
-        }
-        const json = await response.json();
-        resolve({ tileSets: json });
+  loadTileSets = async () => {
+    try {
+      const response = await fetch(tileSetsApi, { method: 'GET' });
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
       }
-      catch(e) {
-        reject({ message: `Could not load tilesets [${e.message}]` })
-      }
-    });
-    return p;
+      const json = await response.json();
+      // resolve({ tileSets: json });
+      return { tileSets: json };
+    }
+    catch(e) {
+      // reject({ message: `Could not load tilesets [${e.message}]` })
+      throw new Error(`Could not load tilesets [${e.message}]`);
+    }
   };
 
   loadTileSetByName = name => {
