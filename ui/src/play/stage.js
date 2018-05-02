@@ -1,8 +1,8 @@
-import { SpriteGroup, Beetle, Blades, Checkpoint, Coin, Door, Flames, Key, Rock, Wasp } from './sprites';
+import { SpriteGroup, Beetle, Blades, Checkpoint, Coin, Door, Flames, Key, Rock, Wasp } from './Sprites';
 import { copyCanvas, initRect } from '../utils';
 import { viewWidth, viewHeight } from '../config';
-import { Keys, Player } from './player';
-import PlayMap from './play-map';
+import { Keys, Player } from './Player';
+import PlayMap from './PlayMap';
 
 const spriteProvider = {
     'rock': Rock.loadSprite,

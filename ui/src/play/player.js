@@ -1,5 +1,5 @@
 import { tileSize } from '../config';
-import { Sprite, MovingFrames, StaticFrames, SingleFrame } from './sprites';
+import { Sprite, MovingFrames, StaticFrames, SingleFrame } from './Sprites';
 import { Rect } from '../utils';
 import {
     upKey, downKey, leftKey, rightKey,
@@ -10,7 +10,7 @@ import {
     spritesImgPath,
     defaultBaseRectHeight,
     baseRectExtension
-} from './play-config';
+} from './PlayConfig';
 
 const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
 const playerFallingFramesUrl = spritesImgPath + '/ulmo-falling.png';

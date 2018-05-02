@@ -449,25 +449,25 @@ class RpgMapService {
     return instance;
   }
 
-  loadMaps = () => {
-    const p = new Promise(async (resolve, reject) => {
+  loadMaps = async () => {
+    // const p = new Promise(async (resolve, reject) => {
       try {
         const response = await fetch(rpgMapsApi, { method: 'GET', cache: 'no-store' });
         if (!response.ok) {
           throw new Error(`${response.status}: ${response.statusText}`);
         }
         const json = await response.json();
-        resolve({ maps: json });
+        return { maps: json };
       }
       catch(e) {
-        reject({ message: `Could not load maps [${e.message}]` })
+        throw new Error(`Could not load maps [${e.message}]`);
       }
-    });
-    return p;
+    // });
+    // return p;
   };
 
-  loadMap = mapId => {
-    const p = new Promise(async (resolve, reject) => {
+  loadMap = async (mapId) => {
+    // const p = new Promise(async (resolve, reject) => {
       try {
         const response = await fetch(`${rpgMapsApi}/${mapId}`, { method: 'GET', cache: 'no-store' });
         if (!response.ok) {
@@ -475,13 +475,13 @@ class RpgMapService {
         }
         const json = await response.json();
         const tileSets = await Promise.all(this._tileSetPromises(json));
-        resolve({ map: this._buildRpgMap(json, tileSets) })
+        return { map: this._buildRpgMap(json, tileSets) };
       }
       catch(e) {
-        reject({ message: `Could not load map [${e.message}]` })
+        throw new Error(`Could not load map [${e.message}]`);
       }
-    });
-    return p;
+    // });
+    // return p;
   };
 
   saveMap = rpgMap => {
@@ -492,8 +492,8 @@ class RpgMapService {
     return this._doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName));
   };
 
-  _doSave = (mapUrl, reqType, rpgMap, rpgMapDef) => {
-    const p = new Promise(async (resolve, reject) => {
+  _doSave = async (mapUrl, reqType, rpgMap, rpgMapDef) => {
+    // const p = new Promise(async (resolve, reject) => {
       try {
         const response = await fetch(mapUrl, {
           method: reqType,
@@ -509,13 +509,13 @@ class RpgMapService {
           throw new Error(`${status}: ${err}`);
         }
         const json = await response.json();
-        resolve(this._mapSaved(rpgMap, rpgMapDef, json))
+        return this._mapSaved(rpgMap, rpgMapDef, json);
       }
       catch(e) {
-        reject({ message: `Could not save map [${e.message}]` })
+        throw new Error(`Could not save map [${e.message}]`)
       }
-    });
-    return p;
+    // });
+    // return p;
   };
 
   _mapSaved = (rpgMap, { name }, { mapId, message } ) => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Overlay, Popover, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { EditLevelsModal, EditImagesModal, EditMasksModal } from './MapModal';
-import { PlayMapModal } from '../play/play-modal';
+import { PlayModal } from '../play/PlayModal';
 import RpgMapService from '../services/RpgMaps';
 import { TilePosition } from '../utils';
 import { tileSize } from '../config';
@@ -478,7 +478,7 @@ class MapCanvas extends React.Component {
             onClose={this.closeModal}
             onSubmit={this.applyTilesEdit} />
 
-        <PlayMapModal
+        <PlayModal
             showModal={showModal === "PLAY"}
             tilePosition={tilePosition}
             level={playLevel}

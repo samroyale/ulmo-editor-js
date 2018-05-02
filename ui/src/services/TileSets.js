@@ -102,63 +102,57 @@ class TileSetService {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
       const json = await response.json();
-      // resolve({ tileSets: json });
       return { tileSets: json };
     }
     catch(e) {
-      // reject({ message: `Could not load tilesets [${e.message}]` })
       throw new Error(`Could not load tilesets [${e.message}]`);
     }
   };
 
-  loadTileSetByName = name => {
+  loadTileSetByName = async (name) => {
     if (this.nameToIdMappings[name]) {
       return this.loadTileSet(this.nameToIdMappings[name]);
     }
-    const p = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'GET' });
-        if (!response.ok) {
-          throw new Error(`${response.status}: ${response.statusText}`);
-        }
-        const json = await response.json();
-        const img = await loadImage(`${tilesImgPath}/${json.image}`);
-        resolve({ tileSet: this._buildTileSet(json, img) });
+    try {
+      const response = await fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'GET' });
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
       }
-      catch (e) {
-        reject({ message: `Could not load tileset [${e.message}]` })
-      }
-    });
-    return p;
+      const json = await response.json();
+      const img = await loadImage(`${tilesImgPath}/${json.image}`);
+      const tileSet = this._buildTileSet(json, img);
+      return this.cacheAndReturn(tileSet);
+    }
+    catch (e) {
+      throw new Error(`Could not load tileset [${e.message}]`);
+    }
   };
 
-  loadTileSet = tileSetId => {
+  loadTileSet = async (tileSetId) => {
     if (this.cache[tileSetId]) {
-      return this.cache[tileSetId];
+      return { tileSet: this.cache[tileSetId] };
     }
-    const p = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch(`${tileSetsApi}/${tileSetId}`, { method: 'GET' });
-        if (!response.ok) {
-          throw new Error(`${response.status}: ${response.statusText}`);
-        }
-        const json = await response.json();
-        const img = await loadImage(`${tilesImgPath}/${json.image}`);
-        resolve({ tileSet: this._buildTileSet(json, img) });
+    try {
+      const response = await fetch(`${tileSetsApi}/${tileSetId}`, { method: 'GET' });
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
       }
-      catch (e) {
-        reject({ message: `Could not load tileset [${e.message}]` })
-      }
-    });
-    // cache promise on success
-    return p.then(({ tileSet }) => {
-      if (tileSet) {
-        this.cache[tileSetId] = p;
-        this.nameToIdMappings[tileSet.getName()] = tileSetId;
-        return p;
-      }
-    });
+      const json = await response.json();
+      const img = await loadImage(`${tilesImgPath}/${json.image}`);
+      const tileSet = this._buildTileSet(json, img);
+      return this.cacheAndReturn(tileSet);
+    }
+    catch (e) {
+      throw new Error(`Could not load tileset [${e.message}]`);
+    }
   };
+
+  cacheAndReturn(tileSet) {
+    const tileSetId = tileSet.getId();
+    this.cache[tileSetId] = tileSet;
+    this.nameToIdMappings[tileSet.getName()] = tileSetId;
+    return { tileSet: tileSet };
+  }
 
   _buildTileSet = (data, { img }) => {
     var tiles = this._initTiles(data, img);

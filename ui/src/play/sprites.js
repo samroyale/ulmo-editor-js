@@ -8,7 +8,7 @@ import {
     defaultBaseRectWidth,
     defaultBaseRectHeight,
     baseRectExtension
-} from './play-config';
+} from './PlayConfig';
 
 const zoomMovement = new Map([
     [up, [up, 0, -4]],
@@ -37,7 +37,7 @@ const checkpointFramesUrl = spritesImgPath + '/check-frames.png';
 /* =============================================================================
  * CLASS: MOVING FRAMES
  * -----------------------------------------------------------------------------
- * Sprite frames handler that is aware of directional movement
+ * Sprite frames handler for animated sprites with directional movement
  * =============================================================================
  */
 export class MovingFrames {
@@ -109,7 +109,7 @@ export class MovingFrames {
 /* =============================================================================
  * CLASS: STATIC FRAMES
  * -----------------------------------------------------------------------------
- * Frames handler for static animated sprites
+ * Sprite frames handler for animated sprites that don't move
  * =============================================================================
  */
 export class StaticFrames {

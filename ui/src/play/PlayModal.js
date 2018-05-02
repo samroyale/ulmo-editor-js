@@ -1,8 +1,8 @@
 import React from 'react';
 import { Alert, ButtonToolbar, ToggleButtonGroup, ToggleButton, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
-import Stage from './stage';
-import './play-modal.css';
+import Stage from './Stage';
+import './PlayModal.css';
 
 const fps = 60;
 
@@ -10,7 +10,7 @@ const fps = 60;
  * COMPONENT: PLAY MAP MODAL
  * =============================================================================
  */
-export class PlayMapModal extends React.Component {
+export class PlayModal extends React.Component {
     constructor(props) {
         super(props);
 
