@@ -1,10 +1,8 @@
 import React from 'react';
 import { Panel, Modal, Grid, Row, Col, ButtonToolbar, ButtonGroup, Button,
     ListGroup, ListGroupItem, Glyphicon, Well, FormGroup, ControlLabel, FormControl } from 'react-bootstrap';
-import RpgMapService from '../services/RpgMaps';
+import { newSprite } from '../services/RpgMaps';
 import './SpritesModal.css';
-
-const rpgMapService = new RpgMapService();
 
 const spriteTypes = ['flames', 'rock', 'key', 'door', 'chest', 'coin', 'checkpoint', 'blades', 'beetle', 'wasp'];
 
@@ -197,13 +195,10 @@ class SpriteEditModal extends React.Component {
     }
   }
 
-  handleSubmit = () => {
-    this.props.onSubmit(rpgMapService.newSprite(
-      this.state.typeVal,
-      parseInt(this.state.levelVal, 10),
-      this.state.locations
-    ));
-  };
+  handleSubmit = () => this.props.onSubmit(newSprite(
+    this.state.typeVal,
+    parseInt(this.state.levelVal, 10),
+    this.state.locations));
 
   handleTypeChange = evt => this.setTypeVal(evt.target.value);
 

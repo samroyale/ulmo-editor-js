@@ -2,7 +2,7 @@ import React from 'react';
 import { Overlay, Popover, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { EditLevelsModal, EditImagesModal, EditMasksModal } from './MapModal';
 import { PlayModal } from '../play/PlayModal';
-import RpgMapService from '../services/RpgMaps';
+import RpgMapService, { emptyClipboard } from '../services/RpgMaps';
 import { TilePosition } from '../utils';
 import { tileSize } from '../config';
 import './MapCanvas.css';
@@ -19,7 +19,7 @@ class MapCanvas extends React.Component {
     this._canvas = React.createRef();
     this._rpgMap = null;
     this._mouseDown = null;
-    this._clipboard = rpgMapService.emptyClipboard();
+    this._clipboard = emptyClipboard();
     this.state = {
       showMap: false,
       showOverlay: false,
@@ -256,7 +256,7 @@ class MapCanvas extends React.Component {
       return [];
     }
     var multipleSelected = this.multipleTilesSelected(props);
-    var pasteInvalid = this._clipboard === null || multipleSelected;
+    var pasteInvalid = multipleSelected || this._clipboard === null || this._clipboard.isEmpty();
     return [
       {label: 'Send to back', onClick: this.sendToBack},
       {label: 'Keep top', onClick: this.keepTop},
@@ -299,7 +299,7 @@ class MapCanvas extends React.Component {
     var fromPosition = this.state.startPosition ? this.state.startPosition : toPosition;
     return (toPosition.x !== fromPosition.x || toPosition.y !== fromPosition.y);
   };
-
+  
   handleMouseMove = evt => {
     const { onTilePositionUpdated } = this.props;
     if (this.state.showOverlay) {

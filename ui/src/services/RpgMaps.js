@@ -26,6 +26,10 @@ class Clipboard {
   getTiles = () => {
     return this._tiles;
   };
+
+  isEmpty = () => {
+    return !this._tiles || this._tiles.length === 0;
+  }
 }
 
 /* =============================================================================
@@ -290,6 +294,9 @@ class RpgMap {
   };
 
   pasteTiles = (topLeft, clipboard) => {
+    if (clipboard.isEmpty()) {
+      return;
+    }
     return this._pasteTilesInternal(topLeft.x, topLeft.y, clipboard.getTiles());
   };
 
@@ -639,20 +646,20 @@ class RpgMapService {
     }
     return [];
   };
+}
 
-  /*
-   * So map canvas doesn't need to know about clipboards.
-   */
-  emptyClipboard = () => {
-    return new Clipboard();
-  };
+/*
+ * So map canvas doesn't need to know about clipboards.
+ */
+export function emptyClipboard() {
+  return new Clipboard();
+}
 
-  /*
-   * So sprites modal doesn't need to know about sprites.
-   */
-  newSprite = (type, level, location) => {
-    return new Sprite(type, level, location);
-  }
+/*
+ * So sprites modal doesn't need to know about sprites.
+ */
+export function newSprite(type, level, location) {
+  return new Sprite(type, level, location);
 }
 
 export default RpgMapService;
