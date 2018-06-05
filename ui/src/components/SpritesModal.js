@@ -26,10 +26,15 @@ class SpritesModal extends React.Component {
 
   handleSubmit = evt => this.props.onSubmit(this.state.sprites);
 
-  deleteSprite = evt => {
-    var buttonId = evt.currentTarget.id;
-    var index = parseInt(buttonId.slice(3), 10);
-    var newSprites = this.state.sprites;
+  editSprite = index => {
+    this.setState({
+      editableSprite: this.state.sprites[index],
+      showEditModal: true
+    });
+  };
+
+  deleteSprite = index => {
+    var newSprites = [...this.state.sprites];
     newSprites.splice(index, 1);
     this.setState({ sprites: newSprites });
   };
@@ -37,15 +42,6 @@ class SpritesModal extends React.Component {
   addSprite = () => {
     this.setState({
       editableSprite: null,
-      showEditModal: true
-    });
-  };
-
-  editSprite = evt => {
-    var buttonId = evt.currentTarget.id;
-    var index = parseInt(buttonId.slice(3), 10);
-    this.setState({
-      editableSprite: this.state.sprites[index],
       showEditModal: true
     });
   };
@@ -83,7 +79,7 @@ class SpritesModal extends React.Component {
     return this.state.sprites.map((sprite, i) => (
       <SpriteItem
           key={i}
-          buttonId={'btn' + i}
+          index={i}
           sprite={sprite}
           onEdit={this.editSprite}
           onDelete={this.deleteSprite} />
@@ -143,7 +139,7 @@ class SpriteItem extends React.Component {
   };
 
   render = () => {
-    const { sprite, buttonId, onEdit, onDelete } = this.props;
+    const { sprite, index, onEdit, onDelete } = this.props;
     return (
       <ListGroupItem className="sprite-list-item">
         <Grid>
@@ -161,10 +157,10 @@ class SpriteItem extends React.Component {
             </Col>
             <Col className="edit-sprite-col" lg={2}>
               <ButtonToolbar>
-                <Button id={buttonId} onClick={onEdit}>
+                <Button id={index} onClick={() => onEdit(index)}>
                   <Glyphicon glyph="edit" />
                 </Button>
-                <Button id={buttonId} onClick={onDelete}>
+                <Button id={index} onClick={() => onDelete(index)}>
                   <Glyphicon glyph="trash" />
                 </Button>
               </ButtonToolbar>
@@ -212,17 +208,15 @@ class SpriteEditModal extends React.Component {
     return spriteTypes.includes(type) && level.length > 0 && locations.length > 0;
   };
 
-  moveItem = (evt, func) => {
-    var buttonId = evt.currentTarget.id;
-    var index = parseInt(buttonId.slice(3), 10);
+  moveItem = (index, func) => {
     var newLocations = [...this.state.locations];
     var location = newLocations[index];
     func(newLocations, location, index);
     this.setState({ locations: newLocations });
   };
 
-  moveTop = evt => {
-    this.moveItem(evt, (locations, location, index) => {
+  moveTop = index => {
+    this.moveItem(index, (locations, location, index) => {
       if (index > 0) {
         locations.splice(index, 1);
         locations.splice(0, 0, location);
@@ -230,8 +224,8 @@ class SpriteEditModal extends React.Component {
     });
   };
 
-  moveUp = evt => {
-    this.moveItem(evt, (locations, location, index) => {
+  moveUp = index => {
+    this.moveItem(index, (locations, location, index) => {
       if (index > 0) {
         locations.splice(index, 1);
         locations.splice(index - 1, 0, location);
@@ -239,8 +233,8 @@ class SpriteEditModal extends React.Component {
     });
   };
 
-  moveDown = evt => {
-    this.moveItem(evt, (locations, location, index) => {
+  moveDown = index => {
+    this.moveItem(index, (locations, location, index) => {
       if (index < locations.length - 1) {
         locations.splice(index, 1);
         locations.splice(index + 1, 0, location);
@@ -248,8 +242,8 @@ class SpriteEditModal extends React.Component {
     });
   };
 
-  moveBottom = evt => {
-    this.moveItem(evt, (locations, location, index) => {
+  moveBottom = index => {
+    this.moveItem(index, (locations, location, index) => {
       if (index < locations.length - 1) {
         locations.splice(index, 1);
         locations.push(location);
@@ -257,8 +251,8 @@ class SpriteEditModal extends React.Component {
     });
   };
 
-  delete = evt => {
-    this.moveItem(evt, (locations, location, index) => {
+  delete = index => {
+    this.moveItem(index, (locations, location, index) => {
       locations.splice(index, 1);
     });
   };
@@ -332,7 +326,7 @@ class SpriteEditModal extends React.Component {
       var listPosition = this.listPosition(i, this.state.locations.length - 1);
       return (
         <LocationItem key={i}
-            buttonId={'btn' + i}
+            index={i}
             position={listPosition}
             locationX={loc[0]}
             locationY={loc[1]}
@@ -397,10 +391,10 @@ class SpriteEditModal extends React.Component {
  * =============================================================================
  */
 const LocationItem = ({
+  index,
   position,
   locationX,
   locationY,
-  buttonId,
   onMoveTop,
   onMoveUp,
   onMoveDown,
@@ -418,16 +412,16 @@ const LocationItem = ({
           <Col className="location-controls-col" lg={2}>
             <ButtonToolbar>
               <ButtonGroup>
-                <Button id={buttonId} onClick={onMoveTop} disabled={disabledFirst}>
+                <Button id={index} onClick={() => onMoveTop(index)} disabled={disabledFirst}>
                   <Glyphicon glyph="triangle-top" />
                 </Button>
-                <Button id={buttonId} onClick={onMoveUp} disabled={disabledFirst}>
+                <Button id={index} onClick={() => onMoveUp(index)} disabled={disabledFirst}>
                   <Glyphicon glyph="menu-up" />
                 </Button>
-                <Button id={buttonId} onClick={onMoveDown} disabled={disabledLast}>
+                <Button id={index} onClick={() => onMoveDown(index)} disabled={disabledLast}>
                   <Glyphicon glyph="menu-down" />
                 </Button>
-                <Button id={buttonId} onClick={onMoveBottom} disabled={disabledLast}>
+                <Button id={index} onClick={() => onMoveBottom(index)} disabled={disabledLast}>
                   <Glyphicon glyph="triangle-bottom" />
                 </Button>
               </ButtonGroup>
@@ -435,7 +429,7 @@ const LocationItem = ({
           </Col>
           <Col className="edit-sprite-col" lg={1}>
             <ButtonToolbar>
-              <Button id={buttonId} onClick={onDelete}>
+              <Button id={index} onClick={() => onDelete(index)}>
                 <Glyphicon glyph="trash" />
               </Button>
             </ButtonToolbar>

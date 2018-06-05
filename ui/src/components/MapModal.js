@@ -82,9 +82,7 @@ export class EditLevelsModal extends React.Component {
     return `${result.level}`;
   };
 
-  delete = evt => {
-    var buttonId = evt.currentTarget.id;
-    var index = parseInt(buttonId.slice(3), 10);
+  delete = index => {
     var newLevels = [...this.state.levels];
     newLevels.splice(index, 1);
     this.setState({
@@ -114,7 +112,7 @@ export class EditLevelsModal extends React.Component {
       return (
         <LevelItem
             key={i}
-            buttonId={`btn${i}`}
+            index={i}
             level={level}
             onDelete={this.delete} />
       );
@@ -167,7 +165,7 @@ export class EditLevelsModal extends React.Component {
  * COMPONENT: LEVEL ITEM
  * =============================================================================
  */
-const LevelItem = ({ level, buttonId, onDelete }) => (
+const LevelItem = ({ level, index, onDelete }) => (
   <ListGroupItem>
     <Grid>
       <Row>
@@ -176,7 +174,7 @@ const LevelItem = ({ level, buttonId, onDelete }) => (
         </Col>
         <Col className="edit-tiles-col" lg={1}>
           <ButtonToolbar className="sprite-controls">
-            <Button id={buttonId} onClick={onDelete}>
+            <Button id={index} onClick={() => onDelete(index)}>
               <Glyphicon glyph="trash" />
             </Button>
           </ButtonToolbar>
@@ -202,17 +200,16 @@ export class EditImagesModal extends React.Component {
 
   handleSubmit = () => this.props.onSubmit(this.state.maskTiles);
 
-  moveTile = (evt, func) => {
-    var buttonId = evt.currentTarget.id;
+  moveTile = (index, func) => {
     var newMaskTiles = [...this.state.maskTiles];
-    var index = newMaskTiles.length - parseInt(buttonId.slice(3), 10) - 1;
-    var maskTile = newMaskTiles[index];
-    func(newMaskTiles, maskTile, index);
+    var rIndex = newMaskTiles.length - index - 1;
+    var maskTile = newMaskTiles[rIndex];
+    func(newMaskTiles, maskTile, rIndex);
     this.setState({ maskTiles: newMaskTiles });
   };
 
-  moveTop = evt => {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveTop = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index < maskTiles.length - 1) {
         maskTiles.splice(index, 1);
         maskTiles.push(maskTile);
@@ -220,8 +217,8 @@ export class EditImagesModal extends React.Component {
     });
   };
 
-  moveUp = evt => {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveUp = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index < maskTiles.length - 1) {
         maskTiles.splice(index, 1);
         maskTiles.splice(index + 1, 0, maskTile);
@@ -229,8 +226,8 @@ export class EditImagesModal extends React.Component {
     });
   };
 
-  moveDown = evt => {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveDown = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index > 0) {
         maskTiles.splice(index, 1);
         maskTiles.splice(index - 1, 0, maskTile);
@@ -238,8 +235,8 @@ export class EditImagesModal extends React.Component {
     });
   };
 
-  moveBottom = evt => {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveBottom = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index > 0) {
         maskTiles.splice(index, 1);
         maskTiles.splice(0, 0, maskTile);
@@ -247,8 +244,8 @@ export class EditImagesModal extends React.Component {
     });
   };
 
-  delete = evt => {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  delete = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       maskTiles.splice(index, 1);
     });
   };
@@ -311,8 +308,8 @@ export class EditImagesModal extends React.Component {
       var listPosition = this.listPosition(i, maskTiles.length - 1);
       return (
         <TileImageItem key={i}
+          index={i}
           ref={`item${i}`}
-          buttonId={`btn${i}`}
           position={listPosition}
           onMoveTop={this.moveTop}
           onMoveUp={this.moveUp}
@@ -380,7 +377,7 @@ class TileImageItem extends React.Component {
   };
 
   render = () => {
-    const { position, buttonId, onMoveTop, onMoveUp, onMoveDown, onMoveBottom, onDelete } = this.props;
+    const { position, index, onMoveTop, onMoveUp, onMoveDown, onMoveBottom, onDelete } = this.props;
     var disabledFirst = position.includes('first');
     var disabledLast = position.includes('last');
     return (
@@ -398,16 +395,16 @@ class TileImageItem extends React.Component {
             <Col className="tile-controls-col" lg={2}>
               <ButtonToolbar className="tile-controls">
                 <ButtonGroup>
-                  <Button id={buttonId} onClick={onMoveTop} disabled={disabledFirst}>
+                  <Button id={index} onClick={() => onMoveTop(index)} disabled={disabledFirst}>
                     <Glyphicon glyph="triangle-top" />
                   </Button>
-                  <Button id={buttonId} onClick={onMoveUp} disabled={disabledFirst}>
+                  <Button id={index} onClick={() => onMoveUp(index)} disabled={disabledFirst}>
                     <Glyphicon glyph="menu-up" />
                   </Button>
-                  <Button id={buttonId} onClick={onMoveDown} disabled={disabledLast}>
+                  <Button id={index} onClick={() => onMoveDown(index)} disabled={disabledLast}>
                     <Glyphicon glyph="menu-down" />
                   </Button>
-                  <Button id={buttonId} onClick={onMoveBottom} disabled={disabledLast}>
+                  <Button id={index} onClick={() => onMoveBottom(index)} disabled={disabledLast}>
                     <Glyphicon glyph="triangle-bottom" />
                   </Button>
                 </ButtonGroup>
@@ -415,7 +412,7 @@ class TileImageItem extends React.Component {
             </Col>
             <Col className="edit-tiles-item-col" lg={1}>
               <ButtonToolbar className="tile-controls">
-                <Button id={buttonId} onClick={onDelete}>
+                <Button id={index} onClick={() => onDelete(index)}>
                   <Glyphicon glyph="trash" />
                 </Button>
               </ButtonToolbar>
