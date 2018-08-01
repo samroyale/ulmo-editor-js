@@ -569,7 +569,7 @@ class RpgMapService {
       cols: cols,
       mapTiles: []
     };
-    return { map: this.buildRpgMap(emptyTileSetDef, []) };
+    return { map: this._buildRpgMap(emptyTileSetDef, []) };
   };
 
   resizeMap = (rpgMap, left, right, top, bottom) => {

@@ -17,7 +17,7 @@ export class PlayModal extends React.Component {
         this._canvas = React.createRef();
         this._stage = null;
         this._requestId = null; // only set if using requestAnimationFrame
-        this._intervalId = null, // only set if using setInterval
+        this._intervalId = null; // only set if using setInterval
 
         this.state = {
             rpgMap: null,

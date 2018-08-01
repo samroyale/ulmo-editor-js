@@ -174,7 +174,7 @@ const LevelItem = ({ level, index, onDelete }) => (
         </Col>
         <Col className="edit-tiles-col" lg={1}>
           <ButtonToolbar className="sprite-controls">
-            <Button id={index} onClick={() => onDelete(index)}>
+            <Button onClick={() => onDelete(index)}>
               <Glyphicon glyph="trash" />
             </Button>
           </ButtonToolbar>
@@ -395,16 +395,16 @@ class TileImageItem extends React.Component {
             <Col className="tile-controls-col" lg={2}>
               <ButtonToolbar className="tile-controls">
                 <ButtonGroup>
-                  <Button id={index} onClick={() => onMoveTop(index)} disabled={disabledFirst}>
+                  <Button onClick={() => onMoveTop(index)} disabled={disabledFirst}>
                     <Glyphicon glyph="triangle-top" />
                   </Button>
-                  <Button id={index} onClick={() => onMoveUp(index)} disabled={disabledFirst}>
+                  <Button onClick={() => onMoveUp(index)} disabled={disabledFirst}>
                     <Glyphicon glyph="menu-up" />
                   </Button>
-                  <Button id={index} onClick={() => onMoveDown(index)} disabled={disabledLast}>
+                  <Button onClick={() => onMoveDown(index)} disabled={disabledLast}>
                     <Glyphicon glyph="menu-down" />
                   </Button>
-                  <Button id={index} onClick={() => onMoveBottom(index)} disabled={disabledLast}>
+                  <Button onClick={() => onMoveBottom(index)} disabled={disabledLast}>
                     <Glyphicon glyph="triangle-bottom" />
                   </Button>
                 </ButtonGroup>
@@ -412,7 +412,7 @@ class TileImageItem extends React.Component {
             </Col>
             <Col className="edit-tiles-item-col" lg={1}>
               <ButtonToolbar className="tile-controls">
-                <Button id={index} onClick={() => onDelete(index)}>
+                <Button onClick={() => onDelete(index)}>
                   <Glyphicon glyph="trash" />
                 </Button>
               </ButtonToolbar>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Panel, Modal, ButtonToolbar, Button, Collapse, Alert } from 'react-bootstrap';
+import { Panel, Modal, ButtonToolbar, Button, Collapse, Alert, ListGroup, ListGroupItem } from 'react-bootstrap';
 import TileSetService from '../services/TileSets';
 import { TilePosition } from '../utils';
 import { tileSize } from '../config';
@@ -37,30 +37,16 @@ const TileSetToolbar = ({ onLoadTileSetsFromServer, onAdmin }) => (
 );
 
 /* =============================================================================
- * COMPONENT: TILE SET ITEM
- * =============================================================================
- */
-const TileSetItem = ({ onTileSetSelected, tileSet }) => (
-  <li>
-    <a href="#" onClick={evt => {
-      evt.preventDefault();
-      onTileSetSelected(tileSet.id);}}>
-      {tileSet.name}
-    </a>
-  </li>
-);
-
-
-/* =============================================================================
  * COMPONENT: OPEN TILE SET MODAL
  * =============================================================================
  */
 const OpenTileSetModal = ({ error, tileSets, onTileSetSelected, showModal, onClose }) => {
   var showError = error && error.length > 0;
 
-  var items = tileSets.map(
-    tileSet => <TileSetItem key={tileSet.id} tileSet={tileSet}
-        onTileSetSelected={onTileSetSelected} />
+  var items = tileSets.map(tileSet =>
+    <ListGroupItem className="tileset-item" onClick={() => onTileSetSelected(tileSet.id)}>
+      {tileSet.name}
+    </ListGroupItem>
   );
 
   return (
@@ -74,7 +60,7 @@ const OpenTileSetModal = ({ error, tileSets, onTileSetSelected, showModal, onClo
             <Alert bsStyle="danger">{error}</Alert>
           </div>
         </Collapse>
-        <ul>{items}</ul>
+        <ListGroup className="tilesets-list">{items}</ListGroup>
       </Modal.Body>
       <Modal.Footer>
         <Button onClick={onClose}>Cancel</Button>

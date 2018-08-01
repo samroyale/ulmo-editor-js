@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, Row, Col, PageHeader, Button } from 'react-bootstrap';
 // import { Router, Route, IndexRoute, browserHistory } from 'react-router';
-import { BrowserRouter as Router, Switch, Route, IndexRoute } from 'react-router-dom'
+import { BrowserRouter as Router, Route } from 'react-router-dom'
 import TilePalette from './TilePalette';
 import MapEditor from './MapEditor';
 import './App.css';
@@ -40,7 +40,6 @@ class Home extends React.Component {
   tileSelected = tile => this.setState({ selectedTile: tile });
 
   render() {
-    const { route } = this.props;
     return (
       <Row>
         <Col className="tile-palette-col" lg={4}>

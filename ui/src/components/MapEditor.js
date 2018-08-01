@@ -1,12 +1,12 @@
 import React from 'react';
 import { Panel, Modal, Grid, Row, Col, ButtonToolbar, Button, DropdownButton,
     Dropdown, MenuItem, Collapse, Alert, Form, FormGroup, FormControl, ControlLabel,
-    ProgressBar, Glyphicon } from 'react-bootstrap';
+    ProgressBar, Glyphicon, ListGroup, ListGroupItem } from 'react-bootstrap';
 import SpritesModal from './SpritesModal';
 import MapCanvas from './MapCanvas';
 import RpgMapService from '../services/RpgMaps';
 import { tileSize } from '../config';
-import { errorMessage, initRect, getDrawingContext } from '../utils';
+import { initRect, getDrawingContext } from '../utils';
 import './MapEditor.css';
 
 const rpgMapService = new RpgMapService();
@@ -524,10 +524,13 @@ class TileControl extends React.Component {
  */
 const OpenMapModal = ({ error, maps, onMapSelected, showModal, onClose }) => {
   var showError = error && error.length > 0;
-  var items = maps.map(
-    map => <MapItem key={map.id} map={map}
-                    onMapSelected={onMapSelected} />
+
+  var items = maps.map(map =>
+    <ListGroupItem className="map-item" onClick={() => onMapSelected(map.id)}>
+      {map.name}
+    </ListGroupItem>
   );
+
   return (
     <Modal show={showModal} onHide={onClose}>
       <Modal.Header closeButton>
@@ -539,7 +542,7 @@ const OpenMapModal = ({ error, maps, onMapSelected, showModal, onClose }) => {
             <Alert bsStyle="danger">{error}</Alert>
           </div>
         </Collapse>
-        <ul>{items}</ul>
+        <ListGroup className="maps-list">{items}</ListGroup>
       </Modal.Body>
       <Modal.Footer>
         <Button onClick={onClose}>Cancel</Button>
@@ -547,21 +550,6 @@ const OpenMapModal = ({ error, maps, onMapSelected, showModal, onClose }) => {
     </Modal>
   );
 };
-
-/* =============================================================================
- * COMPONENT: MAP ITEM
- * =============================================================================
- */
-const MapItem = ({ onMapSelected, map }) => (
-  <li>
-    <a href="#" onClick={evt => {
-      evt.preventDefault();
-      onMapSelected(map.id);
-      }}>
-      {map.name}
-    </a>
-  </li>
-);
 
 /* =============================================================================
  * COMPONENT: NEW MAP MODAL
@@ -632,7 +620,7 @@ class NewMapModal extends React.Component {
 class ResizeMapModal extends React.Component {
   constructor(props) {
     super(props);
-    this._regex = /[^0-9\-]/g;
+    this._regex = /[^0-9-]/g;
     this.state = {
       leftVal: '',
       rightVal: '',
