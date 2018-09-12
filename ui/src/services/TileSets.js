@@ -114,7 +114,7 @@ class TileSetService {
       return this.loadTileSet(this.nameToIdMappings[name]);
     }
     try {
-      const response = await fetch(`${tileSetsApi}/tileset?name=${name}`, { method: 'GET' });
+      const response = await fetch(`${tileSetsApi}/withName/${name}`, { method: 'GET' });
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
