@@ -50,8 +50,6 @@ class MapEditor extends React.Component {
     });
   };
 
-  closeProgressModal = () => this.setState({ showProgressModal: false });
-
   showProgressModal = title => {
     this.setState({
       showProgressModal: true,
@@ -60,7 +58,9 @@ class MapEditor extends React.Component {
     });
   };
 
-  closeWarningModal = ()  => this.setState({ showWarningModal: false });
+  updateProgress = percent => this.setState({ progressPercent: percent });
+
+  closeProgressModal = () => this.setState({ showProgressModal: false });
 
   closeErrorModal = () => {
     this.setState({
@@ -76,7 +76,7 @@ class MapEditor extends React.Component {
     });
   };
 
-  updateProgress = percent => this.setState({ progressPercent: percent });
+  closeWarningModal = ()  => this.setState({ showWarningModal: false });
 
   mapSelected = mid => {
     if (this.state.mapDirty) {
@@ -187,7 +187,7 @@ class MapEditor extends React.Component {
     if (this.isMapPresent()) {
       this.setState({ showModal: "SAVE" });
     }
-  }
+  };
 
   isMapPresent = () => {
     // a mapId of undefined or something indicates that we have a map, whereas null indicates that we don't
@@ -308,11 +308,12 @@ class MapEditor extends React.Component {
     this.addToChangeHistory({ sprites: oldSprites })
   };
 
-  componentWillReceiveProps = ({ selectedTile }) => {
+  static getDerivedStateFromProps = ({ selectedTile }, { tileMode }) => {
     // if selecting a tile for the first time, set the tile mode to INSERT
-    if (!this.props.selectedTile && selectedTile) {
-      this.setState({ tileMode: "INSERT" });
+    if (!tileMode && selectedTile) {
+      return { tileMode: "INSERT" };
     }
+    return null;
   };
 
   render = () => {
@@ -450,10 +451,11 @@ class TileControl extends React.Component {
     };
   }
 
-  componentWillReceiveProps = ({ tileMode }) => {
-    if (!this.props.tileMode && tileMode) {
-      this.setState({ disabled: false });
+  static getDerivedStateFromProps = ({ tileMode }, { disabled }) => {
+    if (disabled && tileMode) {
+      return { disabled: false };
     }
+    return null;
   };
 
   componentDidUpdate = (oldProps, oldState) => {
@@ -516,7 +518,7 @@ class TileControl extends React.Component {
       </Dropdown>
     );
   }
-};
+}
 
 /* =============================================================================
  * COMPONENT: OPEN MAP MODAL

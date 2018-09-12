@@ -238,7 +238,7 @@ class MapCanvas extends React.Component {
     var toPosition = {
       x: tilePosition.x + oldTiles.length - 1,
       y: tilePosition.y + oldTiles[0].length - 1
-    }
+    };
     this.updateRange(tilePosition, toPosition);
     onMapUpdated(tilePosition, oldTiles);
     this.hideOverlay();
@@ -288,7 +288,7 @@ class MapCanvas extends React.Component {
       menuItems: availableLevels.map(level => {
         return {
           label: 'Level: ' + level,
-          onClick: () => this.playMap(level),
+          onClick: () => this.playMap(level)
         };
       })
     }
@@ -522,6 +522,6 @@ const SelectionPopup = ({ buttons, showOverlay, onHide, target }) => {
       </Popover>
     </Overlay>
   )
-}
+};
 
 export default MapCanvas;

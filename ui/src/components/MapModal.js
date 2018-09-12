@@ -94,7 +94,10 @@ export class EditLevelsModal extends React.Component {
   static getDerivedStateFromProps = ({ showModal, editableTile }) => {
     if (showModal) {
       var initialState = EditLevelsModal.initialState();
-      return {...initialState, levels: EditLevelsModal.getLevels(editableTile)};
+      return {
+        ...initialState,
+        levels: EditLevelsModal.getLevels(editableTile)
+      };
     }
     return null;
   };
