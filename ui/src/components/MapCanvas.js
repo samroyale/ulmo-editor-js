@@ -183,6 +183,7 @@ class MapCanvas extends React.Component {
       y: tilePosition.y
     }
     onMapUpdated(topLeft, oldTiles);
+    this.updateRange(topLeft, topLeft);
     this.closeModal();
   };
 

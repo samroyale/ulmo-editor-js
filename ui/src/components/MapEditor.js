@@ -313,7 +313,6 @@ class MapEditor extends React.Component {
     if (!tileMode && selectedTile) {
       return { tileMode: "INSERT" };
     }
-    return null;
   };
 
   render = () => {
@@ -455,7 +454,6 @@ class TileControl extends React.Component {
     if (disabled && tileMode) {
       return { disabled: false };
     }
-    return null;
   };
 
   componentDidUpdate = (oldProps, oldState) => {

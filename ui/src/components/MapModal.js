@@ -99,7 +99,6 @@ export class EditLevelsModal extends React.Component {
         levels: EditLevelsModal.getLevels(editableTile)
       };
     }
-    return null;
   };
 
   static getLevels = editableTile => {
@@ -257,7 +256,6 @@ export class EditImagesModal extends React.Component {
     if (showModal) {
       return { maskTiles: EditImagesModal.getMaskTiles(editableTile) };
     }
-    return null;
   };
 
   static getMaskTiles = editableTile => {
@@ -462,7 +460,6 @@ export class EditMasksModal extends React.Component {
     if (showModal) {
       return { maskTiles: EditMasksModal.getMaskTiles(editableTile) };
     }
-    return null;
   };
 
   static getMaskTiles = editableTile => {

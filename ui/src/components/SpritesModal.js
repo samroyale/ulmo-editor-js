@@ -72,7 +72,6 @@ class SpritesModal extends React.Component {
     if (showModal) {
       return { sprites: [...sprites] };
     }
-    return null;
   };
 
   sprites = () => {
