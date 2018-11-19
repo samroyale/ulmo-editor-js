@@ -4,96 +4,116 @@
 
 accepts@~1.0.7:
   version "1.0.7"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/accepts/-/accepts-1.0.7.tgz#5b501fb4f0704309964ccdb048172541208dab1a"
+  resolved "https://registry.yarnpkg.com/accepts/-/accepts-1.0.7.tgz#5b501fb4f0704309964ccdb048172541208dab1a"
+  integrity sha1-W1AftPBwQwmWTM2wSBclQSCNqxo=
   dependencies:
     mime-types "~1.0.0"
     negotiator "0.4.7"
 
 async@2.1.4:
   version "2.1.4"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/async/-/async-2.1.4.tgz#2d2160c7788032e4dd6cbe2502f1f9a2c8f6cde4"
+  resolved "https://registry.yarnpkg.com/async/-/async-2.1.4.tgz#2d2160c7788032e4dd6cbe2502f1f9a2c8f6cde4"
+  integrity sha1-LSFgx3iAMuTdbL4lAvH5osj2zeQ=
   dependencies:
     lodash "^4.14.0"
 
 bluebird@2.10.2:
   version "2.10.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/bluebird/-/bluebird-2.10.2.tgz#024a5517295308857f14f91f1106fc3b555f446b"
+  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-2.10.2.tgz#024a5517295308857f14f91f1106fc3b555f446b"
+  integrity sha1-AkpVFylTCIV/FPkfEQb8O1VfRGs=
 
 body-parser@~1.0.1:
   version "1.0.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/body-parser/-/body-parser-1.0.2.tgz#3461479a3278fe00fcaebec3314bb54fc4f7b47c"
+  resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.0.2.tgz#3461479a3278fe00fcaebec3314bb54fc4f7b47c"
+  integrity sha1-NGFHmjJ4/gD8rr7DMUu1T8T3tHw=
   dependencies:
     qs "~0.6.6"
     raw-body "~1.1.2"
     type-is "~1.1.0"
 
 bson@~1.0.4:
-  version "1.0.4"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/bson/-/bson-1.0.4.tgz#93c10d39eaa5b58415cbc4052f3e53e562b0b72c"
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/bson/-/bson-1.0.9.tgz#12319f8323b1254739b7c6bef8d3e89ae05a2f57"
+  integrity sha512-IQX9/h7WdMBIW/q/++tGd+emQr0XMdeZ6icnT/74Xk9fnabWn+gZgpE+9V+gujL3hhJOoNrnDVY7tWdzc7NUTg==
 
 buffer-crc32@0.2.3:
   version "0.2.3"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/buffer-crc32/-/buffer-crc32-0.2.3.tgz#bb54519e95d107cbd2400e76d0cab1467336d921"
+  resolved "https://registry.yarnpkg.com/buffer-crc32/-/buffer-crc32-0.2.3.tgz#bb54519e95d107cbd2400e76d0cab1467336d921"
+  integrity sha1-u1RRnpXRB8vSQA520MqxRnM22SE=
 
 buffer-shims@~1.0.0:
   version "1.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/buffer-shims/-/buffer-shims-1.0.0.tgz#9978ce317388c649ad8793028c3477ef044a8b51"
+  resolved "https://registry.yarnpkg.com/buffer-shims/-/buffer-shims-1.0.0.tgz#9978ce317388c649ad8793028c3477ef044a8b51"
+  integrity sha1-mXjOMXOIxkmth5MCjDR37wRKi1E=
 
 bytes@1:
   version "1.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/bytes/-/bytes-1.0.0.tgz#3569ede8ba34315fab99c3e92cb04c7220de1fa8"
+  resolved "https://registry.yarnpkg.com/bytes/-/bytes-1.0.0.tgz#3569ede8ba34315fab99c3e92cb04c7220de1fa8"
+  integrity sha1-NWnt6Lo0MV+rmcPpLLBMciDeH6g=
 
 cookie-signature@1.0.4:
   version "1.0.4"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/cookie-signature/-/cookie-signature-1.0.4.tgz#0edd22286e3a111b9a2a70db363e925e867f6aca"
+  resolved "https://registry.yarnpkg.com/cookie-signature/-/cookie-signature-1.0.4.tgz#0edd22286e3a111b9a2a70db363e925e867f6aca"
+  integrity sha1-Dt0iKG46ERuaKnDbNj6SXoZ/aso=
 
 cookie@0.1.2:
   version "0.1.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/cookie/-/cookie-0.1.2.tgz#72fec3d24e48a3432073d90c12642005061004b1"
+  resolved "https://registry.yarnpkg.com/cookie/-/cookie-0.1.2.tgz#72fec3d24e48a3432073d90c12642005061004b1"
+  integrity sha1-cv7D0k5Io0Mgc9kMEmQgBQYQBLE=
 
 core-util-is@~1.0.0:
   version "1.0.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
+  resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
+  integrity sha1-tf1UIgqivFq1eqtxQMlAdUUDwac=
 
 debug@1.0.4:
   version "1.0.4"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/debug/-/debug-1.0.4.tgz#5b9c256bd54b6ec02283176fa8a0ede6d154cbf8"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-1.0.4.tgz#5b9c256bd54b6ec02283176fa8a0ede6d154cbf8"
+  integrity sha1-W5wla9VLbsAigxdvqKDt5tFUy/g=
   dependencies:
     ms "0.6.2"
 
 debug@2.2.0:
   version "2.2.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/debug/-/debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da"
+  integrity sha1-+HBX6ZWxofauaklgZkE3vFbwOdo=
   dependencies:
     ms "0.7.1"
 
 depd@0.4.4:
   version "0.4.4"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/depd/-/depd-0.4.4.tgz#07091fae75f97828d89b4a02a2d4778f0e7c0662"
+  resolved "https://registry.yarnpkg.com/depd/-/depd-0.4.4.tgz#07091fae75f97828d89b4a02a2d4778f0e7c0662"
+  integrity sha1-BwkfrnX5eCjYm0oCotR3jw58BmI=
 
 destroy@1.0.3:
   version "1.0.3"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/destroy/-/destroy-1.0.3.tgz#b433b4724e71fd8551d9885174851c5fc377e2c9"
+  resolved "https://registry.yarnpkg.com/destroy/-/destroy-1.0.3.tgz#b433b4724e71fd8551d9885174851c5fc377e2c9"
+  integrity sha1-tDO0ck5x/YVR2YhRdIUcX8N34sk=
 
 ee-first@1.0.5:
   version "1.0.5"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/ee-first/-/ee-first-1.0.5.tgz#8c9b212898d8cd9f1a9436650ce7be202c9e9ff0"
+  resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.0.5.tgz#8c9b212898d8cd9f1a9436650ce7be202c9e9ff0"
+  integrity sha1-jJshKJjYzZ8alDZlDOe+ICyen/A=
 
 es6-promise@3.2.1:
   version "3.2.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/es6-promise/-/es6-promise-3.2.1.tgz#ec56233868032909207170c39448e24449dd1fc4"
+  resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-3.2.1.tgz#ec56233868032909207170c39448e24449dd1fc4"
+  integrity sha1-7FYjOGgDKQkgcXDDlEjiREndH8Q=
 
 escape-html@1.0.1:
   version "1.0.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/escape-html/-/escape-html-1.0.1.tgz#181a286ead397a39a92857cfb1d43052e356bff0"
+  resolved "https://registry.yarnpkg.com/escape-html/-/escape-html-1.0.1.tgz#181a286ead397a39a92857cfb1d43052e356bff0"
+  integrity sha1-GBoobq05ejmpKFfPsdQwUuNWv/A=
 
 express-history-api-fallback@~2.0.0:
   version "2.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/express-history-api-fallback/-/express-history-api-fallback-2.0.0.tgz#c7a47ffe30ee1a1ff6cf54c2bdc319d634991b2e"
+  resolved "https://registry.yarnpkg.com/express-history-api-fallback/-/express-history-api-fallback-2.0.0.tgz#c7a47ffe30ee1a1ff6cf54c2bdc319d634991b2e"
+  integrity sha1-x6R//jDuGh/2z1TCvcMZ1jSZGy4=
 
 express@~4.8.0:
   version "4.8.8"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/express/-/express-4.8.8.tgz#6aba348ccdfa87608040b12ca0010107a0aac28e"
+  resolved "https://registry.yarnpkg.com/express/-/express-4.8.8.tgz#6aba348ccdfa87608040b12ca0010107a0aac28e"
+  integrity sha1-aro0jM36h2CAQLEsoAEBB6Cqwo4=
   dependencies:
     accepts "~1.0.7"
     buffer-crc32 "0.2.3"
@@ -120,69 +140,84 @@ express@~4.8.0:
 
 finalhandler@0.1.0:
   version "0.1.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/finalhandler/-/finalhandler-0.1.0.tgz#da05bbc4f5f4a30c84ce1d91f3c154007c4e9daa"
+  resolved "https://registry.yarnpkg.com/finalhandler/-/finalhandler-0.1.0.tgz#da05bbc4f5f4a30c84ce1d91f3c154007c4e9daa"
+  integrity sha1-2gW7xPX0owyEzh2R88FUAHxOnao=
   dependencies:
     debug "1.0.4"
     escape-html "1.0.1"
 
 fresh@0.2.2:
   version "0.2.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/fresh/-/fresh-0.2.2.tgz#9731dcf5678c7faeb44fb903c4f72df55187fa77"
+  resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.2.2.tgz#9731dcf5678c7faeb44fb903c4f72df55187fa77"
+  integrity sha1-lzHc9WeMf660T7kDxPct9VGH+nc=
 
 hooks-fixed@2.0.0:
   version "2.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/hooks-fixed/-/hooks-fixed-2.0.0.tgz#a01d894d52ac7f6599bbb1f63dfc9c411df70cba"
+  resolved "https://registry.yarnpkg.com/hooks-fixed/-/hooks-fixed-2.0.0.tgz#a01d894d52ac7f6599bbb1f63dfc9c411df70cba"
+  integrity sha1-oB2JTVKsf2WZu7H2PfycQR33DLo=
 
 inherits@~2.0.1:
   version "2.0.3"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/inherits/-/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
+  resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
+  integrity sha1-Yzwsg+PaQqUC9SRmAiSA9CCCYd4=
 
 ipaddr.js@0.1.2:
   version "0.1.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/ipaddr.js/-/ipaddr.js-0.1.2.tgz#6a1fd3d854f5002965c34d7bbcd9b4a8d4b0467e"
+  resolved "https://registry.yarnpkg.com/ipaddr.js/-/ipaddr.js-0.1.2.tgz#6a1fd3d854f5002965c34d7bbcd9b4a8d4b0467e"
+  integrity sha1-ah/T2FT1ACllw017vNm0qNSwRn4=
 
 isarray@~1.0.0:
   version "1.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
+  resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
+  integrity sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=
 
 kareem@1.4.1:
   version "1.4.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/kareem/-/kareem-1.4.1.tgz#ed76200044fa041ef32b4da8261e2553f1173531"
+  resolved "https://registry.yarnpkg.com/kareem/-/kareem-1.4.1.tgz#ed76200044fa041ef32b4da8261e2553f1173531"
+  integrity sha1-7XYgAET6BB7zK02oJh4lU/EXNTE=
 
 lodash@^4.14.0:
-  version "4.17.4"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
+  version "4.17.11"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
+  integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
 
 media-typer@0.2.0:
   version "0.2.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/media-typer/-/media-typer-0.2.0.tgz#d8a065213adfeaa2e76321a2b6dda36ff6335984"
+  resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.2.0.tgz#d8a065213adfeaa2e76321a2b6dda36ff6335984"
+  integrity sha1-2KBlITrf6qLnYyGitt2jb/YzWYQ=
 
 merge-descriptors@0.0.2:
   version "0.0.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/merge-descriptors/-/merge-descriptors-0.0.2.tgz#c36a52a781437513c57275f39dd9d317514ac8c7"
+  resolved "https://registry.yarnpkg.com/merge-descriptors/-/merge-descriptors-0.0.2.tgz#c36a52a781437513c57275f39dd9d317514ac8c7"
+  integrity sha1-w2pSp4FDdRPFcnXzndnTF1FKyMc=
 
 methods@1.1.0:
   version "1.1.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/methods/-/methods-1.1.0.tgz#5dca4ee12df52ff3b056145986a8f01cbc86436f"
+  resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.0.tgz#5dca4ee12df52ff3b056145986a8f01cbc86436f"
+  integrity sha1-XcpO4S31L/OwVhRZhqjwHLyGQ28=
 
 mime-types@~1.0.0, mime-types@~1.0.1:
   version "1.0.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mime-types/-/mime-types-1.0.2.tgz#995ae1392ab8affcbfcb2641dd054e943c0d5dce"
+  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-1.0.2.tgz#995ae1392ab8affcbfcb2641dd054e943c0d5dce"
+  integrity sha1-mVrhOSq4r/y/yyZB3QVOlDwNXc4=
 
 mime@1.2.11, mime@~1.2.11:
   version "1.2.11"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mime/-/mime-1.2.11.tgz#58203eed86e3a5ef17aed2b7d9ebd47f0a60dd10"
+  resolved "https://registry.yarnpkg.com/mime/-/mime-1.2.11.tgz#58203eed86e3a5ef17aed2b7d9ebd47f0a60dd10"
+  integrity sha1-WCA+7Ybjpe8XrtK32evUfwpg3RA=
 
 mongodb-core@2.1.10:
   version "2.1.10"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mongodb-core/-/mongodb-core-2.1.10.tgz#eb290681d196d3346a492161aa2ea0905e63151b"
+  resolved "https://registry.yarnpkg.com/mongodb-core/-/mongodb-core-2.1.10.tgz#eb290681d196d3346a492161aa2ea0905e63151b"
+  integrity sha1-6ykGgdGW0zRqSSFhqi6gkF5jFRs=
   dependencies:
     bson "~1.0.4"
     require_optional "~1.0.0"
 
 mongodb@2.2.26:
   version "2.2.26"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mongodb/-/mongodb-2.2.26.tgz#1bd50c557c277c98e1a05da38c9839c4922b034a"
+  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-2.2.26.tgz#1bd50c557c277c98e1a05da38c9839c4922b034a"
+  integrity sha1-G9UMVXwnfJjhoF2jjJg5xJIrA0o=
   dependencies:
     es6-promise "3.2.1"
     mongodb-core "2.1.10"
@@ -190,7 +225,8 @@ mongodb@2.2.26:
 
 mongoose@~4.9.1:
   version "4.9.10"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mongoose/-/mongoose-4.9.10.tgz#3e35963e1ab72b275a998582baeb26e8f202d2e3"
+  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-4.9.10.tgz#3e35963e1ab72b275a998582baeb26e8f202d2e3"
+  integrity sha1-PjWWPhq3KydamYWCuusm6PIC0uM=
   dependencies:
     async "2.1.4"
     bson "~1.0.4"
@@ -207,15 +243,18 @@ mongoose@~4.9.1:
 
 mpath@0.2.1:
   version "0.2.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mpath/-/mpath-0.2.1.tgz#3a4e829359801de96309c27a6b2e102e89f9e96e"
+  resolved "https://registry.yarnpkg.com/mpath/-/mpath-0.2.1.tgz#3a4e829359801de96309c27a6b2e102e89f9e96e"
+  integrity sha1-Ok6Ck1mAHeljCcJ6ay4QLon56W4=
 
 mpromise@0.5.5:
   version "0.5.5"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mpromise/-/mpromise-0.5.5.tgz#f5b24259d763acc2257b0a0c8c6d866fd51732e6"
+  resolved "https://registry.yarnpkg.com/mpromise/-/mpromise-0.5.5.tgz#f5b24259d763acc2257b0a0c8c6d866fd51732e6"
+  integrity sha1-9bJCWddjrMIlewoMjG2Gb9UXMuY=
 
 mquery@2.3.0:
   version "2.3.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/mquery/-/mquery-2.3.0.tgz#3d1717ad8958d0c99e42ea2461a109f3e5f3e458"
+  resolved "https://registry.yarnpkg.com/mquery/-/mquery-2.3.0.tgz#3d1717ad8958d0c99e42ea2461a109f3e5f3e458"
+  integrity sha1-PRcXrYlY0MmeQuokYaEJ8+Xz5Fg=
   dependencies:
     bluebird "2.10.2"
     debug "2.2.0"
@@ -224,74 +263,90 @@ mquery@2.3.0:
 
 ms@0.6.2:
   version "0.6.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/ms/-/ms-0.6.2.tgz#d89c2124c6fdc1353d65a8b77bf1aac4b193708c"
+  resolved "https://registry.yarnpkg.com/ms/-/ms-0.6.2.tgz#d89c2124c6fdc1353d65a8b77bf1aac4b193708c"
+  integrity sha1-2JwhJMb9wTU9Zai3e/GqxLGTcIw=
 
 ms@0.7.1:
   version "0.7.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
+  resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
+  integrity sha1-nNE8A62/8ltl7/3nzoZO6VIBcJg=
 
 ms@0.7.2:
   version "0.7.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/ms/-/ms-0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765"
+  resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765"
+  integrity sha1-riXPJRKziFodldfwN4aNhDESR2U=
 
 muri@1.2.1:
   version "1.2.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/muri/-/muri-1.2.1.tgz#ec7ea5ce6ca6a523eb1ab35bacda5fa816c9aa3c"
+  resolved "https://registry.yarnpkg.com/muri/-/muri-1.2.1.tgz#ec7ea5ce6ca6a523eb1ab35bacda5fa816c9aa3c"
+  integrity sha1-7H6lzmympSPrGrNbrNpfqBbJqjw=
 
 negotiator@0.4.7:
   version "0.4.7"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/negotiator/-/negotiator-0.4.7.tgz#a4160f7177ec806738631d0d3052325da42abdc8"
+  resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.4.7.tgz#a4160f7177ec806738631d0d3052325da42abdc8"
+  integrity sha1-pBYPcXfsgGc4Yx0NMFIyXaQqvcg=
 
 on-finished@2.1.0:
   version "2.1.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/on-finished/-/on-finished-2.1.0.tgz#0c539f09291e8ffadde0c8a25850fb2cedc7022d"
+  resolved "https://registry.yarnpkg.com/on-finished/-/on-finished-2.1.0.tgz#0c539f09291e8ffadde0c8a25850fb2cedc7022d"
+  integrity sha1-DFOfCSkej/rd4MiiWFD7LO3HAi0=
   dependencies:
     ee-first "1.0.5"
 
 parseurl@~1.3.0:
   version "1.3.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/parseurl/-/parseurl-1.3.2.tgz#fc289d4ed8993119460c156253262cdc8de65bf3"
+  resolved "https://registry.yarnpkg.com/parseurl/-/parseurl-1.3.2.tgz#fc289d4ed8993119460c156253262cdc8de65bf3"
+  integrity sha1-/CidTtiZMRlGDBViUyYs3I3mW/M=
 
 path-to-regexp@0.1.3:
   version "0.1.3"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/path-to-regexp/-/path-to-regexp-0.1.3.tgz#21b9ab82274279de25b156ea08fd12ca51b8aecb"
+  resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.3.tgz#21b9ab82274279de25b156ea08fd12ca51b8aecb"
+  integrity sha1-IbmrgidCed4lsVbqCP0SylG4rss=
 
 process-nextick-args@~1.0.6:
   version "1.0.7"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/process-nextick-args/-/process-nextick-args-1.0.7.tgz#150e20b756590ad3f91093f25a4f2ad8bff30ba3"
+  resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-1.0.7.tgz#150e20b756590ad3f91093f25a4f2ad8bff30ba3"
+  integrity sha1-FQ4gt1ZZCtP5EJPyWk8q2L/zC6M=
 
 proxy-addr@1.0.1:
   version "1.0.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/proxy-addr/-/proxy-addr-1.0.1.tgz#c7c566d5eb4e3fad67eeb9c77c5558ccc39b88a8"
+  resolved "https://registry.yarnpkg.com/proxy-addr/-/proxy-addr-1.0.1.tgz#c7c566d5eb4e3fad67eeb9c77c5558ccc39b88a8"
+  integrity sha1-x8Vm1etOP61n7rnHfFVYzMObiKg=
   dependencies:
     ipaddr.js "0.1.2"
 
 qs@2.2.2:
   version "2.2.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/qs/-/qs-2.2.2.tgz#dfe783f1854b1ac2b3ade92775ad03e27e03218c"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-2.2.2.tgz#dfe783f1854b1ac2b3ade92775ad03e27e03218c"
+  integrity sha1-3+eD8YVLGsKzreknda0D4n4DIYw=
 
 qs@~0.6.6:
   version "0.6.6"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/qs/-/qs-0.6.6.tgz#6e015098ff51968b8a3c819001d5f2c89bc4b107"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-0.6.6.tgz#6e015098ff51968b8a3c819001d5f2c89bc4b107"
+  integrity sha1-bgFQmP9RlouKPIGQAdXyyJvEsQc=
 
 range-parser@1.0.0:
   version "1.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/range-parser/-/range-parser-1.0.0.tgz#a4b264cfe0be5ce36abe3765ac9c2a248746dbc0"
+  resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.0.0.tgz#a4b264cfe0be5ce36abe3765ac9c2a248746dbc0"
+  integrity sha1-pLJkz+C+XONqvjdlrJwqJIdG28A=
 
 range-parser@~1.0.0:
   version "1.0.3"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/range-parser/-/range-parser-1.0.3.tgz#6872823535c692e2c2a0103826afd82c2e0ff175"
+  resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.0.3.tgz#6872823535c692e2c2a0103826afd82c2e0ff175"
+  integrity sha1-aHKCNTXGkuLCoBA4Jq/YLC4P8XU=
 
 raw-body@~1.1.2:
   version "1.1.7"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/raw-body/-/raw-body-1.1.7.tgz#1d027c2bfa116acc6623bca8f00016572a87d425"
+  resolved "https://registry.yarnpkg.com/raw-body/-/raw-body-1.1.7.tgz#1d027c2bfa116acc6623bca8f00016572a87d425"
+  integrity sha1-HQJ8K/oRasxmI7yo8AAWVyqH1CU=
   dependencies:
     bytes "1"
     string_decoder "0.10"
 
 readable-stream@2.2.7:
   version "2.2.7"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/readable-stream/-/readable-stream-2.2.7.tgz#07057acbe2467b22042d36f98c5ad507054e95b1"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.2.7.tgz#07057acbe2467b22042d36f98c5ad507054e95b1"
+  integrity sha1-BwV6y+JGeyIELTb5jFrVBwVOlbE=
   dependencies:
     buffer-shims "~1.0.0"
     core-util-is "~1.0.0"
@@ -303,30 +358,36 @@ readable-stream@2.2.7:
 
 regexp-clone@0.0.1:
   version "0.0.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/regexp-clone/-/regexp-clone-0.0.1.tgz#a7c2e09891fdbf38fbb10d376fb73003e68ac589"
+  resolved "https://registry.yarnpkg.com/regexp-clone/-/regexp-clone-0.0.1.tgz#a7c2e09891fdbf38fbb10d376fb73003e68ac589"
+  integrity sha1-p8LgmJH9vzj7sQ03b7cwA+aKxYk=
 
 require_optional@~1.0.0:
   version "1.0.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/require_optional/-/require_optional-1.0.1.tgz#4cf35a4247f64ca3df8c2ef208cc494b1ca8fc2e"
+  resolved "https://registry.yarnpkg.com/require_optional/-/require_optional-1.0.1.tgz#4cf35a4247f64ca3df8c2ef208cc494b1ca8fc2e"
+  integrity sha512-qhM/y57enGWHAe3v/NcwML6a3/vfESLe/sGM2dII+gEO0BpKRUkWZow/tyloNqJyN6kXSl3RyyM8Ll5D/sJP8g==
   dependencies:
     resolve-from "^2.0.0"
     semver "^5.1.0"
 
 resolve-from@^2.0.0:
   version "2.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/resolve-from/-/resolve-from-2.0.0.tgz#9480ab20e94ffa1d9e80a804c7ea147611966b57"
+  resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-2.0.0.tgz#9480ab20e94ffa1d9e80a804c7ea147611966b57"
+  integrity sha1-lICrIOlP+h2egKgEx+oUdhGWa1c=
 
 safe-buffer@~5.1.0:
-  version "5.1.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
+  version "5.1.2"
+  resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.2.tgz#991ec69d296e0313747d59bdfd2b745c35f8828d"
+  integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
 
 semver@^5.1.0:
-  version "5.4.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/semver/-/semver-5.4.1.tgz#e059c09d8571f0540823733433505d3a2f00b18e"
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-5.6.0.tgz#7e74256fbaa49c75aa7c7a205cc22799cac80004"
+  integrity sha512-RS9R6R35NYgQn++fkDWaOmqGoj4Ek9gGs+DPxNUZKuwE183xjJroKvyo1IzVFeXvUrvmALy6FWD5xrdJT25gMg==
 
 send@0.8.5:
   version "0.8.5"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/send/-/send-0.8.5.tgz#37f708216e6f50c175e74c69fec53484e2fd82c7"
+  resolved "https://registry.yarnpkg.com/send/-/send-0.8.5.tgz#37f708216e6f50c175e74c69fec53484e2fd82c7"
+  integrity sha1-N/cIIW5vUMF150xp/sU0hOL9gsc=
   dependencies:
     debug "1.0.4"
     depd "0.4.4"
@@ -340,7 +401,8 @@ send@0.8.5:
 
 serve-static@~1.5.4:
   version "1.5.4"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/serve-static/-/serve-static-1.5.4.tgz#819fb37ae46bd02dd520b77fcf7fd8f5112f9782"
+  resolved "https://registry.yarnpkg.com/serve-static/-/serve-static-1.5.4.tgz#819fb37ae46bd02dd520b77fcf7fd8f5112f9782"
+  integrity sha1-gZ+zeuRr0C3VILd/z3/Y9REvl4I=
   dependencies:
     escape-html "1.0.1"
     parseurl "~1.3.0"
@@ -349,43 +411,52 @@ serve-static@~1.5.4:
 
 sliced@0.0.5:
   version "0.0.5"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/sliced/-/sliced-0.0.5.tgz#5edc044ca4eb6f7816d50ba2fc63e25d8fe4707f"
+  resolved "https://registry.yarnpkg.com/sliced/-/sliced-0.0.5.tgz#5edc044ca4eb6f7816d50ba2fc63e25d8fe4707f"
+  integrity sha1-XtwETKTrb3gW1Qui/GPiXY/kcH8=
 
 sliced@1.0.1:
   version "1.0.1"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/sliced/-/sliced-1.0.1.tgz#0b3a662b5d04c3177b1926bea82b03f837a2ef41"
+  resolved "https://registry.yarnpkg.com/sliced/-/sliced-1.0.1.tgz#0b3a662b5d04c3177b1926bea82b03f837a2ef41"
+  integrity sha1-CzpmK10Ewxd7GSa+qCsD+Dei70E=
 
 string_decoder@0.10:
   version "0.10.31"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/string_decoder/-/string_decoder-0.10.31.tgz#62e203bc41766c6c28c9fc84301dab1c5310fa94"
+  resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-0.10.31.tgz#62e203bc41766c6c28c9fc84301dab1c5310fa94"
+  integrity sha1-YuIDvEF2bGwoyfyEMB2rHFMQ+pQ=
 
 string_decoder@~1.0.0:
   version "1.0.3"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/string_decoder/-/string_decoder-1.0.3.tgz#0fc67d7c141825de94282dd536bec6b9bce860ab"
+  resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-1.0.3.tgz#0fc67d7c141825de94282dd536bec6b9bce860ab"
+  integrity sha512-4AH6Z5fzNNBcH+6XDMfA/BTt87skxqJlO0lAh3Dker5zThcAxG6mKz+iGu308UKoPPQ8Dcqx/4JhujzltRa+hQ==
   dependencies:
     safe-buffer "~5.1.0"
 
 type-is@~1.1.0:
   version "1.1.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/type-is/-/type-is-1.1.0.tgz#d0245ec8b2676668d59dd0cf3255060676a57db6"
+  resolved "https://registry.yarnpkg.com/type-is/-/type-is-1.1.0.tgz#d0245ec8b2676668d59dd0cf3255060676a57db6"
+  integrity sha1-0CReyLJnZmjVndDPMlUGBnalfbY=
   dependencies:
     mime "~1.2.11"
 
 type-is@~1.3.2:
   version "1.3.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/type-is/-/type-is-1.3.2.tgz#4f2a5dc58775ca1630250afc7186f8b36309d1bb"
+  resolved "https://registry.yarnpkg.com/type-is/-/type-is-1.3.2.tgz#4f2a5dc58775ca1630250afc7186f8b36309d1bb"
+  integrity sha1-TypdxYd1yhYwJQr8cYb4s2MJ0bs=
   dependencies:
     media-typer "0.2.0"
     mime-types "~1.0.1"
 
 util-deprecate@~1.0.1:
   version "1.0.2"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
+  resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
+  integrity sha1-RQ1Nyfpw3nMnYvvS1KKJgUGaDM8=
 
 utils-merge@1.0.0:
   version "1.0.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/utils-merge/-/utils-merge-1.0.0.tgz#0294fb922bb9375153541c4f7096231f287c8af8"
+  resolved "https://registry.yarnpkg.com/utils-merge/-/utils-merge-1.0.0.tgz#0294fb922bb9375153541c4f7096231f287c8af8"
+  integrity sha1-ApT7kiu5N1FTVBxPcJYjHyh8ivg=
 
 vary@0.1.0:
   version "0.1.0"
-  resolved "https://nexus.anaplan-np.net/repository/npm-all/vary/-/vary-0.1.0.tgz#df0945899e93c0cc5bd18cc8321d9d21e74f6176"
+  resolved "https://registry.yarnpkg.com/vary/-/vary-0.1.0.tgz#df0945899e93c0cc5bd18cc8321d9d21e74f6176"
+  integrity sha1-3wlFiZ6TwMxb0YzIMh2dIedPYXY=
