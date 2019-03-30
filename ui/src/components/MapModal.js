@@ -291,7 +291,7 @@ export class EditImagesModal extends React.Component {
 
   updateRequired = () => {
     return this.state.maskTiles.length > 0 && !this.refs['item0'];
-  }
+  };
 
   listPosition = (tileIndex, lastIndex) => {
     var position = [];

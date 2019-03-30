@@ -1,5 +1,6 @@
 {
     "name": "ulmo-server",
+    "license": "GPL-3.0-or-later",
     "main": "server.js",
     "scripts": {
         "start": "node server.js"
