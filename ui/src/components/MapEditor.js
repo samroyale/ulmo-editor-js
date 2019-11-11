@@ -393,7 +393,7 @@ class MapEditor extends React.Component {
             onClose={this.closeErrorModal} />
       </div>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -515,7 +515,7 @@ class TileControl extends React.Component {
         </Dropdown.Menu>
       </Dropdown>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -610,8 +610,8 @@ class NewMapModal extends React.Component {
         </Modal.Footer>
       </Modal>
     );
-  }
-};
+  };
+}
 
 /* =============================================================================
  * COMPONENT: RESIZE MAP MODAL
@@ -707,7 +707,7 @@ class ResizeMapModal extends React.Component {
         </Modal.Footer>
       </Modal>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -765,7 +765,7 @@ class SaveAsModal extends React.Component {
         </Modal.Footer>
       </Modal>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -803,7 +803,7 @@ const WarningModal = ({ showModal, onClose, onContinue, percent }) => (
       <Button onClick={onClose}>Cancel</Button>
     </Modal.Footer>
   </Modal>
-)
+);
 
 /* =============================================================================
  * COMPONENT: ERROR MODAL
@@ -821,7 +821,7 @@ const ErrorModal = ({ showModal, onClose, title, error }) => (
       <Button onClick={onClose}>Close</Button>
     </Modal.Footer>
   </Modal>
-)
+);
 
 /* =============================================================================
  * COMPONENT: MAP TILE INFO

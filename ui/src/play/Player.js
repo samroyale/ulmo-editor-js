@@ -74,7 +74,7 @@ export class Keys {
     // _flush() {
     //     // do nothing
     // };
-};
+}
 
 /* =============================================================================
  * CLASS: SHADOW
@@ -112,7 +112,7 @@ export class Player extends Sprite {
             MovingFrames.loadFrames(playerFramesUrl, directions, 4, 6),
             StaticFrames.loadFrames(playerFallingFramesUrl, 4, 0),
             SingleFrame.loadFrames(shadowFramesUrl)
-        ])
+        ]);
         const sprite = new Player(playMap, level, location);
         return sprite._withPlayerFrames(frames, 0);
     }

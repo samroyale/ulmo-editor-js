@@ -194,7 +194,7 @@ export class SingleFrame {
     }
 
     static _processFrames(img) {
-        let spriteWidth = img.width * 2
+        let spriteWidth = img.width * 2;
         let spriteHeight = img.height * 2;
         let frameCanvas = document.createElement('canvas');
         frameCanvas.width = spriteWidth;
@@ -719,7 +719,7 @@ export class Blades extends Sprite {
         this._countdown = 30;
         this._active = false;
         if (level) {
-            this._getMapTile().addNewLevel(level)
+            this._getMapTile().addNewLevel(level);
             this._frames = this._frames.withFrameTicks(0);
         }
     }

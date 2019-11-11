@@ -51,7 +51,7 @@ class SpritesModal extends React.Component {
     if (this.state.editableSprite) {
       var index = sprites.indexOf(this.state.editableSprite);
       if (index > -1) {
-        var newSprites = [...sprites]
+        var newSprites = [...sprites];
         newSprites[index] = newSprite;
         this.setState({
           sprites: newSprites,
@@ -118,7 +118,7 @@ class SpritesModal extends React.Component {
           onClose={this.closeEditModal} />
       </div>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -168,7 +168,7 @@ class SpriteItem extends React.Component {
         </Grid>
       </ListGroupItem>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -188,7 +188,7 @@ class SpriteEditModal extends React.Component {
       levelVal: '',
       locations: []
     }
-  }
+  };
 
   handleSubmit = () => this.props.onSubmit(newSprite(
     this.state.typeVal,
@@ -382,7 +382,7 @@ class SpriteEditModal extends React.Component {
         </Modal.Footer>
       </Modal>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -508,7 +508,7 @@ class AddLocationItem extends React.Component {
         </Grid>
       </ListGroupItem>
     );
-  }
+  };
 }
 
 export default SpritesModal;

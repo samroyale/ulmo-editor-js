@@ -182,7 +182,7 @@ class MapTile {
 class Sprite {
   constructor(type, level, location) {
     this._type = type;
-    this._level = level
+    this._level = level;
     // location is an array of [x, y] values
     this._location = location;
   }
@@ -338,13 +338,13 @@ class RpgMap {
     var sourceTopLeft = {
       x: 0 - Math.min(0, left),
       y: 0 - Math.min(0, top)
-    }
+    };
     var rows = rpgMap.getRows() - sourceTopLeft.y;
     var cols = rpgMap.getCols() - sourceTopLeft.x;
     var targetTopLeft = {
       x: Math.max(0, left),
       y: Math.max(0, top)
-    }
+    };
     this._pasteTilesInternal(targetTopLeft.x, targetTopLeft.y,
         rpgMap._copyInternal(sourceTopLeft.x, sourceTopLeft.y, rows, cols));
     // TODO: filter sprites that are now outside the map?
@@ -459,11 +459,11 @@ class RpgMapService {
   loadMaps = async () => {
     try {
       const response = await fetch(rpgMapsApi, { method: 'GET', cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
+      if (response.ok) {
+        const json = await response.json();
+        return {maps: json};
       }
-      const json = await response.json();
-      return { maps: json };
+      throw new Error(`${response.status}: ${response.statusText}`);
     }
     catch(e) {
       throw new Error(`Could not load maps [${e.message}]`);
@@ -473,12 +473,12 @@ class RpgMapService {
   loadMap = async (mapId) => {
     try {
       const response = await fetch(`${rpgMapsApi}/${mapId}`, { method: 'GET', cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
+      if (response.ok) {
+        const json = await response.json();
+        const tileSets = await Promise.all(this._tileSetPromises(json));
+        return {map: this._buildRpgMap(json, tileSets)};
       }
-      const json = await response.json();
-      const tileSets = await Promise.all(this._tileSetPromises(json));
-      return { map: this._buildRpgMap(json, tileSets) };
+      throw new Error(`${response.status}: ${response.statusText}`);
     }
     catch(e) {
       throw new Error(`Could not load map [${e.message}]`);
@@ -503,13 +503,13 @@ class RpgMapService {
           'Content-Type': 'application/json'
         })
       });
-      if (!response.ok) {
-        const text = await response.text();
-        const { status, err } = this._saveError(response, text, rpgMapDef);
-        throw new Error(`${status}: ${err}`);
+      if (response.ok) {
+        const json = await response.json();
+        return this._mapSaved(rpgMap, rpgMapDef, json);
       }
-      const json = await response.json();
-      return this._mapSaved(rpgMap, rpgMapDef, json);
+      const text = await response.text();
+      const {status, err} = this._saveError(response, text, rpgMapDef);
+      throw new Error(`${status}: ${err}`);
     }
     catch(e) {
       throw new Error(`Could not save map [${e.message}]`)

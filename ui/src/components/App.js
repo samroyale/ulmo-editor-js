@@ -39,7 +39,7 @@ class Home extends React.Component {
 
   tileSelected = tile => this.setState({ selectedTile: tile });
 
-  render() {
+  render = () => {
     return (
       <Row>
         <Col className="tile-palette-col" lg={4}>
@@ -52,7 +52,7 @@ class Home extends React.Component {
         </Col>
       </Row>
     );
-  }
+  };
 }
 
 /* =============================================================================

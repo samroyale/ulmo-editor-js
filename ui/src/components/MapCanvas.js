@@ -181,7 +181,7 @@ class MapCanvas extends React.Component {
     var topLeft = {
       x: tilePosition.x,
       y: tilePosition.y
-    }
+    };
     onMapUpdated(topLeft, oldTiles);
     this.updateRange(topLeft, topLeft);
     this.closeModal();
@@ -487,7 +487,7 @@ class MapCanvas extends React.Component {
             onClose={this.closeModal} />
       </div>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -522,7 +522,7 @@ const SelectionPopup = ({ buttons, showOverlay, onHide, target }) => {
         <ButtonGroup vertical block>{popupButtons}</ButtonGroup>
       </Popover>
     </Overlay>
-  )
+  );
 };
 
 export default MapCanvas;

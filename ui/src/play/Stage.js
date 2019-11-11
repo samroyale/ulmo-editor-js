@@ -45,8 +45,10 @@ class Stage {
 
     async initPlay() {
         this._playMap = new PlayMap(this._rpgMap);
-        const playerPromise = Player.loadSprite(this._playMap, this._playerLevel,
-            [this._playerX, this._playerY])
+        const playerPromise = Player.loadSprite(
+            this._playMap,
+            this._playerLevel,
+            [this._playerX, this._playerY]);
         const spritePromises = [playerPromise, ...this._spritePromises(this._rpgMap.getSprites())];
         try {
             const sprites = await Promise.all(spritePromises);

@@ -98,11 +98,11 @@ class TileSetService {
   loadTileSets = async () => {
     try {
       const response = await fetch(tileSetsApi, { method: 'GET' });
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
+      if (response.ok) {
+        const json = await response.json();
+        return {tileSets: json};
       }
-      const json = await response.json();
-      return { tileSets: json };
+      throw new Error(`${response.status}: ${response.statusText}`);
     }
     catch(e) {
       throw new Error(`Could not load tilesets [${e.message}]`);
@@ -115,13 +115,13 @@ class TileSetService {
     }
     try {
       const response = await fetch(`${tileSetsApi}/withName/${name}`, { method: 'GET' });
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
+      if (response.ok) {
+        const json = await response.json();
+        const img = await loadImage(`${tilesImgPath}/${json.image}`);
+        const tileSet = this._buildTileSet(json, img);
+        return this.cacheAndReturn(tileSet);
       }
-      const json = await response.json();
-      const img = await loadImage(`${tilesImgPath}/${json.image}`);
-      const tileSet = this._buildTileSet(json, img);
-      return this.cacheAndReturn(tileSet);
+      throw new Error(`${response.status}: ${response.statusText}`);
     }
     catch (e) {
       throw new Error(`Could not load tileset [${e.message}]`);
@@ -134,13 +134,13 @@ class TileSetService {
     }
     try {
       const response = await fetch(`${tileSetsApi}/${tileSetId}`, { method: 'GET' });
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
+      if (response.ok) {
+        const json = await response.json();
+        const img = await loadImage(`${tilesImgPath}/${json.image}`);
+        const tileSet = this._buildTileSet(json, img);
+        return this.cacheAndReturn(tileSet);
       }
-      const json = await response.json();
-      const img = await loadImage(`${tilesImgPath}/${json.image}`);
-      const tileSet = this._buildTileSet(json, img);
-      return this.cacheAndReturn(tileSet);
+      throw new Error(`${response.status}: ${response.statusText}`);
     }
     catch (e) {
       throw new Error(`Could not load tileset [${e.message}]`);

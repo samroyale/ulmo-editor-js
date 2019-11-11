@@ -23,7 +23,7 @@ const TileInfo = ({ tilePosition, tile }) => {
     );
   }
   return (<p className="with-top-margin">-</p>);
-}
+};
 
 /* =============================================================================
  * COMPONENT: TILE SET TOOLBAR
@@ -67,7 +67,7 @@ const OpenTileSetModal = ({ error, tileSets, onTileSetSelected, showModal, onClo
       </Modal.Footer>
     </Modal>
   );
-}
+};
 
 /* =============================================================================
  * COMPONENT: TILE SET CANVAS
@@ -170,7 +170,7 @@ class TileSetCanvas extends React.Component {
         </div>
       </div>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -225,7 +225,7 @@ class TilePalette extends React.Component {
     } catch(e) {
       this.tileSetsLoadErr(e);
     }
-  }
+  };
 
   tileSetsLoadErr = ({ message }) => {
     if (message) {
@@ -268,7 +268,7 @@ class TilePalette extends React.Component {
             error={this.state.serviceError} />
       </div>
     );
-  }
+  };
 }
 
 export default TilePalette;

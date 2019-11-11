@@ -29,7 +29,7 @@ export class EditLevelsModal extends React.Component {
       addDisabled: true,
       deleteDisabled: true
     };
-  }
+  };
 
   handleSubmit = () => this.props.onSubmit(this.state.levels);
 
@@ -56,7 +56,7 @@ export class EditLevelsModal extends React.Component {
 
   addLevel = () => {
     try {
-      let level = this.normalizeLevel(this.state.levelVal)
+      let level = this.normalizeLevel(this.state.levelVal);
       if (this.state.levels.includes(level)) {
         return;
       }
@@ -160,7 +160,7 @@ export class EditLevelsModal extends React.Component {
         </Modal.Footer>
       </Modal>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -357,7 +357,7 @@ export class EditImagesModal extends React.Component {
         </Modal.Footer>
       </Modal>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -422,7 +422,7 @@ class TileImageItem extends React.Component {
         </Grid>
       </ListGroupItem>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -487,7 +487,7 @@ export class EditMasksModal extends React.Component {
 
   updateRequired = () => {
     return this.state.maskTiles.length > 0 && !this.refs['item0'];
-  }
+  };
 
   tileItems = () => {
     return this.state.maskTiles.map((maskTile, i) => {
@@ -526,7 +526,7 @@ export class EditMasksModal extends React.Component {
         </Modal.Footer>
       </Modal>
     );
-  }
+  };
 }
 
 /* =============================================================================
@@ -595,5 +595,5 @@ class TileMaskItem extends React.Component {
         </Grid>
       </ListGroupItem>
     );
-  }
+  };
 }

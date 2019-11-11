@@ -43,7 +43,7 @@ export class PlayModal extends React.Component {
     };
 
     handleModeChange = value => {
-        this.setState({ modeVal: value })
+        this.setState({ modeVal: value });
         if (this._stage) {
             this._stage.setLiveMode(this.isLive(value));
         }
@@ -90,7 +90,7 @@ export class PlayModal extends React.Component {
                 var _cb = () => {
                     cb();
                     this._requestId = window.requestAnimationFrame(_cb);
-                }
+                };
                 _cb();
             };
         }
@@ -153,5 +153,5 @@ export class PlayModal extends React.Component {
                 {this.modalBody(this.props)}
             </Modal>
         );
-    }
+    };
 }

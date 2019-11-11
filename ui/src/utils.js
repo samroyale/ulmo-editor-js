@@ -32,7 +32,7 @@ export function getDrawingContext(canvas) {
   context.webkitImageSmoothingEnabled = false;
   context.mozImageSmoothingEnabled = false;
   return context;
-};
+}
 
 export function drawTile(maskTiles, baseTileCanvas) {
   let tileCanvas = document.createElement('canvas');
@@ -46,11 +46,11 @@ export function drawTile(maskTiles, baseTileCanvas) {
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0);
   });
   return tileCanvas;
-};
+}
 
 export function initTile(colour) {
   return initRect(colour, tileSize, tileSize);
-};
+}
 
 export function initRect(colour, width, height) {
   let canvas = initTransparentRect(width, height);
@@ -73,26 +73,16 @@ export function copyCanvas(canvas) {
   let ctx = copy.getContext('2d');
   ctx.drawImage(canvas, 0, 0);
   return copy;
-};
+}
 
-// export function loadImage(imageUrl) {
-//   var p = new Promise((resolve, reject) => {
-//     let image = new Image();
-//     image.onerror = () => reject({ err: `${imageUrl} failed to load` });
-//     image.onload = () => resolve({ img: image });
-//     image.src = imageUrl;
-//   });
-//   return p;
-// };
 export function loadImage(imageUrl) {
-  var p = new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     let image = new Image();
     image.onload = () => resolve({ img: image });
     image.onerror = () => reject({ message: `${imageUrl} failed to load` });
     image.src = imageUrl;
   });
-  return p;
-};
+}
 
 export function parseLevel(levelStr) {
   if (levelStr.startsWith('S')) {
@@ -134,7 +124,7 @@ export function parseLevel(levelStr) {
     type: 'standard',
     level: Number.parseInt(levelStr, 10)
   };
-};
+}
 
 /* =============================================================================
  * CLASS: RECT
@@ -195,7 +185,7 @@ export class Rect {
   toString() {
     return 'Rect [left: ' + this.left + ', top: ' + this.top + ', width: ' + this.width + ', height: ' + this.height + ']';
   }
-};
+}
 
 /* =============================================================================
  * CLASS: TILE POSITION
@@ -246,5 +236,5 @@ export class TilePosition {
     var heightBound = Math.min(cvsElement.height, containerElement.clientHeight);
     return x >= 0 && x < widthBound && y >= 0 && y < heightBound;
   }
-};
+}
 
