@@ -62,13 +62,34 @@ router.get('/', function(req, res) {
 
 // on routes that end in /tilesets/tileset
 // ----------------------------------------------------
-router.route('/tilesets/tileset')
-  // get the named TileSet (accessed at GET http://localhost:8081/api/tilesets/tileset?name=grass)
+// router.route('/tilesets/tileset')
+//   // get the named TileSet (accessed at GET http://localhost:8081/api/tilesets/tileset?name=grass)
+//   .get(function(req, res) {
+//     if (!req.query.name) {
+//       res.status(400).send({ err: 'Tileset name not specified' });
+//     }
+//     TileSet.findByName(req.query.name, function (err, tileSet) {
+//       if (err) {
+//         console.log(err.toString());
+//         res.status(500).send(err);
+//         return;
+//       }
+//       // return _id as id
+//       res.json({
+//         id: tileSet._id,
+//         name: tileSet.name,
+//         image: tileSet.image,
+//         tiles: tileSet.tiles
+//       });
+//     });
+//   });
+
+// on routes that end in /tilesets/withName/:tileset_name
+// ----------------------------------------------------
+router.route('/tilesets/withName/:tileset_name')
+  // get the named TileSet (accessed at GET http://localhost:8081/api/tilesets/withName/grass)
   .get(function(req, res) {
-    if (!req.query.name) {
-      res.status(400).send({ err: 'Tileset name not specified' });
-    }
-    TileSet.findByName(req.query.name, function (err, tileSet) {
+    TileSet.findByName(req.params.tileset_name, function (err, tileSet) {
       if (err) {
         console.log(err.toString());
         res.status(500).send(err);

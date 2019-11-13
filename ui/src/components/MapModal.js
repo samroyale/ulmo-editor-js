@@ -4,7 +4,7 @@ import { Modal, Grid, Row, Col, Panel, ListGroup, ListGroupItem, ButtonToolbar,
     Checkbox, Well } from 'react-bootstrap';
 import { tileSize } from '../config';
 import { getDrawingContext, drawTile, parseLevel } from '../utils';
-import './map-modal.css';
+import './MapModal.css';
 
 // allows 'specials' eg. S1.5, S2 and 'drops' eg. D3-2
 const levelRegex = /[^\dSD.-]/g;
@@ -15,9 +15,13 @@ const numRegex = /\D/g;
  * COMPONENT: EDIT LEVELS MODAL
  * =============================================================================
  */
-export const EditLevelsModal = React.createClass({
+export class EditLevelsModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = EditLevelsModal.initialState();
+  }
 
-  getInitialState: function() {
+  static initialState = () => {
     return {
       levelVal: '',
       levels: [],
@@ -25,25 +29,21 @@ export const EditLevelsModal = React.createClass({
       addDisabled: true,
       deleteDisabled: true
     };
-  },
+  };
 
-  handleSubmit: function() {
-    this.props.onSubmit(this.state.levels);
-  },
+  handleSubmit = () => this.props.onSubmit(this.state.levels);
 
-  handleLevelChange: function(event) {
-    this.setLevelVal(event.target.value.replace(levelRegex, ''));
-  },
+  handleLevelChange = evt => this.setLevelVal(evt.target.value.replace(levelRegex, ''));
 
-  setLevelVal: function(newLevelVal) {
+  setLevelVal = newLevelVal => {
     var levelValid = this.isLevelValid(newLevelVal);
     this.setState({
       levelVal: newLevelVal,
       addDisabled: !levelValid
     });
-  },
+  };
 
-  isLevelValid: function(levelVal) {
+  isLevelValid = levelVal => {
     try {
       parseLevel(levelVal);
       return true;
@@ -52,16 +52,16 @@ export const EditLevelsModal = React.createClass({
       // console.log(e.message);
     }
     return false;
-  },
+  };
 
-  addLevel: function() {
+  addLevel = () => {
     try {
-      let level = this.normalizeLevel(this.state.levelVal)
+      let level = this.normalizeLevel(this.state.levelVal);
       if (this.state.levels.includes(level)) {
         return;
       }
       this.setState({
-        levelVal: "",
+        levelVal: '',
         levels: [...this.state.levels, level],
         addDisabled: true
       });
@@ -69,75 +69,68 @@ export const EditLevelsModal = React.createClass({
     catch (e) {
       console.log(e.name + ": " + e.message);
     }
-  },
+  };
 
-  normalizeLevel(levelStr) {
+  normalizeLevel = levelStr => {
     let result = parseLevel(levelStr);
     if (result.type === 'special') {
-      return 'S' + result.level;
+      return `S${result.level}`;
     }
     if (result.type === 'down') {
-      return 'D' + result.level + '-' + result.drop;
+      return `D${result.level}-${result.drop}`;
     }
-    return '' + result.level;
-  },
+    return `${result.level}`;
+  };
 
-  delete: function(evt) {
-    var buttonId = evt.currentTarget.id;
-    var index = parseInt(buttonId.slice(3), 10);
-    var newLevels = this.state.levels.slice();
+  delete = index => {
+    var newLevels = [...this.state.levels];
     newLevels.splice(index, 1);
     this.setState({
-      levelVal: "",
+      levelVal: '',
       levels: newLevels
     });
-  },
+  };
 
-  componentWillMount: function() {
-    this.populateStateFromProps(this.props);
-  },
-
-  componentWillReceiveProps: function(nextProps) {
-    this.populateStateFromProps(nextProps);
-  },
-
-  populateStateFromProps: function(props) {
-    if (props.showModal) {
-      var initialState = this.getInitialState();
-      initialState.levels = this.getLevels(props);
-      this.setState(initialState);
+  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
+    if (showModal) {
+      var initialState = EditLevelsModal.initialState();
+      return {
+        ...initialState,
+        levels: EditLevelsModal.getLevels(editableTile)
+      };
     }
-  },
+  };
 
-  getLevels: function(props) {
-    if (!props.editableTile) {
+  static getLevels = editableTile => {
+    if (!editableTile) {
       return [];
     }
     // return a copy of the levels array
-    return props.editableTile.getLevels().slice();
-  },
+    return [...editableTile.getLevels()];
+  };
 
-  levels: function() {
+  levels = () => {
     return this.state.levels.map((level, i) => {
       return (
         <LevelItem
             key={i}
-            buttonId={'btn' + i}
+            index={i}
             level={level}
             onDelete={this.delete} />
       );
     })
-  },
+  };
 
-  render: function() {
+  render = () => {
+    const { showModal, onClose } = this.props;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="tile-levels-modal">
+      <Modal show={showModal} onHide={onClose} dialogClassName="tile-levels-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Panel className="edit-levels-panel" header="Levels">
-            <ListGroup fill>
+            <ListGroup>
               {this.levels()}
               <ListGroupItem>
                 <Grid>
@@ -163,145 +156,144 @@ export const EditLevelsModal = React.createClass({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
-          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
-  }
-});
+  };
+}
 
 /* =============================================================================
  * COMPONENT: LEVEL ITEM
  * =============================================================================
  */
-function LevelItem(props) {
-  return (
-    <ListGroupItem>
-      <Grid>
-        <Row>
-          <Col className="edit-level-col" lg={1}>
-            <Well className="level-well" bsSize="small">level: {props.level}</Well>
-          </Col>
-          <Col className="edit-tiles-col" lg={1}>
-            <ButtonToolbar className="sprite-controls">
-              <Button id={props.buttonId} onClick={props.onDelete}>
-                <Glyphicon glyph="trash" />
-              </Button>
-            </ButtonToolbar>
-          </Col>
-        </Row>
-      </Grid>
-    </ListGroupItem>
-  );
-}
+const LevelItem = ({ level, index, onDelete }) => (
+  <ListGroupItem>
+    <Grid>
+      <Row>
+        <Col className="edit-level-col" lg={1}>
+          <Well className="level-well" bsSize="small">level: {level}</Well>
+        </Col>
+        <Col className="edit-tiles-col" lg={1}>
+          <ButtonToolbar className="sprite-controls">
+            <Button onClick={() => onDelete(index)}>
+              <Glyphicon glyph="trash" />
+            </Button>
+          </ButtonToolbar>
+        </Col>
+      </Row>
+    </Grid>
+  </ListGroupItem>
+);
+
 
 /* =============================================================================
  * COMPONENT: EDIT IMAGES MODAL
  * =============================================================================
  */
-export const EditImagesModal = React.createClass({
-  _previewCanvas: null,
-
-  getInitialState: function() {
-    return {
+export class EditImagesModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this._previewCanvas = React.createRef();
+    this.state = {
       maskTiles: [],
     };
-  },
+  };
 
-  handleSubmit: function() {
-    this.props.onSubmit(this.state.maskTiles);
-  },
+  handleSubmit = () => this.props.onSubmit(this.state.maskTiles);
 
-  moveTile: function(evt, func) {
-    var buttonId = evt.currentTarget.id;
-    var newMaskTiles = this.state.maskTiles.slice();
-    var index = newMaskTiles.length - parseInt(buttonId.slice(3), 10) - 1;
-    var maskTile = newMaskTiles[index];
-    func(newMaskTiles, maskTile, index);
+  moveTile = (index, func) => {
+    var newMaskTiles = [...this.state.maskTiles];
+    var rIndex = newMaskTiles.length - index - 1;
+    var maskTile = newMaskTiles[rIndex];
+    func(newMaskTiles, maskTile, rIndex);
     this.setState({ maskTiles: newMaskTiles });
-  },
+  };
 
-  moveTop: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveTop = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index < maskTiles.length - 1) {
         maskTiles.splice(index, 1);
         maskTiles.push(maskTile);
       }
     });
-  },
+  };
 
-  moveUp: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveUp = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index < maskTiles.length - 1) {
         maskTiles.splice(index, 1);
         maskTiles.splice(index + 1, 0, maskTile);
       }
     });
-  },
+  };
 
-  moveDown: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveDown = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index > 0) {
         maskTiles.splice(index, 1);
         maskTiles.splice(index - 1, 0, maskTile);
       }
     });
-  },
+  };
 
-  moveBottom: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  moveBottom = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       if (index > 0) {
         maskTiles.splice(index, 1);
         maskTiles.splice(0, 0, maskTile);
       }
     });
-  },
+  };
 
-  delete: function(evt) {
-    this.moveTile(evt, (maskTiles, maskTile, index) => {
+  delete = index => {
+    this.moveTile(index, (maskTiles, maskTile, index) => {
       maskTiles.splice(index, 1);
     });
-  },
+  };
 
-  componentWillMount: function() {
-    this.populateStateFromProps(this.props);
-  },
-
-  componentWillReceiveProps: function(nextProps) {
-    this.populateStateFromProps(nextProps);
-  },
-
-  populateStateFromProps: function(props) {
-    if (props.showModal) {
-      this.setState({ maskTiles: this.getMaskTiles(props) });
+  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
+    if (showModal) {
+      return { maskTiles: EditImagesModal.getMaskTiles(editableTile) };
     }
-  },
+  };
 
-  getMaskTiles: function(props) {
-    if (!props.editableTile) {
+  static getMaskTiles = editableTile => {
+    if (!editableTile) {
       return [];
     }
-    // return a copy of the mask tiles array
-    return props.editableTile.getMaskTiles();
-  },
+    return editableTile.getMaskTiles();
+  };
 
-  componentDidUpdate: function(oldProps, oldState) {
-    var maskTiles = this.state.maskTiles.slice().reverse(); // copy + reverse the array
+  componentDidUpdate = (oldProps, oldState) => {
+    const { showModal } = this.props;
+    if (!showModal) {
+      return;
+    }
+    if (this.updateRequired()) {
+      this.forceUpdate(); // need this to populate refs
+    }
+    var maskTiles = [...this.state.maskTiles].reverse(); // copy + reverse the array
     maskTiles.forEach((maskTile, i) => {
-      var item = this.refs['item' + i];
+      var item = this.refs[`item${i}`];
       if (item) {
         item.drawToCanvas(maskTile);
       }
     });
-    if (this._previewCanvas) {
-      var ctx = getDrawingContext(this._previewCanvas);
-      ctx.clearRect(0, 0, this._previewCanvas.width, this._previewCanvas.height);
+    const previewCanvas = this._previewCanvas.current;
+    if (previewCanvas) {
+      var ctx = getDrawingContext(previewCanvas);
+      ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       ctx.drawImage(drawTile(this.state.maskTiles), 0, 0,
-          this._previewCanvas.width, this._previewCanvas.height);
+          previewCanvas.width, previewCanvas.height);
     }
-  },
+  };
 
-  listPosition: function(tileIndex, lastIndex) {
+  updateRequired = () => {
+    return this.state.maskTiles.length > 0 && !this.refs['item0'];
+  };
+
+  listPosition = (tileIndex, lastIndex) => {
     var position = [];
     if (tileIndex === 0) {
       position.push('first');
@@ -310,15 +302,15 @@ export const EditImagesModal = React.createClass({
       position.push('last');
     }
     return position;
-  },
+  };
 
-  tileItems: function() {
-    return this.state.maskTiles.map((maskTile, i) => {
-      var listPosition = this.listPosition(i, this.state.maskTiles.length - 1);
+  tileItems = ({ maskTiles }) => {
+    return maskTiles.map((maskTile, i) => {
+      var listPosition = this.listPosition(i, maskTiles.length - 1);
       return (
         <TileImageItem key={i}
-          ref={'item' + i}
-          buttonId={'btn' + i}
+          index={i}
+          ref={`item${i}`}
           position={listPosition}
           onMoveTop={this.moveTop}
           onMoveUp={this.moveUp}
@@ -327,11 +319,12 @@ export const EditImagesModal = React.createClass({
           onDelete={this.delete} />
       );
     });
-  },
+  };
 
-  render: function() {
+  render = () => {
+    const { showModal, onClose } = this.props;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="tile-images-modal">
+      <Modal show={showModal} onHide={onClose} dialogClassName="tile-images-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
@@ -340,15 +333,17 @@ export const EditImagesModal = React.createClass({
             <Row>
               <Col className="tile-images-col" lg={4}>
                 <Panel className="tile-images-panel" header="Images">
-                  <ListGroup fill>{this.tileItems()}</ListGroup>
+                  <ListGroup>{this.tileItems(this.state)}</ListGroup>
                 </Panel>
               </Col>
               <Col className="edit-tiles-col" lg={2}>
                 <Panel className="tile-preview-panel" header="Preview">
-                  <ListGroup fill>
+                  <ListGroup>
                     <ListGroupItem className="tile-list-item">
-                      <canvas className="tile-preview" width={tileSize * 2} height={tileSize * 2}
-                              ref={cvs => this._previewCanvas = cvs} />
+                      <canvas className="tile-preview"
+                              width={tileSize * 2}
+                              height={tileSize * 2}
+                              ref={this._previewCanvas} />
                     </ListGroupItem>
                   </ListGroup>
                 </Panel>
@@ -358,52 +353,59 @@ export const EditImagesModal = React.createClass({
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
-          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
-  }
-});
+  };
+}
 
 /* =============================================================================
  * COMPONENT: TILE IMAGE ITEM
  * =============================================================================
  */
-const TileImageItem = React.createClass({
-  _canvas: null,
+class TileImageItem extends React.Component {
+  constructor(props) {
+    super(props);
+    this._canvas = React.createRef();
+  }
 
-  drawToCanvas: function(maskTile) {
-    var ctx = getDrawingContext(this._canvas);
-    ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-    ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
-  },
+  drawToCanvas = maskTile => {
+    const canvas = this._canvas.current;
+    var ctx = getDrawingContext(canvas);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, canvas.width, canvas.height);
+  };
 
-  render: function() {
-    var disabledFirst = this.props.position.includes('first');
-    var disabledLast = this.props.position.includes('last');
+  render = () => {
+    const { position, index, onMoveTop, onMoveUp, onMoveDown, onMoveBottom, onDelete } = this.props;
+    var disabledFirst = position.includes('first');
+    var disabledLast = position.includes('last');
     return (
       <ListGroupItem className="tile-list-item">
         <Grid>
           <Row>
             <Col className="tile-canvas-col" lg={1}>
               <div className="tile-canvas-container">
-                <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
-                    ref={cvs => this._canvas = cvs} />
+                <canvas className="tiles"
+                        width={tileSize * 2}
+                        height={tileSize * 2}
+                        ref={this._canvas} />
               </div>
             </Col>
             <Col className="tile-controls-col" lg={2}>
               <ButtonToolbar className="tile-controls">
                 <ButtonGroup>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveTop} disabled={disabledFirst}>
+                  <Button onClick={() => onMoveTop(index)} disabled={disabledFirst}>
                     <Glyphicon glyph="triangle-top" />
                   </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveUp} disabled={disabledFirst}>
+                  <Button onClick={() => onMoveUp(index)} disabled={disabledFirst}>
                     <Glyphicon glyph="menu-up" />
                   </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveDown} disabled={disabledLast}>
+                  <Button onClick={() => onMoveDown(index)} disabled={disabledLast}>
                     <Glyphicon glyph="menu-down" />
                   </Button>
-                  <Button id={this.props.buttonId} onClick={this.props.onMoveBottom} disabled={disabledLast}>
+                  <Button onClick={() => onMoveBottom(index)} disabled={disabledLast}>
                     <Glyphicon glyph="triangle-bottom" />
                   </Button>
                 </ButtonGroup>
@@ -411,7 +413,7 @@ const TileImageItem = React.createClass({
             </Col>
             <Col className="edit-tiles-item-col" lg={1}>
               <ButtonToolbar className="tile-controls">
-                <Button id={this.props.buttonId} onClick={this.props.onDelete}>
+                <Button onClick={() => onDelete(index)}>
                   <Glyphicon glyph="trash" />
                 </Button>
               </ButtonToolbar>
@@ -420,71 +422,74 @@ const TileImageItem = React.createClass({
         </Grid>
       </ListGroupItem>
     );
-  }
-});
+  };
+}
 
 /* =============================================================================
  * COMPONENT: EDIT MASKS MODAL
  * =============================================================================
  */
-export const EditMasksModal = React.createClass({
-  getInitialState: function() {
-    return {
+export class EditMasksModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
       maskTiles: []
     };
-  },
+  }
 
-  handleSubmit: function() {
+  handleSubmit = () => {
     this.state.maskTiles.forEach((maskTile, i) => {
-      var item = this.refs['item' + i];
+      var item = this.refs[`item${i}`];
       maskTile.setMaskLevel(this.getMaskLevel(item));
     });
     this.props.onSubmit(this.state.maskTiles.reverse());
-  },
+  };
 
-  getMaskLevel: function(tileMaskItem) {
+  getMaskLevel = tileMaskItem => {
     var maskLevel = parseInt(tileMaskItem.state.levelVal, 10);
     if (!maskLevel) {
       return null;
     }
     if (tileMaskItem.state.verticalVal) {
-      return 'V' + maskLevel;
+      return `V${maskLevel}`;
     }
     return maskLevel.toString();
-  },
+  };
 
-  componentWillMount: function() {
-    this.populateStateFromProps(this.props);
-  },
-
-  componentWillReceiveProps: function(nextProps) {
-    this.populateStateFromProps(nextProps);
-  },
-
-  populateStateFromProps: function(props) {
-    if (props.showModal) {
-      this.setState({ maskTiles: this.getMaskTiles(props) });
+  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
+    if (showModal) {
+      return { maskTiles: EditMasksModal.getMaskTiles(editableTile) };
     }
-  },
+  };
 
-  getMaskTiles: function(props) {
-    if (!props.editableTile) {
+  static getMaskTiles = editableTile => {
+    if (!editableTile) {
       return [];
     }
-    // return a reversed copy of the mask tiles array
-    return props.editableTile.getMaskTiles().reverse();
-  },
+    return editableTile.getMaskTiles().reverse();
+  };
 
-  componentDidUpdate: function(oldProps, oldState) {
+  componentDidUpdate = (oldProps, oldState) => {
+    const { showModal } = this.props;
+    if (!showModal) {
+      return;
+    }
+    if (this.updateRequired()) {
+      this.forceUpdate(); // need this to populate refs
+    }
     this.state.maskTiles.forEach((maskTile, i) => {
-      var item = this.refs['item' + i];
+      var item = this.refs[`item${i}`];
       if (item) {
         item.drawToCanvas(maskTile);
       }
     });
-  },
+  };
 
-  tileItems: function() {
+  updateRequired = () => {
+    return this.state.maskTiles.length > 0 && !this.refs['item0'];
+  };
+
+  tileItems = () => {
     return this.state.maskTiles.map((maskTile, i) => {
       var maskLevel = maskTile.getMaskLevel();
       var maskVertical = false;
@@ -498,87 +503,80 @@ export const EditMasksModal = React.createClass({
         maskLevel = '';
       }
       return (
-        <TileMaskItem key={i} index={i} ref={'item' + i} level={maskLevel} vertical={maskVertical} />
+        <TileMaskItem key={i} index={i} ref={`item${i}`} level={maskLevel} vertical={maskVertical} />
       );
     });
-  },
+  };
 
-  render: function() {
+  render = () => {
+    const { showModal, onClose } = this.props;
     return (
-      <Modal show={this.props.showModal} onHide={this.props.onClose} dialogClassName="tile-masks-modal">
+      <Modal show={showModal} onHide={onClose} dialogClassName="tile-masks-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Panel className="tile-masks-panel" header="Masks">
-            <ListGroup fill>{this.tileItems()}</ListGroup>
+            <ListGroup>{this.tileItems()}</ListGroup>
           </Panel>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
-          <Button onClick={this.props.onClose}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
         </Modal.Footer>
       </Modal>
     );
-  }
-});
+  };
+}
 
 /* =============================================================================
  * COMPONENT: TILE MASK ITEM
  * =============================================================================
  */
-const TileMaskItem = React.createClass({
-  _canvas: null,
-
-  getInitialState: function() {
-    return {
+class TileMaskItem extends React.Component {
+  constructor(props) {
+    super(props);
+    this._canvas = React.createRef();
+    this.state = {
       levelVal: '',
       verticalVal: false
     };
-  },
+  }
 
-  handleLevelChange: function(event) {
-    this.setState({ levelVal: event.target.value.replace(numRegex, '') });
-  },
+  handleLevelChange = evt => this.setState({ levelVal: evt.target.value.replace(numRegex, '') });
 
-  handleVerticalChange: function(event) {
-    this.setState({ verticalVal: event.target.checked });
-  },
+  handleVerticalChange = evt => this.setState({ verticalVal: evt.target.checked });
 
-  drawToCanvas: function(maskTile) {
-    var ctx = getDrawingContext(this._canvas);
-    ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, this._canvas.width, this._canvas.height);
-  },
+  drawToCanvas = maskTile => {
+    const canvas = this._canvas.current;
+    var ctx = getDrawingContext(canvas);
+    ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, canvas.width, canvas.height);
+  };
 
-  componentWillMount: function() {
-    this.populateStateFromProps(this.props);
-  },
+  static getDerivedStateFromProps = ({ level, vertical }) => {
+    return {
+      levelVal: level,
+      verticalVal: vertical
+    };
+  };
 
-  componentWillReceiveProps: function(nextProps) {
-    this.populateStateFromProps(nextProps);
-  },
-
-  populateStateFromProps: function(props) {
-    this.setState({
-      levelVal: props.level,
-      verticalVal: props.vertical
-    });
-  },
-
-  render: function() {
+  render = () => {
+    const { index } = this.props;
     return (
       <ListGroupItem className="tile-list-item">
         <Grid>
           <Row>
             <Col className="tile-canvas-col" lg={1}>
               <div className="tile-canvas-container">
-                <canvas className="tiles" width={tileSize * 2} height={tileSize * 2}
-                    ref={cvs => this._canvas = cvs} />
+                <canvas className="tiles"
+                        width={tileSize * 2}
+                        height={tileSize * 2}
+                        ref={this._canvas} />
               </div>
             </Col>
             <Col className="edit-tiles-item-col" lg={1}>
               <div className="tile-controls">
-                <FormGroup controlId={"levelGroup" + this.props.index}>
+                <FormGroup controlId={"levelGroup" + index}>
                   <FormControl type="text" placeholder="level"
                       value={this.state.levelVal} onChange={this.handleLevelChange} />
                 </FormGroup>
@@ -586,7 +584,7 @@ const TileMaskItem = React.createClass({
             </Col>
             <Col className="edit-tiles-item-col" lg={1}>
               <div className="tile-checkbox">
-                <FormGroup controlId={"verticalGroup" + this.props.index}>
+                <FormGroup controlId={"verticalGroup" + index}>
                   <Checkbox checked={this.state.verticalVal} onChange={this.handleVerticalChange}>
                     Vertical
                   </Checkbox>
@@ -597,5 +595,5 @@ const TileMaskItem = React.createClass({
         </Grid>
       </ListGroupItem>
     );
-  }
-});
+  };
+}

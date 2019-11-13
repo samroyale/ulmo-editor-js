@@ -1,0 +1,5 @@
+>convert to latest style, eg. classes
+>use spread operator to copy/modify arrays + objects
+>use native promises
+>replace jquery with ???
+

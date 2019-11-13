@@ -1,21 +1,18 @@
 {
-  "name": "ulmo-editor-boot",
+  "name": "ulmo-editor-js",
   "version": "0.5.0",
   "author": "Sam Eldred <samuel.eldred@gmail.com>",
   "description": "Ulmo Editor built with create-react-app",
+  "license": "GPL-3.0-or-later",
   "private": true,
   "proxy": "http://localhost:8081",
-  "devDependencies": {
-    "react-scripts": "0.8.4"
-  },
   "dependencies": {
     "bootstrap": "3.3.7",
-    "jquery": "3.1.1",
-    "q": "1.4.1",
-    "react": "15.4.1",
-    "react-bootstrap": "0.31.5",
-    "react-dom": "15.4.1",
-    "react-router": "2.8.1"
+    "react": "^16.3.1",
+    "react-bootstrap": "^0.32.1",
+    "react-dom": "^16.3.1",
+    "react-router-dom": "^4.2.2",
+    "react-scripts": "1.1.4"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -2,12 +2,20 @@ p.with-top-margin {
   margin: 10px 0 0 ;
 }
 
+button.map-item {
+  padding: 6px 15px;
+}
+
+div.maps-list {
+  margin: 0 15px;
+}
+
 div.component {
   background-color: #eee;
 }
 
-div.component-panel-body {
-  padding: 12px;
+div.component-panel {
+  padding: 10px;
 }
 
 div.component-buttons {

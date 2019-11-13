@@ -79,8 +79,6 @@ class PlayTile {
         });
 
         // other stuff
-        this.verticals = null;
-        this.horizontals = null;
         this.oldLevels = null;
     }
 
@@ -194,7 +192,7 @@ class PlayMap {
     constructor(rpgMap) {
         this.cols = rpgMap.getCols();
         this.rows = rpgMap.getRows();
-        this.mapRect = new Rect(0, 0, this.cols * tileSize, this.rows * tileSize)
+        this.mapRect = new Rect(0, 0, this.cols * tileSize, this.rows * tileSize);
         this.mapCanvas = this.drawMap(rpgMap);
         var tiles = new Array(this.cols);
         for (var x = 0; x < this.cols; x++) {
@@ -204,6 +202,8 @@ class PlayMap {
             }
         }
         this.tiles = tiles;
+        this.verticals = null;
+        this.horizontals = null;
     }
 
     drawMap(rpgMap) {
@@ -242,10 +242,7 @@ class PlayMap {
             return true;
         }
         // console.log(baseRect.bottom + ' :: ' + this.height);
-        if ((rect.top < 0) || (rect.bottom > this.mapCanvas.height)) {
-            return true;
-        }
-        return false;
+        return (rect.top < 0) || (rect.bottom > this.mapCanvas.height);
     }
 
     isSpanValid(level, spanTiles) {
@@ -337,18 +334,15 @@ class PlayMap {
         let spanTiles = this._getSpanTiles(baseRect);
         let falling = spanTiles.every(tile => {
             let downLevel = tile.getDownLevel(level);
-            if (downLevel) {
-                return true;
-            }
-            return false;
+            return !!downLevel;
         });
-        if (falling) {
-            return {
-                eventType: 'falling',
-                downLevel: spanTiles[0].getDownLevel(level)
-            }
+        if (!falling) {
+            return null;
         }
-        return null;
+        return {
+            eventType: 'falling',
+            downLevel: spanTiles[0].getDownLevel(level)
+        };
     }
 
     _getSpanTiles(rect) {

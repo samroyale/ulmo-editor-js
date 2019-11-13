@@ -1,8 +1,8 @@
 import React from 'react';
 import { Alert, ButtonToolbar, ToggleButtonGroup, ToggleButton, Collapse, Modal } from 'react-bootstrap';
 import { viewWidth, viewHeight } from '../config';
-import Stage from './stage';
-import './play-modal.css';
+import Stage from './Stage';
+import './PlayModal.css';
 
 const fps = 60;
 
@@ -10,21 +10,22 @@ const fps = 60;
  * COMPONENT: PLAY MAP MODAL
  * =============================================================================
  */
-export const PlayMapModal = React.createClass({
-    _canvas: null,
-    _stage: null,
+export class PlayModal extends React.Component {
+    constructor(props) {
+        super(props);
 
-    _requestId: null, // only set if using requestAnimationFrame
-    _intervalId: null, // only set if using setInterval
+        this._canvas = React.createRef();
+        this._stage = null;
+        this._requestId = null; // only set if using requestAnimationFrame
+        this._intervalId = null; // only set if using setInterval
 
-    getInitialState: function() {
-        return {
+        this.state = {
             rpgMap: null,
             modeVal: 'live'
         };
-    },
+    }
 
-    closeModal() {
+    closeModal = () => {
         if (this._requestId) {
             window.cancelAnimationFrame(this._requestId);
             this._requestId = null;
@@ -39,64 +40,57 @@ export const PlayMapModal = React.createClass({
             playReady: false,
             playError: false
         });
-    },
+    };
 
-    handleModeChange: function(value) {
-        this.setState({ modeVal: value })
+    handleModeChange = value => {
+        this.setState({ modeVal: value });
         if (this._stage) {
             this._stage.setLiveMode(this.isLive(value));
         }
-    },
+    };
 
-    isLive: function(value) {
+    isLive = value => {
         return (value === 'live');
-    },
+    };
 
-    componentWillMount: function() {
-        this.populateStateFromProps(this.props);
-    },
-
-    componentWillReceiveProps: function(nextProps) {
-        this.populateStateFromProps(nextProps);
-    },
-
-    populateStateFromProps: function(props) {
-        if (props.showModal) {
-            this.setState({ rpgMap: props.rpgMap });
+    static getDerivedStateFromProps = ({ showModal, rpgMap }) => {
+        if (showModal) {
+            return { rpgMap: rpgMap };
         }
-    },
+    };
 
-    componentDidUpdate: function(oldProps, oldState) {
-        if (!this.props.showModal) {
+    componentDidUpdate = (oldProps, oldState) => {
+        const { showModal, level, tilePosition } = this.props;
+        if (!showModal) {
             return;
         }
         if (this.state.rpgMap && !this._stage) {
             let liveMode = this.isLive(this.state.modeVal);
-            this._stage = new Stage(this.state.rpgMap, this.props.level,
-                this.props.tilePosition.x, this.props.tilePosition.y, liveMode);
+            this._stage = new Stage(this.state.rpgMap, level,
+                tilePosition.x, tilePosition.y, liveMode);
             let p = this._stage.initPlay();
             p.then(
                 () => {
                     let onEachFrame = this.assignOnEachFrame();
-                    onEachFrame(() => this._stage.executeMain(this._canvas, this._keys));
+                    onEachFrame(() => this._stage.executeMain(this._canvas.current));
                     this.setState({
                         playReady: true,
                         playError: false
                     });
                 },
                 data => this.setState({ playReady: false, playError: data.err })
-            ).done();
+            );
         }
-    },
+    };
 
-    assignOnEachFrame() {
+    assignOnEachFrame = () => {
         if (window.requestAnimationFrame) {
             console.log('Using requestAnimationFrame');
             return (cb) => {
                 var _cb = () => {
                     cb();
                     this._requestId = window.requestAnimationFrame(_cb);
-                }
+                };
                 _cb();
             };
         }
@@ -104,38 +98,39 @@ export const PlayMapModal = React.createClass({
         return (cb) => {
             this._intervalId = setInterval(cb, 1000 / fps);
         }
-    },
+    };
 
-    keyDown: function(e) {
-        e.preventDefault();
-        this._stage.keyDown(e.keyCode);
-    },
+    keyDown = evt => {
+        evt.preventDefault();
+        this._stage.keyDown(evt.keyCode);
+    };
 
-    keyUp: function(e) {
-        e.preventDefault();
-        this._stage.keyUp(e.keyCode);
-    },
+    keyUp = evt => {
+        evt.preventDefault();
+        this._stage.keyUp(evt.keyCode);
+    };
 
-    modalBody: function() {
-        if (this.props.showModal && this.state.rpgMap) {
-            let showError = this.state.playError && this.state.playError.length > 0;
+    modalBody = ({ showModal }) => {
+        const {rpgMap, playError, playReady, modeVal } = this.state;
+        if (showModal && rpgMap) {
+            let showError = playError && playError.length > 0;
             return (
                 <Modal.Body>
                     <Collapse in={showError}>
                         <div>
-                            <Alert bsStyle="danger">Could not initiate play mode: {this.state.playError}</Alert>
+                            <Alert bsStyle="danger">Could not initiate play mode: {playError}</Alert>
                         </div>
                     </Collapse>
-                    <Collapse in={this.state.playReady}>
+                    <Collapse in={playReady}>
                         <div>
                             <canvas className="play-canvas" width={viewWidth} height={viewHeight}
-                                ref={cvs => this._canvas = cvs} />
+                                ref={this._canvas} />
                         </div>
                     </Collapse>
                     <ButtonToolbar className="play-buttons">
                         <ToggleButtonGroup type="radio"
                                            name="options"
-                                           value={this.state.modeVal}
+                                           value={modeVal}
                                            onChange={this.handleModeChange}
                                            justified>
                             <ToggleButton type="radio" value={'live'}>Live Mode</ToggleButton>
@@ -146,16 +141,17 @@ export const PlayMapModal = React.createClass({
             );
         }
         return <Modal.Body />
-    },
+    };
 
-    render: function() {
+    render = () => {
+        const { showModal } = this.props;
         return (
-            <Modal show={this.props.showModal} onHide={this.closeModal} dialogClassName="play-map-modal" onKeyDown={this.keyDown} onKeyUp={this.keyUp}>
+            <Modal show={showModal} onHide={this.closeModal} dialogClassName="play-map-modal" onKeyDown={this.keyDown} onKeyUp={this.keyUp}>
                 <Modal.Header closeButton>
                     <Modal.Title>Play Map</Modal.Title>
                 </Modal.Header>
-                {this.modalBody()}
+                {this.modalBody(this.props)}
             </Modal>
         );
-    }
-});
+    };
+}

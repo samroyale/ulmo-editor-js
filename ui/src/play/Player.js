@@ -1,6 +1,5 @@
-import Q from 'q';
 import { tileSize } from '../config';
-import { Sprite, MovingFrames, StaticFrames, SingleFrame } from './sprites';
+import { Sprite, MovingFrames, StaticFrames, SingleFrame } from './Sprites';
 import { Rect } from '../utils';
 import {
     upKey, downKey, leftKey, rightKey,
@@ -11,7 +10,7 @@ import {
     spritesImgPath,
     defaultBaseRectHeight,
     baseRectExtension
-} from './play-config';
+} from './PlayConfig';
 
 const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
 const playerFallingFramesUrl = spritesImgPath + '/ulmo-falling.png';
@@ -74,8 +73,8 @@ export class Keys {
     }
     // _flush() {
     //     // do nothing
-    // }
-};
+    // };
+}
 
 /* =============================================================================
  * CLASS: SHADOW
@@ -89,7 +88,7 @@ export class Shadow extends Sprite {
         this._canvas = frames.currentFrame();
     }
 
-    setPosition(playerRect, playerLevel, downLevel) {
+    setRelativePosition(playerRect, playerLevel, downLevel) {
         let px = playerRect.left;
         let py = playerRect.top + downLevel * tileSize + playerRect.height - this._canvas.height;
         super.setPosition(playerLevel - downLevel, px, py);
@@ -101,22 +100,28 @@ export class Shadow extends Sprite {
  * =============================================================================
  */
 export class Player extends Sprite {
-    constructor(playMap, level, tx, ty) {
-        super(playMap, level, tx, ty, true);
-        this._movingFrames = new MovingFrames(playerFramesUrl, directions, 4, 6);
-        this._fallingFrames = new StaticFrames(playerFallingFramesUrl, 4, 0);
-        this._shadowFrames = new SingleFrame(shadowFramesUrl);
+    constructor(playMap, level, location) {
+        super(playMap, level, location[0], location[1], true);
         this._deferredMovement = null;
         this._keyBits = 0;
         this._deferDiagonal = true;
     }
 
-    load() {
-        return Q.all([
-            this.loadFrames(this._movingFrames),
-            this._fallingFrames.load(),
-            this._shadowFrames.load()
+    static async loadSprite(playMap, level, location) {
+        const frames = await Promise.all([
+            MovingFrames.loadFrames(playerFramesUrl, directions, 4, 6),
+            StaticFrames.loadFrames(playerFallingFramesUrl, 4, 0),
+            SingleFrame.loadFrames(shadowFramesUrl)
         ]);
+        const sprite = new Player(playMap, level, location);
+        return sprite._withPlayerFrames(frames, 0);
+    }
+
+    _withPlayerFrames([ movingFrames, fallingFrames, shadowFrames ]) {
+        this._movingFrames = movingFrames;
+        this._fallingFrames = fallingFrames;
+        this._shadowFrames = shadowFrames;
+        return this.withFrames(movingFrames);
     }
 
     _initBaseRect(spriteRect) {
@@ -138,7 +143,7 @@ export class Player extends Sprite {
             return;
         }
         this._keyBits = keyBits;
-        let moves = movement.get(keyBits);
+        const moves = movement.get(keyBits);
         if (moves) {
             this._move(moves[0], moves[1], moves[2], moves[3]);
         }
@@ -146,14 +151,14 @@ export class Player extends Sprite {
 
     _move(direction, mx, my, diagonal) {
         // check requested movement falls within map boundary
-        var newRect = this._rect.move(mx, my);
+        const newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
             return;
         }
 
         // check requested movement is valid
-        let newBaseRect = this._baseRect.move(mx, my);
-        let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        const newBaseRect = this._baseRect.move(mx, my);
+        const [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
             if (diagonal) {
                 if (this._deferDiagonal) {
@@ -193,7 +198,7 @@ export class Player extends Sprite {
 
     _shuffleX(direction) {
         // see if we can shuffle horizontally
-        let [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
+        const [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
         if (valid) {
             this._deferMovement(direction, level, shuffle, 0);
         }
@@ -202,7 +207,7 @@ export class Player extends Sprite {
 
     _shuffleY(direction) {
         // see if we can shuffle vertically
-        var [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
+        const [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
         if (valid) {
             this._deferMovement(direction, level, 0, shuffle);
         }
@@ -211,8 +216,8 @@ export class Player extends Sprite {
 
     _slide(direction, mx, my) {
         // see if we can slide horizontally
-        var newBaseRect = this._baseRect.move(mx, 0);
-        var [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        let newBaseRect = this._baseRect.move(mx, 0);
+        let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
             this._deferMovement(direction, level, mx, 0);
             return valid;
@@ -228,7 +233,7 @@ export class Player extends Sprite {
 
     _applyDeferredMovement() {
         if (this._deferredMovement) {
-            var [direction, level, mx, my] = this._deferredMovement;
+            const [direction, level, mx, my] = this._deferredMovement;
             this._applyMovement(direction, level, mx, my);
             this._deferredMovement = null;
             return true;
@@ -265,7 +270,7 @@ export class Player extends Sprite {
             this._continueFalling();
             return;
         }
-        let event = this._playMap.getEvent(this._level, this._baseRect);
+        const event = this._playMap.getEvent(this._level, this._baseRect);
         if (event && event.eventType === 'falling') {
             this._startFalling(mapSprites, event.downLevel);
         }
@@ -279,7 +284,7 @@ export class Player extends Sprite {
         this._falling = downLevel * tileSize;
         this._frames = this._fallingFrames.withFrameIndex(this._frames.getFrameIndex());
         this._shadow = new Shadow(this._playMap, this._shadowFrames);
-        this._shadow.setPosition(this._rect, this._level, downLevel);
+        this._shadow.setRelativePosition(this._rect, this._level, downLevel);
         mapSprites.add(this._shadow);
     }
 

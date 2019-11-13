@@ -1,4 +1,3 @@
-import Q from 'q';
 import { tileSize, viewWidth, viewHeight } from '../config';
 import { copyCanvas, getDrawingContext, loadImage, Rect } from '../utils';
 import {
@@ -9,7 +8,7 @@ import {
     defaultBaseRectWidth,
     defaultBaseRectHeight,
     baseRectExtension
-} from './play-config';
+} from './PlayConfig';
 
 const zoomMovement = new Map([
     [up, [up, 0, -4]],
@@ -38,41 +37,32 @@ const checkpointFramesUrl = spritesImgPath + '/check-frames.png';
 /* =============================================================================
  * CLASS: MOVING FRAMES
  * -----------------------------------------------------------------------------
- * Sprite frames handler that is aware of directional movement
+ * Sprite frames handler for animated sprites with directional movement
  * =============================================================================
  */
 export class MovingFrames {
-    constructor(imageUrl, directions, frameCount, frameTicks) {
-        this._imageUrl = imageUrl;
-        this._directions = directions;
+    constructor(frames, frameCount, frameTicks) {
+        this._frames = frames;
         this._frameCount = frameCount;
         this._frameTicks = frameTicks;
-        this._frames = null;
         this._direction = down;
         this._frameIndex = 0;
         this._tick = 0;
     }
 
-    load() {
-        let deferred = Q.defer();
-        loadImage(this._imageUrl, data => {
-            if (data.err) {
-                deferred.reject({ err: data.err });
-                return;
-            }
-            this._processFrames(data.img, this._directions);
-            deferred.resolve({ currentFrame: this.currentFrame() });
-        });
-        return deferred.promise;
+    static async loadFrames(imageUrl, directions, frameCount, frameTicks) {
+        const { img } = await loadImage(imageUrl);
+        const frames = this._processFrames(img, directions, frameCount);
+        return new MovingFrames(frames, frameCount, frameTicks);
     }
 
-    _processFrames(img, directions) {
-        this._frames = new Map();
-        let spriteWidth = img.width / this._frameCount;
+    static _processFrames(img, directions, frameCount) {
+        const frames = new Map();
+        let spriteWidth = img.width / frameCount;
         let spriteHeight = img.height / directions.length;
         for (let i = 0; i < directions.length; i++) {
-            let frames = [];
-            for (let j = 0; j < this._frameCount; j++) {
+            let xFrames = [];
+            for (let j = 0; j < frameCount; j++) {
                 let frameCanvas = document.createElement('canvas');
                 frameCanvas.width = spriteWidth * 2;
                 frameCanvas.height = spriteHeight * 2;
@@ -80,10 +70,11 @@ export class MovingFrames {
                 frameCtx.drawImage(img,
                     j * spriteWidth, i * spriteHeight, spriteWidth, spriteHeight,
                     0, 0, spriteWidth * 2, spriteHeight * 2);
-                frames.push(frameCanvas);
+                xFrames.push(frameCanvas);
             }
-            this._frames.set(directions[i], frames);
+            frames.set(directions[i], xFrames);
         }
+        return frames;
     }
 
     getDirection() {
@@ -118,37 +109,29 @@ export class MovingFrames {
 /* =============================================================================
  * CLASS: STATIC FRAMES
  * -----------------------------------------------------------------------------
- * Frames handler for static animated sprites
+ * Sprite frames handler for animated sprites that don't move
  * =============================================================================
  */
 export class StaticFrames {
-    constructor(imageUrl, frameCount, frameTicks) {
-        this._imageUrl = imageUrl;
+    constructor(frames, frameCount, frameTicks) {
+        this._frames = frames;
         this._frameCount = frameCount;
         this._frameTicks = frameTicks;
-        this._frames = null;
         this._frameIndex = 0;
         this._tick = 0;
     }
 
-    load() {
-        let deferred = Q.defer();
-        loadImage(this._imageUrl, data => {
-            if (data.err) {
-                deferred.reject({ err: data.err });
-                return;
-            }
-            this._processFrames(data.img, this._directions);
-            deferred.resolve({ currentFrame: this.currentFrame() });
-        });
-        return deferred.promise;
+    static async loadFrames(imageUrl, frameCount, frameTicks) {
+        const { img } = await loadImage(imageUrl);
+        const frames = this._processFrames(img, frameCount);
+        return new StaticFrames(frames, frameCount, frameTicks);
     }
 
-    _processFrames(img, directions) {
-        let spriteWidth = img.width / this._frameCount;
+    static _processFrames(img, frameCount) {
+        let spriteWidth = img.width / frameCount;
         let spriteHeight = img.height;
         let frames = [];
-        for (let i = 0; i < this._frameCount; i++) {
+        for (let i = 0; i < frameCount; i++) {
             let frameCanvas = document.createElement('canvas');
             frameCanvas.width = spriteWidth * 2;
             frameCanvas.height = spriteHeight * 2;
@@ -158,7 +141,7 @@ export class StaticFrames {
                 0, 0, spriteWidth * 2, spriteHeight * 2);
             frames.push(frameCanvas);
         }
-        this._frames = frames;
+        return frames;
     }
 
     advanceFrame() {
@@ -172,7 +155,6 @@ export class StaticFrames {
     }
 
     currentFrame() {
-        // console.log(this._direction + ' ' + this._frameIndex);
         return this._frames[this._frameIndex];
     }
 
@@ -201,34 +183,26 @@ export class StaticFrames {
  * =============================================================================
  */
 export class SingleFrame {
-    constructor(imageUrl) {
-        this._imageUrl = imageUrl;
-        this._frame = null;
+    constructor(frame) {
+        this._frame = frame;
     }
 
-    load() {
-        let deferred = Q.defer();
-        loadImage(this._imageUrl, data => {
-            if (data.err) {
-                deferred.reject({ err: data.err });
-                return;
-            }
-            this._processFrame(data.img);
-            deferred.resolve({ currentFrame: this.currentFrame() });
-        });
-        return deferred.promise;
+    static async loadFrames(imageUrl) {
+        const { img } = await loadImage(imageUrl);
+        const frame = this._processFrames(img);
+        return new SingleFrame(frame);
     }
 
-    _processFrame(img, directions) {
-        let spriteWidth = img.width * 2
+    static _processFrames(img) {
+        let spriteWidth = img.width * 2;
         let spriteHeight = img.height * 2;
         let frameCanvas = document.createElement('canvas');
         frameCanvas.width = spriteWidth;
         frameCanvas.height = spriteHeight;
         let frameCtx = getDrawingContext(frameCanvas);
         frameCtx.drawImage(img, 0, 0, spriteWidth, spriteHeight);
-        this._frame = frameCanvas;
-    }
+        return frameCanvas;
+    };
 
     advanceFrame() {
         return this._frame;
@@ -303,22 +277,19 @@ export class Sprite {
         this._toRemove = false;
     }
 
-    loadFrames(spriteFrames, marginY) {
+    withFrames(spriteFrames, marginY) {
         this._frames = spriteFrames;
-        let p = this._frames.load();
-        return p.then(data => {
-            this._canvas = data.currentFrame;
-            if (this._isPositionValid()) {
-                let marginX = (tileSize - this._canvas.width) / 2;
-                if (!Number.isInteger(marginY)) {
-                    marginY = this._canvas.height / -2;
-                }
-                let px = this._tx * tileSize + marginX;
-                let py = this._ty * tileSize + marginY;
-                this.setPosition(this._level, px, py);
+        this._canvas = spriteFrames.currentFrame();
+        if (this._isPositionValid()) {
+            let marginX = (tileSize - this._canvas.width) / 2;
+            if (!Number.isInteger(marginY)) {
+                marginY = this._canvas.height / -2;
             }
-            return data;
-        });
+            let px = this._tx * tileSize + marginX;
+            let py = this._ty * tileSize + marginY;
+            this.setPosition(this._level, px, py);
+        }
+        return this;
     }
 
     _isPositionValid() {
@@ -472,8 +443,10 @@ export class Rock extends Sprite {
         this._frames = new SingleFrame(rockFramesUrl);
     }
 
-    load() {
-        return this.loadFrames(this._frames, -8);
+    static async loadSprite(playMap, level, location) {
+        const frames = await SingleFrame.loadFrames(rockFramesUrl);
+        const sprite = new Rock(playMap, level, location);
+        return sprite.withFrames(frames, -8);
     }
 }
 
@@ -484,11 +457,12 @@ export class Rock extends Sprite {
 export class Flames extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(flameFramesUrl, 4, 6);
     }
 
-    load() {
-        return this.loadFrames(this._frames, 4);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(flameFramesUrl, 4, 6);
+        const sprite = new Flames(playMap, level, location);
+        return sprite.withFrames(frames, 4);
     }
 }
 
@@ -499,11 +473,12 @@ export class Flames extends Sprite {
 export class Key extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(keyFramesUrl, 6, 6);
     }
 
-    load() {
-        return this.loadFrames(this._frames, 4);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(keyFramesUrl, 6, 6);
+        const sprite = new Key(playMap, level, location);
+        return sprite.withFrames(frames, 4);
     }
 
     _initBaseRect() {
@@ -518,11 +493,12 @@ export class Key extends Sprite {
 export class Coin extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(coinFramesUrl, 4, 6);
     }
 
-    load() {
-        return this.loadFrames(this._frames, 4);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(coinFramesUrl, 4, 6);
+        const sprite = new Coin(playMap, level, location);
+        return sprite.withFrames(frames, 4);
     }
 
     _initBaseRect() {
@@ -537,11 +513,12 @@ export class Coin extends Sprite {
 export class Checkpoint extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(checkpointFramesUrl, 4, 12);
     }
 
-    load() {
-        return this.loadFrames(this._frames, -6);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(checkpointFramesUrl, 4, 12);
+        const sprite = new Checkpoint(playMap, level, location);
+        return sprite.withFrames(frames, -6);
     }
 
     _initBaseRect() {
@@ -556,11 +533,12 @@ export class Checkpoint extends Sprite {
 export class Door extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], true);
-        this._frames = new StaticFrames(doorFramesUrl, 10, 0);
     }
 
-    load() {
-        return this.loadFrames(this._frames, -32);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(doorFramesUrl, 10, 0);
+        const sprite = new Door(playMap, level, location);
+        return sprite.withFrames(frames, -32);
     }
 
     /* Base rect extends beyond the bottom of the sprite image so player's base
@@ -583,14 +561,15 @@ export class Door extends Sprite {
 export class Beetle extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], false);
-        this._frames = new MovingFrames(beetleFramesUrl, directions, 2, 12);
         this._positions = location.map(l => [l[0] * tileSize, l[1] * tileSize]);
         this._position = this._positions[0];
         this._positionIndex = 0;
     }
 
-    load() {
-        return this.loadFrames(this._frames, 0);
+    static async loadSprite(playMap, level, location) {
+        const frames = await MovingFrames.loadFrames(beetleFramesUrl, directions, 2, 12);
+        const sprite = new Beetle(playMap, level, location);
+        return sprite.withFrames(frames, 0);
     }
 
     _initBaseRect() {
@@ -636,14 +615,15 @@ export class Beetle extends Sprite {
 export class Wasp extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], false);
-        this._frames = new MovingFrames(waspFramesUrl, directions, 2, 4);
         this._countdown = 12;
         this._zooming = false;
         this._direction = null; // this is also used to detect if the sprite has 'seen' the player
     }
 
-    load() {
-        return this.loadFrames(this._frames, 0);
+    static async loadSprite(playMap, level, location) {
+        const frames = await MovingFrames.loadFrames(waspFramesUrl, directions, 2, 4);
+        const sprite = new Wasp(playMap, level, location);
+        return sprite.withFrames(frames, 0);
     }
 
     _initBaseRect() {
@@ -705,19 +685,20 @@ export class Wasp extends Sprite {
 export class Blades extends Sprite {
     constructor(playMap, level, location) {
         super(playMap, level, location[0][0], location[0][1], false);
-        this._frames = new StaticFrames(bladesFramesUrl, 10, 0);
-        this._deactivate();
     }
 
-    load() {
-        return this.loadFrames(this._frames, -28);
+    static async loadSprite(playMap, level, location) {
+        const frames = await StaticFrames.loadFrames(bladesFramesUrl, 10, 0);
+        const sprite = new Blades(playMap, level, location);
+        sprite.withFrames(frames, -28)._deactivate();
+        return sprite;
     }
 
     _initBaseRect() {
         return new Rect(this._tx * tileSize, this._ty * tileSize, tileSize, tileSize);
     }
 
-    _getMovement(player) {
+    _getMovement() {
         if (this._active) {
             let frameIndex = this._frames.getFrameIndex();
             if (frameIndex === 0) {
@@ -738,7 +719,7 @@ export class Blades extends Sprite {
         this._countdown = 30;
         this._active = false;
         if (level) {
-            this._getMapTile().addNewLevel(level)
+            this._getMapTile().addNewLevel(level);
             this._frames = this._frames.withFrameTicks(0);
         }
     }

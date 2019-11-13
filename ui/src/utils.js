@@ -32,7 +32,7 @@ export function getDrawingContext(canvas) {
   context.webkitImageSmoothingEnabled = false;
   context.mozImageSmoothingEnabled = false;
   return context;
-};
+}
 
 export function drawTile(maskTiles, baseTileCanvas) {
   let tileCanvas = document.createElement('canvas');
@@ -46,11 +46,11 @@ export function drawTile(maskTiles, baseTileCanvas) {
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0);
   });
   return tileCanvas;
-};
+}
 
 export function initTile(colour) {
   return initRect(colour, tileSize, tileSize);
-};
+}
 
 export function initRect(colour, width, height) {
   let canvas = initTransparentRect(width, height);
@@ -73,21 +73,16 @@ export function copyCanvas(canvas) {
   let ctx = copy.getContext('2d');
   ctx.drawImage(canvas, 0, 0);
   return copy;
-};
+}
 
-export function loadImage(imageUrl, callback) {
-  let image = new Image();
-  image.onerror = () => {
-    callback({
-      err: imageUrl + ' failed to load'
-    });
-  };
-  image.onload = () => {
-    callback({ img: image });
-  };
-  //tileSetImage.crossOrigin = "Anonymous"; // CORS
-  image.src = imageUrl;
-};
+export function loadImage(imageUrl) {
+  return new Promise((resolve, reject) => {
+    let image = new Image();
+    image.onload = () => resolve({ img: image });
+    image.onerror = () => reject({ message: `${imageUrl} failed to load` });
+    image.src = imageUrl;
+  });
+}
 
 export function parseLevel(levelStr) {
   if (levelStr.startsWith('S')) {
@@ -129,7 +124,7 @@ export function parseLevel(levelStr) {
     type: 'standard',
     level: Number.parseInt(levelStr, 10)
   };
-};
+}
 
 /* =============================================================================
  * CLASS: RECT
@@ -190,4 +185,56 @@ export class Rect {
   toString() {
     return 'Rect [left: ' + this.left + ', top: ' + this.top + ', width: ' + this.width + ', height: ' + this.height + ']';
   }
-};
+}
+
+/* =============================================================================
+ * CLASS: TILE POSITION
+ * =============================================================================
+ */
+export class TilePosition {
+  static _getEventPosition(evt) {
+    var x = evt.pageX;
+    var y = evt.pageY;
+    if (x === undefined || y === undefined) {
+      x = evt.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+      y = evt.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+    }
+    return { x: x, y: y }
+  }
+
+  static _getPositionRelativeToCanvas(evt, canvas) {
+    var {x, y} = this._getEventPosition(evt);
+    var containerElement = canvas.parentElement;
+    var offsetLeft = containerElement.offsetLeft + containerElement.offsetParent.offsetLeft - containerElement.scrollLeft;
+    var offsetTop = containerElement.offsetTop + containerElement.offsetParent.offsetTop - containerElement.scrollTop;
+    return { x: x - offsetLeft, y: y - offsetTop };
+  }
+
+  static _getPositionRelativeToCanvasView(evt, canvas) {
+    var {x, y} = this._getEventPosition(evt);
+    var containerElement = canvas.parentElement;
+    var offsetLeft = containerElement.offsetLeft + containerElement.offsetParent.offsetLeft;
+    var offsetTop = containerElement.offsetTop + containerElement.offsetParent.offsetTop;
+    return { x: x - offsetLeft, y: y - offsetTop};
+  }
+
+  /* Returns a tile position relative to the tile canvas */
+  static getCurrentTilePosition(evt, canvas) {
+    var cvsElement = canvas ? canvas : evt.target;
+    var {x, y} = this._getPositionRelativeToCanvas(evt, cvsElement);
+    x = Math.max(Math.min(x, cvsElement.width), 0);
+    y = Math.max(Math.min(y, cvsElement.height), 0);
+    return { x: Math.floor(x / tileSize), y: Math.floor(y / tileSize) };
+  }
+
+  /* Returns true if the tile position is within the bounds of the canvas view */
+  static isTilePositionWithinCanvasView(evt, canvas) {
+    var cvsElement = canvas ? canvas : evt.target;
+    var {x, y} = this._getPositionRelativeToCanvasView(evt, cvsElement);
+    var containerElement = cvsElement.parentElement;
+    var widthBound = Math.min(cvsElement.width, containerElement.clientWidth);
+    var heightBound = Math.min(cvsElement.height, containerElement.clientHeight);
+    return x >= 0 && x < widthBound && y >= 0 && y < heightBound;
+  }
+}
+

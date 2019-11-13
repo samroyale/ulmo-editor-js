@@ -1,6 +1,4 @@
-import $ from 'jquery';
-import Q from 'q';
-import TileSetService from './tile-sets';
+import TileSetService from './TileSets';
 import { drawTile, initTile } from '../utils';
 import { rpgMapsApi, baseTileColours } from '../config';
 
@@ -21,12 +19,16 @@ class Clipboard {
     this._tiles = tiles;
   }
 
-  setTiles(tiles) {
+  setTiles = tiles => {
     this._tiles = tiles;
-  }
+  };
 
-  getTiles() {
+  getTiles = () => {
     return this._tiles;
+  };
+
+  isEmpty = () => {
+    return !this._tiles || this._tiles.length === 0;
   }
 }
 
@@ -42,29 +44,29 @@ class MaskTile {
     this._maskLevel = maskLevel; // string
   }
 
-  getTile() {
+  getTile = () => {
     return this._tile;
-  }
+  };
 
-  getMaskLevel() {
+  getMaskLevel = () => {
     return this._maskLevel;
-  }
+  };
 
-  setMaskLevel(maskLevel) {
+  setMaskLevel = maskLevel => {
     this._maskLevel = maskLevel;
-  }
+  };
 
-  copy() {
+  copy = () => {
     return new MaskTile(this._tile, this._maskLevel);
-  }
+  };
 
-  getDto() {
+  getDto = () => {
     return {
       tileSet: this._tile.getTileSetName(),
       tile: this._tile.getTileName(),
       maskLevel: this._maskLevel
     }
-  }
+  };
 }
 
 /* =============================================================================
@@ -79,100 +81,96 @@ class MapTile {
     this._maskTiles = maskTiles ? maskTiles : [];
     this._levels = levels ? levels : [];
     if (baseTileCanvas) {
-      this.initImageData();
+      this._initImageData();
     }
   }
 
-  initImageData() {
+  _initImageData = () => {
     var tileCanvas = drawTile(this._maskTiles, this._baseTileCanvas);
     var ctx = tileCanvas.getContext('2d');
     this._imageData = ctx.getImageData(0, 0, tileCanvas.width, tileCanvas.height);
-  }
+  };
 
-  getMaskTiles() {
+  getMaskTiles = () => {
     return this._maskTiles;
-  }
+  };
 
-  getLevels() {
+  getLevels = () => {
     return this._levels;
-  }
+  };
 
-  getImage() {
+  getImage = () => {
     return this._imageData;
-  }
+  };
 
-  setMaskTiles(maskTiles) {
+  setMaskTiles = maskTiles => {
     this._maskTiles = maskTiles;
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  addAsMaskTile(tile) {
+  addAsMaskTile = tile => {
     this._maskTiles.push(new MaskTile(tile));
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  insertAsMaskTile(tile) {
+  insertAsMaskTile = tile => {
     this._maskTiles = [];
     this._maskTiles.push(new MaskTile(tile));
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  setLevels(levels) {
+  setLevels = levels => {
     this._levels = levels;
-  }
+  };
 
-  addLevel(level) {
+  addLevel = level => {
     this._levels.push(level);
-  }
+  };
 
-  sendToBack() {
+  sendToBack = () => {
     if (this._maskTiles.length < 2) {
       return;
     }
     var topTile = this._maskTiles.pop();
     this._maskTiles.unshift(topTile);
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  keepTop() {
+  keepTop = () => {
     if (this._maskTiles.length < 2) {
       return;
     }
     var topTile = this._maskTiles.pop();
     this._maskTiles = [topTile];
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  clear() {
+  clear = () => {
     if (this._maskTiles.length === 0) {
       return;
     }
     this._maskTiles = [];
-    this.initImageData();
-  }
+    this._initImageData();
+  };
 
-  copy() {
+  copy = () => {
     return new MapTile(
       null,
-      this._maskTiles.map(maskTile =>
-        maskTile.copy()
-      ),
-      this._levels.slice(0)
+      this._maskTiles.map(maskTile => maskTile.copy()),
+      [...this._levels]
     );
-  }
+  };
 
-  getDto(x, y) {
+  getDto = (x, y) => {
     if (this._maskTiles) {
       return {
         xy: [x, y],
-        tiles: this._maskTiles.map(maskTile =>
-          maskTile.getDto()
-        ),
+        tiles: this._maskTiles.map(maskTile => maskTile.getDto()),
         levels: this._levels
       }
     }
     return null;
-  }
+  };
 }
 
 /* =============================================================================
@@ -184,35 +182,35 @@ class MapTile {
 class Sprite {
   constructor(type, level, location) {
     this._type = type;
-    this._level = level
+    this._level = level;
     // location is an array of [x, y] values
     this._location = location;
   }
 
-  getType() {
+  getType = () => {
     return this._type;
-  }
+  };
 
-  getLevel() {
+  getLevel = () => {
     return this._level;
-  }
+  };
 
-  getLocation() {
+  getLocation = () => {
     return this._location;
-  }
+  };
 
-  move(x, y) {
+  move = (x, y) => {
     return new Sprite(this._type, this._level,
         this._location.map(xy => [xy[0] + x, xy[1] + y]));
-  }
+  };
 
-  getDto() {
+  getDto = () => {
     return {
       type: this._type,
       level: this._level,
       location: this._location
     }
-  }
+  };
 }
 
 /* =============================================================================
@@ -232,59 +230,59 @@ class RpgMap {
     this._sprites = sprites;
   }
 
-  getId() {
+  getId = () => {
     return this._id;
-  }
+  };
 
-  setId(id) {
+  setId = id => {
     this._id = id;
-  }
+  };
 
-  getName() {
+  getName = () => {
     return this._name;
-  }
+  };
 
-  setName(name) {
+  setName = name => {
     this._name = name;
-  }
+  };
 
-  getMapTile(x, y) {
+  getMapTile = (x, y) => {
     return this._mapTiles[x][y];
-  }
+  };
 
-  putMapTile(x, y, mapTile) {
+  putMapTile = (x, y, mapTile) => {
     this._mapTiles[x][y] = mapTile;
-  }
+  };
 
-  getSprites() {
+  getSprites = () => {
     return this._sprites;
-  }
+  };
 
-  setSprites(sprites) {
+  setSprites = sprites => {
     var oldSprites = this._sprites;
     this._sprites = sprites;
     return oldSprites;
-  }
+  };
 
-  getCols() {
+  getCols = () => {
     return this._mapTiles.length;
-  }
+  };
 
-  getRows() {
+  getRows = () => {
     return this._mapTiles[0].length;
-  }
+  };
 
-  cutTiles(topLeft, rows, cols, clipboard) {
+  cutTiles = (topLeft, rows, cols, clipboard) => {
     this.copyTiles(topLeft, rows, cols, clipboard);
     return this.clear(topLeft, rows, cols);
-  }
+  };
 
-  copyTiles(topLeft, rows, cols, clipboard) {
+  copyTiles = (topLeft, rows, cols, clipboard) => {
     clipboard.setTiles(this._copyInternal(topLeft.x, topLeft.y, rows, cols));
     return null;
-  }
+  };
 
-  _copyInternal(x, y, rows, cols) {
+  _copyInternal = (x, y, rows, cols) => {
     var tiles = new Array(cols);
     for (var i = 0; i < cols; i++) {
       tiles[i] = new Array(rows);
@@ -293,13 +291,16 @@ class RpgMap {
       }
     }
     return tiles;
-  }
+  };
 
-  pasteTiles(topLeft, clipboard) {
+  pasteTiles = (topLeft, clipboard) => {
+    if (clipboard.isEmpty()) {
+      return;
+    }
     return this._pasteTilesInternal(topLeft.x, topLeft.y, clipboard.getTiles());
-  }
+  };
 
-  _pasteTilesInternal(x, y, tiles) {
+  _pasteTilesInternal = (x, y, tiles) => {
     var xBound = Math.min(tiles.length, this.getCols() - x);
     var yBound = Math.min(tiles[0].length, this.getRows() - y);
     var oldTiles = this._copyInternal(x, y, yBound, xBound);
@@ -312,9 +313,9 @@ class RpgMap {
       }
     }
     return oldTiles;
-  }
+  };
 
-  restoreTiles(topLeft, tiles) {
+  restoreTiles = (topLeft, tiles) => {
     var x = topLeft.x, y = topLeft.y;
     var xBound = tiles.length, yBound = tiles[0].length;
     for (var i = 0; i < xBound; i++) {
@@ -326,74 +327,74 @@ class RpgMap {
       }
     }
     return {x: xBound + x - 1, y: yBound + y - 1};
-  }
+  };
 
-  applyTile(mapTile, tile) {
+  applyTile = (mapTile, tile) => {
     mapTile.setLevels(tile.getLevels());
     mapTile.setMaskTiles(tile.getMaskTiles());
-  }
+  };
 
-  resize(rpgMap, left, top) {
+  resize = (rpgMap, left, top) => {
     var sourceTopLeft = {
       x: 0 - Math.min(0, left),
       y: 0 - Math.min(0, top)
-    }
+    };
     var rows = rpgMap.getRows() - sourceTopLeft.y;
     var cols = rpgMap.getCols() - sourceTopLeft.x;
     var targetTopLeft = {
       x: Math.max(0, left),
       y: Math.max(0, top)
-    }
+    };
     this._pasteTilesInternal(targetTopLeft.x, targetTopLeft.y,
         rpgMap._copyInternal(sourceTopLeft.x, sourceTopLeft.y, rows, cols));
     // TODO: filter sprites that are now outside the map?
     this._sprites = rpgMap.getSprites().map(sprite => 
         sprite.move(left, top));
-  }
+  };
 
-  sendToBack(topLeft, rows, cols) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  sendToBack = (topLeft, rows, cols) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.sendToBack()
     );
-  }
+  };
 
-  keepTop(topLeft, rows, cols) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  keepTop = (topLeft, rows, cols) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.keepTop()
     );
-  }
+  };
 
-  clear(topLeft, rows, cols) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  clear = (topLeft, rows, cols) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.clear()
     );
-  }
+  };
 
-  addAsMaskTile(topLeft, rows, cols, tile) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  addAsMaskTile = (topLeft, rows, cols, tile) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.addAsMaskTile(tile)
     );
-  }
+  };
 
-  insertAsMaskTile(topLeft, rows, cols, tile) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  insertAsMaskTile = (topLeft, rows, cols, tile) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.insertAsMaskTile(tile)
     );
-  }
+  };
 
-  setLevels(topLeft, rows, cols, levels) {
-    return this.doStuff(topLeft, rows, cols, mapTile =>
+  setLevels = (topLeft, rows, cols, levels) => {
+    return this._applyMutation(topLeft, rows, cols, mapTile =>
       mapTile.setLevels(levels)
     );
-  }
+  };
 
-  setMaskTiles(x, y, maskTiles) {
+  setMaskTiles = (x, y, maskTiles) => {
     var oldTile = this._mapTiles[x][y].copy();
     this._mapTiles[x][y].setMaskTiles(maskTiles);
     return [[oldTile]];
-  }
+  };
 
-  doStuff(topLeft, rows, cols, func) {
+  _applyMutation = (topLeft, rows, cols, func) => {
     var oldTiles = new Array(cols);
     for (var i = 0; i < cols; i++) {
       oldTiles[i] = new Array(rows);
@@ -404,21 +405,21 @@ class RpgMap {
       }
     }
     return oldTiles;
-  }
+  };
 
-  copy() {
+  copy = () => {
     return new RpgMap(
       this._id,
       this._name,
       this._copyInternal(0, 0, this.getRows(), this.getCols())
     );
-  }
+  };
 
-  getDto() {
+  getDto = () => {
     return this.getDtoWithName(this._name);
-  }
+  };
 
-  getDtoWithName(name) {
+  getDtoWithName = name => {
     var rows = this.getRows();
     var cols = this.getCols();
     var mapTiles = [];
@@ -438,7 +439,7 @@ class RpgMap {
       mapTiles: mapTiles,
       sprites: sprites
     };
-  }
+  };
 }
 
 /* =============================================================================
@@ -455,205 +456,167 @@ class RpgMapService {
     return instance;
   }
 
-  loadMaps() {
-    var deferred = Q.defer();
-    var p = Q($.ajax({
-      url: rpgMapsApi,
-      dataType: 'json',
-      cache: false
-    }).promise());
-    p.then(
-      data => deferred.resolve({ maps: data }),
-      xhr => deferred.reject(this.handleLoadError(xhr))
-    ).done();
-    return deferred.promise;
-  }
-
-  loadMap(mapId) {
-    console.log("Loading map [" + mapId + "]");
-    var deferred = Q.defer();
-    var mapUrl = rpgMapsApi + "/" + mapId;
-    var p = Q($.ajax({
-      url: mapUrl,
-      dataType: 'json',
-      cache: false
-    }).promise());
-    p.then(
-      data => this.initRpgMap(data, deferred),
-      xhr => deferred.reject(this.handleLoadError(xhr))
-    ).done();
-    return deferred.promise;
-  }
-
-  handleLoadError(xhr) {
-    var data = xhr.responseJSON;
-    if (data) {
-      // known errors go here
-      return { err: data.err, status: xhr.status };
+  loadMaps = async () => {
+    try {
+      const response = await fetch(rpgMapsApi, { method: 'GET', cache: 'no-store' });
+      if (response.ok) {
+        const json = await response.json();
+        return {maps: json};
+      }
+      throw new Error(`${response.status}: ${response.statusText}`);
     }
-    return { err: xhr.statusText, status: xhr.status };
-  }
+    catch(e) {
+      throw new Error(`Could not load maps [${e.message}]`);
+    }
+  };
 
-  saveMap(rpgMap) {
-    var mapUrl = rpgMapsApi + "/" + rpgMap.getId();
-    return this.doSave(mapUrl, "PUT", rpgMap, rpgMap.getDto());
-  }
+  loadMap = async (mapId) => {
+    try {
+      const response = await fetch(`${rpgMapsApi}/${mapId}`, { method: 'GET', cache: 'no-store' });
+      if (response.ok) {
+        const json = await response.json();
+        const tileSets = await Promise.all(this._tileSetPromises(json));
+        return {map: this._buildRpgMap(json, tileSets)};
+      }
+      throw new Error(`${response.status}: ${response.statusText}`);
+    }
+    catch(e) {
+      throw new Error(`Could not load map [${e.message}]`);
+    }
+  };
 
-  saveMapAs(rpgMap, mapName) {
-    return this.doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName));
-  }
+  saveMap = rpgMap => {
+    return this._doSave(`${rpgMapsApi}/${rpgMap.getId()}`, "PUT", rpgMap, rpgMap.getDto());
+  };
 
-  doSave(mapUrl, reqType, rpgMap, mapDef) {
-    console.log("Saving map [" + reqType + " " + mapUrl + "]");
-    var deferred = Q.defer();
-    var p = Q($.ajax({
-      type: reqType,
-      url: mapUrl,
-      dataType: 'json',
-      data: mapDef,
-    }).promise());
-    p.then(
-      data => deferred.resolve(this.mapSaved(rpgMap, mapDef, data)),
-      xhr => deferred.reject(this.handleSaveError(mapDef, xhr))
-    ).done();
-    return deferred.promise;
-  }
+  saveMapAs = (rpgMap, mapName) => {
+    return this._doSave(rpgMapsApi, "POST", rpgMap, rpgMap.getDtoWithName(mapName));
+  };
 
-  mapSaved(rpgMap, mapDef, data) {
+  _doSave = async (mapUrl, reqType, rpgMap, rpgMapDef) => {
+    try {
+      const response = await fetch(mapUrl, {
+        method: reqType,
+        body: JSON.stringify(rpgMapDef), // data can be `string` or {object}!
+        // body: rpgMapDef, // data can be `string` or {object}!
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
+      });
+      if (response.ok) {
+        const json = await response.json();
+        return this._mapSaved(rpgMap, rpgMapDef, json);
+      }
+      const text = await response.text();
+      const {status, err} = this._saveError(response, text, rpgMapDef);
+      throw new Error(`${status}: ${err}`);
+    }
+    catch(e) {
+      throw new Error(`Could not save map [${e.message}]`)
+    }
+  };
+
+  _mapSaved = (rpgMap, { name }, { mapId, message } ) => {
     // console.log(data.message);
-    rpgMap.setId(data.mapId);
-    rpgMap.setName(mapDef.name);
+    rpgMap.setId(mapId);
+    rpgMap.setName(name);
     return {
-      message: data.message,
-      mapId: rpgMap.getId(),
-      mapName: rpgMap.getName()
+      message: message,
+      mapId: mapId,
+      mapName: name
     };
+  };
+
+  _saveError(response, text, rpgMapDef) {
+    try {
+      const json = JSON.parse(text);
+      return this._saveErrorFromJson(response, json, rpgMapDef);
+    }
+    catch(e) {
+      // error response was not valid json
+    }
+    return { status: response.status, err: response.statusText };
   }
 
-  handleSaveError(mapDef, xhr) {
-    var data = xhr.responseJSON;
-    if (data) {
-      // known errors go here
-      console.log(data.err);
-      if (data.code === 11000) {
-        return {
-          err: "Name already in use [" + mapDef.name + "]",
-          status: xhr.status
-        };
-      }
-      if (data.err) {
-        return { err: data.err, status: xhr.status };
-      }
-      if (data.message) {
-        return { err: data.message, status: xhr.status };
+  _saveErrorFromJson = ({ status, statusText }, { code, err, message}, { name }) => {
+    if (code === 11000) {
+      return {
+        status: status,
+        err: `Name already in use '${name}'`,
       }
     }
-    return { err: xhr.statusText, status: xhr.status };
-  }
+    if (err) {
+      return { status: status, err: err };
+    }
+    if (message) {
+      return { status: status, err: message };
+    }
+    return { status: status, err: statusText };
+  };
 
-  newMap(rows, cols) {
-    var data = {
+  newMap = (rows, cols) => {
+    var emptyTileSetDef = {
       rows: rows,
       cols: cols,
       mapTiles: []
     };
-    var deferred = Q.defer();
-    this.initRpgMap(data, deferred, function() {});
-    return deferred.promise;
-  }
+    return { map: this._buildRpgMap(emptyTileSetDef, []) };
+  };
 
-  resizeMap(rpgMap, left, right, top, bottom) {
-    var newRows = rpgMap.getRows() + top + bottom;
-    var newCols = rpgMap.getCols() + left + right;
-    var newMap = this.newMap(newRows, newCols);
-    return newMap.then(data => {
-      var newRpgMap = data.map;
-      newRpgMap.resize(rpgMap, left, top);
-      return { map: newRpgMap, oldMap: rpgMap };
-    });
-  }
-
-  initRpgMap(rpgMapDef, deferred) {
-    var progress = 0;
-    deferred.notify(progress += 20);
-    // var tileSetPromises = this.tileSetPromises(rpgMapDef, (percent) => {
-    //   var increment = progress < 80 ? percent / 10 : 0;
-    //   progressCallback(progress += increment);
-    // });
-    var tileSetPromises = this.tileSetPromises(rpgMapDef);
-    if (tileSetPromises.size === 0) {
-      // no tilesets to load - either a new or empty map
-      deferred.notify(80);
-      deferred.resolve({ map: this.buildRpgMap({}, rpgMapDef, deferred) });
-      return;
-    }
-    // wait for all tilesets to load and then continue
-    var tileSets = {};
-    Q.all(tileSetPromises).then(values => {
-      deferred.notify(80);
-      values.forEach(value => {
-        tileSets[value.tileSet.getName()] = value.tileSet;
-      });
-      deferred.resolve({ map: this.buildRpgMap(tileSets, rpgMapDef, deferred) });
-    }, value => {
-      deferred.reject(this.tileSetLoadErr(value));
-    }, percent => {
-      var increment = progress < 80 ? percent / 10 : 0;
-      deferred.notify(progress += increment);
-    }).done();
-  }
+  resizeMap = (rpgMap, left, right, top, bottom) => {
+    const newRows = rpgMap.getRows() + top + bottom;
+    const newCols = rpgMap.getCols() + left + right;
+    const { map } = this.newMap(newRows, newCols);
+    map.resize(rpgMap, left, top);
+    return { map: map, oldMap: rpgMap };
+  };
 
   /*
    * Returns an array of tileset promises representing the tilesets used in the given map definition.
    */
-  tileSetPromises(rpgMapDef) {
-    var tileSets = new Map();
-    rpgMapDef.mapTiles.forEach(mapTileDef => {
-      mapTileDef.tiles.forEach(tileDef => {
-        var tsName = tileDef.tileSet;
-        if (!tileSets.has(tsName)) {
-          tileSets.set(tsName, tileSetService.loadTileSetByName(tsName));
+  _tileSetPromises = ({ mapTiles }) => {
+    const tileSets = mapTiles.reduce((map, { tiles }) => {
+      tiles.forEach(({ tileSet }) => {
+        if (!map[tileSet]) {
+          map[tileSet] = tileSetService.loadTileSetByName(tileSet);
         }
       });
-    });
-    return Array.from(tileSets.values());
-  }
+      return map;
+    }, {});
+    return Object.values(tileSets);
+  };
 
-  tileSetLoadErr(data) {
-    if (data.err) {
-      return {
-        err: "Could not load tileset '" + data.id + "' : " + data.err,
-        status: data.status
-      };
-    }
-    console.log("Something went wrong...");
-  }
-
-  buildRpgMap(tileSets, rpgMapDef, deferred) {
-    // console.log("buildRpgMap: " + tileSetMappings.size);
-    var mapTiles = this.initMapTiles(tileSets, rpgMapDef);
-    var sprites = this.initSprites(rpgMapDef);
-    deferred.notify(100);
+  _buildRpgMap = (rpgMapDef, tileSetsArray) => {
+    // convert tilesets array to map of tilesets keyed on name
+    const tileSets = tileSetsArray.reduce((map, { tileSet }) => {
+      map[tileSet.getName()] = tileSet;
+      return map;
+    }, {});
+    const mapTiles = this._initMapTiles(rpgMapDef, tileSets);
+    const sprites = this._initSprites(rpgMapDef);
+    // deferred.notify(100);
     return new RpgMap(rpgMapDef.id, rpgMapDef.name, mapTiles, sprites);
-  }
+  };
 
-  initMapTiles(tileSets, rpgMapDef) {
-    var tileDefKey = (x, y) => x + "-" + y;
-    var tileDefMappings = {};
-    rpgMapDef.mapTiles.forEach(mapTileDef => {
-      var key = tileDefKey(mapTileDef.xy[0], mapTileDef.xy[1]);
-      tileDefMappings[key] = mapTileDef;
-    });
-    var rows = rpgMapDef.rows, cols = rpgMapDef.cols;
-    var tiles = new Array(cols);
+  _initMapTiles = (rpgMapDef, tileSets) => {
+    const tileDefKey = (x, y) => `${x}-${y}`;
+
+    const tileDefMappings = rpgMapDef.mapTiles.reduce((map, mapTileDef) => {
+      map[tileDefKey(mapTileDef.xy[0], mapTileDef.xy[1])] = mapTileDef;
+      return map;
+    }, {});
+
+    const rows = rpgMapDef.rows;
+    const cols = rpgMapDef.cols;
+    const tiles = new Array(cols);
     for (var x = 0; x < cols; x++) {
       tiles[x] = new Array(rows);
       for (var y = 0; y < rows; y++) {
-        var mapTileDef = tileDefMappings[tileDefKey(x, y)];
-        var baseCanvas = baseTiles[(x + y) % baseTiles.length];
+        const mapTileDef = tileDefMappings[tileDefKey(x, y)];
+        const baseCanvas = baseTiles[(x + y) % baseTiles.length];
         if (mapTileDef) {
           var maskTiles = mapTileDef.tiles.map(tileDef => {
-            var tile = tileSets[tileDef.tileSet].getTileByName(tileDef.tile);
+            const tile = tileSets[tileDef.tileSet].getTileByName(tileDef.tile);
             return new MaskTile(tile, tileDef.maskLevel);
           });
           tiles[x][y] = new MapTile(baseCanvas, maskTiles, mapTileDef.levels);
@@ -664,30 +627,30 @@ class RpgMapService {
       }
     }
     return tiles;
-  }
+  };
 
-  initSprites(rpgMapDef) {
+  _initSprites = rpgMapDef => {
     if (rpgMapDef.sprites) {
       return rpgMapDef.sprites.map(spriteDef =>
           new Sprite(spriteDef.type, spriteDef.level, spriteDef.location)
       )
     }
     return [];
-  }
+  };
+}
 
-  /*
-   * So map canvas doesn't need to know about clipboards.
-   */
-  emptyClipboard() {
-    return new Clipboard();
-  }
+/*
+ * So map canvas doesn't need to know about clipboards.
+ */
+export function emptyClipboard() {
+  return new Clipboard();
+}
 
-  /*
-   * So sprites modal doesn't need to know about sprites.
-   */
-  newSprite(type, level, location) {
-    return new Sprite(type, level, location);
-  }
+/*
+ * So sprites modal doesn't need to know about sprites.
+ */
+export function newSprite(type, level, location) {
+  return new Sprite(type, level, location);
 }
 
 export default RpgMapService;
