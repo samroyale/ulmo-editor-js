@@ -6,8 +6,12 @@ WORKDIR /usr/src/client
 
 COPY package.json ./
 COPY yarn.lock ./
+COPY config-overrides.js ./
+COPY pkg ./pkg
 
 RUN sed -i "s/localhost/api/" /usr/src/client/package.json
+
+RUN ls -l /usr/src/client
 
 RUN yarn install
 

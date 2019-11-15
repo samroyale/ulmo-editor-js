@@ -1,0 +1,15 @@
+{
+  "name": "wasm-ulmo-map",
+  "collaborators": [
+    "seldred <samuel.eldred@anaplan.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "wasm_ulmo_map_bg.wasm",
+    "wasm_ulmo_map.js",
+    "wasm_ulmo_map.d.ts"
+  ],
+  "module": "wasm_ulmo_map.js",
+  "types": "wasm_ulmo_map.d.ts",
+  "sideEffects": "false"
+}
