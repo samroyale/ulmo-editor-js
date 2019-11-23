@@ -44,7 +44,8 @@ class Stage {
     }
 
     async initPlay() {
-        this._playMap = new PlayMap(this._rpgMap);
+        const wasm = await import('wasm-ulmo-map');
+        this._playMap = new PlayMap(this._rpgMap, wasm);
         const playerPromise = Player.loadSprite(
             this._playMap,
             this._playerLevel,

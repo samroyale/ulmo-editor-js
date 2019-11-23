@@ -28,7 +28,7 @@ const testWasm = ({ PlayMap, Rect }) => {
             special_levels:[]
         }, {
             levels:[],
-            down_levels:[],
+            down_levels:[[3, 2]],
             special_levels:[3]
         }, {
             levels:[],

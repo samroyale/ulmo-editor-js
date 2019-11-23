@@ -5,4 +5,5 @@ import App from './components/App';
 import WasmTest from './components/WasmTest';
 import 'bootstrap/dist/css/bootstrap.css';
 
-ReactDOM.render(<WasmTest />, document.getElementById('root'));
+// ReactDOM.render(<WasmTest />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));

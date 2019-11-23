@@ -17,6 +17,30 @@ const maxShuffle = {
 
 const blackTile = initTile('black');
 
+function asTileData(mapTile) {
+    var levels = [];
+    var downLevels = [];
+    var specialLevels = [];
+    mapTile.getLevels()
+        .map(level => parseLevel(level))
+        .forEach(parsed => {
+            if (parsed.type === 'special') {
+                specialLevels.push(parsed.level);
+                return;
+            }
+            if (parsed.type === 'down') {
+                downLevels.push([parsed.level, parsed.drop]);
+                return;
+            }
+            levels.push(parsed.level);
+        });
+    return {
+        levels: levels,
+        down_levels: downLevels,
+        special_levels: specialLevels
+    }
+}
+
 /* =============================================================================
  * CLASS: MASK INFO
  * =============================================================================
@@ -48,22 +72,22 @@ class PlayTile {
         });
 
         // levels
-        this.levels = [];
-        this.specialLevels = null;
-        this.downLevels = null;
-        mapTile.getLevels()
-            .map(level => parseLevel(level))
-            .forEach(parsed => {
-                if (parsed.type === 'special') {
-                    this.addSpecialLevel(parsed);
-                    return;
-                }
-                if (parsed.type === 'down') {
-                    this.addDownLevel(parsed);
-                    return;
-                }
-                this.levels.push(parsed.level);
-            });
+        // this.levels = [];
+        // this.specialLevels = null;
+        // this.downLevels = null;
+        // mapTile.getLevels()
+        //     .map(level => parseLevel(level))
+        //     .forEach(parsed => {
+        //         if (parsed.type === 'special') {
+        //             this.addSpecialLevel(parsed);
+        //             return;
+        //         }
+        //         if (parsed.type === 'down') {
+        //             this.addDownLevel(parsed);
+        //             return;
+        //         }
+        //         this.levels.push(parsed.level);
+        //     });
 
         // masks
         this.masks = null;
@@ -82,24 +106,24 @@ class PlayTile {
         this.oldLevels = null;
     }
 
-    addSpecialLevel(parsed) {
-        if (!this.specialLevels) {
-            this.specialLevels = new Map();
-        }
-        if (parsed.high && parsed.low) {
-            this.specialLevels.set(parsed.high, parsed.level);
-            this.specialLevels.set(parsed.low, parsed.level);
-            return;
-        }
-        this.specialLevels.set(parsed.level, parsed.level);
-    }
+    // addSpecialLevel(parsed) {
+    //     if (!this.specialLevels) {
+    //         this.specialLevels = new Map();
+    //     }
+    //     if (parsed.high && parsed.low) {
+    //         this.specialLevels.set(parsed.high, parsed.level);
+    //         this.specialLevels.set(parsed.low, parsed.level);
+    //         return;
+    //     }
+    //     this.specialLevels.set(parsed.level, parsed.level);
+    // }
 
-    addDownLevel(parsed) {
-        if (!this.downLevels) {
-            this.downLevels = new Map();
-        }
-        this.downLevels.set(parsed.level, parsed.drop);
-    }
+    // addDownLevel(parsed) {
+    //     if (!this.downLevels) {
+    //         this.downLevels = new Map();
+    //     }
+    //     this.downLevels.set(parsed.level, parsed.drop);
+    // }
 
     addMask(tileIndex, level, flat, y) {
         if (!this.masks) {
@@ -108,52 +132,52 @@ class PlayTile {
         this.masks.push(new MaskInfo(tileIndex, level, flat, y));
     }
 
-    testValidity(level) {
-        if (this.levels.includes(level)) {
-            return [1, null];
-        }
-        var downLevel = this.getDownLevel(level);
-        if (downLevel) {
-            return [1, null];
-        }
-        var specialLevel = this.getSpecialLevel(level);
-        if (specialLevel) {
-            if (specialLevel === level) {
-                return [1, specialLevel];
-            }
-            return [0, specialLevel];
-        }
-        return [0, null];
-    }
+    // testValidity(level) {
+    //     if (this.levels.includes(level)) {
+    //         return [1, null];
+    //     }
+    //     var downLevel = this.getDownLevel(level);
+    //     if (downLevel) {
+    //         return [1, null];
+    //     }
+    //     var specialLevel = this.getSpecialLevel(level);
+    //     if (specialLevel) {
+    //         if (specialLevel === level) {
+    //             return [1, specialLevel];
+    //         }
+    //         return [0, specialLevel];
+    //     }
+    //     return [0, null];
+    // }
 
-    getSpecialLevel(level) {
-        if (!this.specialLevels) {
-            return null;
-        }
-        var specialLevel = this.specialLevels.get(level);
-        if (specialLevel) {
-            return specialLevel;
-        }
-        specialLevel = this.specialLevels.get(Math.floor(level));
-        if (specialLevel) {
-            return specialLevel;
-        }
-        specialLevel = this.specialLevels.get(Math.ceil(level));
-        if (specialLevel) {
-            return specialLevel;
-        }
-        return null;
-    }
+    // getSpecialLevel(level) {
+    //     if (!this.specialLevels) {
+    //         return null;
+    //     }
+    //     var specialLevel = this.specialLevels.get(level);
+    //     if (specialLevel) {
+    //         return specialLevel;
+    //     }
+    //     specialLevel = this.specialLevels.get(Math.floor(level));
+    //     if (specialLevel) {
+    //         return specialLevel;
+    //     }
+    //     specialLevel = this.specialLevels.get(Math.ceil(level));
+    //     if (specialLevel) {
+    //         return specialLevel;
+    //     }
+    //     return null;
+    // }
 
-    getDownLevel(level) {
-        if (!this.downLevels) {
-            return null;
-        }
-        var downLevel = this.downLevels.get(level);
-        if (downLevel) {
-            return downLevel;
-        }
-    }
+    // getDownLevel(level) {
+    //     if (!this.downLevels) {
+    //         return null;
+    //     }
+    //     var downLevel = this.downLevels.get(level);
+    //     if (downLevel) {
+    //         return downLevel;
+    //     }
+    // }
 
     getMasks(spriteZ, spriteLevel, spriteUpright) {
         if (!this.masks) {
@@ -189,21 +213,52 @@ class PlayTile {
  * =============================================================================
  */
 class PlayMap {
-    constructor(rpgMap) {
+    constructor(rpgMap, wasm) {
+        this.wasm = wasm;
         this.cols = rpgMap.getCols();
         this.rows = rpgMap.getRows();
         this.mapRect = new Rect(0, 0, this.cols * tileSize, this.rows * tileSize);
         this.mapCanvas = this.drawMap(rpgMap);
-        var tiles = new Array(this.cols);
-        for (var x = 0; x < this.cols; x++) {
+
+        const tiles = new Array(this.cols);
+        for (let x = 0; x < this.cols; x++) {
             tiles[x] = new Array(this.rows);
-            for (var y = 0; y < this.rows; y++) {
+            for (let y = 0; y < this.rows; y++) {
                 tiles[x][y] = new PlayTile(rpgMap.getMapTile(x, y), x, y);
             }
         }
         this.tiles = tiles;
-        this.verticals = null;
-        this.horizontals = null;
+
+        const tileData = [];
+        for (let y = 0; y < this.rows; y++) {
+            for (let x = 0; x < this.cols; x++) {
+                tileData.push(asTileData(rpgMap.getMapTile(x, y)));
+            }
+        }
+        // debugger
+        const { PlayMap: WasmPlayMap } = wasm;
+        this.wasmPlayMap = WasmPlayMap.from_js_data({
+            rows: this.rows,
+            cols: this.cols,
+            tile_data: tileData,
+            tile_size: tileSize
+        });
+    }
+
+    applyMove(mx, my, level, baseRect) {
+        const { Rect: WasmRect } = this.wasm;
+        const result = this.wasmPlayMap.apply_move(
+            mx,
+            my,
+            Math.round(level * 2),
+            WasmRect.new(baseRect.left, baseRect.top, baseRect.width, baseRect.height)
+        );
+        // TODO: move diffing of Rects into wasm - apply_move should return the delta
+        const wasmRect = result.get_rect();
+        const newBaseRect = new Rect(wasmRect.get_x(), wasmRect.get_y(), wasmRect.get_width(), wasmRect.get_height());
+        const mx_delta = newBaseRect.left - baseRect.left;
+        const my_delta = newBaseRect.top - baseRect.top;
+        return [result.is_valid(), result.get_deferral(), result.get_level() / 2, mx_delta, my_delta];
     }
 
     drawMap(rpgMap) {
@@ -245,79 +300,79 @@ class PlayMap {
         return (rect.top < 0) || (rect.bottom > this.mapCanvas.height);
     }
 
-    isSpanValid(level, spanTiles) {
-        var sameLevelCount = 0;
-        var specialLevels = [];
-        // iterate through base tiles and gather information
-        spanTiles.forEach(tile => {
-            var [increment, specialLevel] = tile.testValidity(level);
-            sameLevelCount += increment;
-            if (specialLevel) {
-                specialLevels.push(specialLevel);
-            }
-        });
-        // test validity of the requested movement
-        var spanTileCount = spanTiles.length;
-        if (sameLevelCount === spanTileCount) {
-            return [true, level];
-        }
-        if (specialLevels.length === spanTileCount) {
-            var minLevel = Math.min(...specialLevels);
-            var maxLevel = Math.max(...specialLevels);
-            if (maxLevel - minLevel < 1) {
-                var result = Number.isInteger(maxLevel) ? maxLevel : minLevel;
-                return [true, result];
-            }
-        }
-        return [false, level];
-    }
+    // _isSpanValid(level, spanTiles) {
+    //     var sameLevelCount = 0;
+    //     var specialLevels = [];
+    //     // iterate through base tiles and gather information
+    //     spanTiles.forEach(tile => {
+    //         var [increment, specialLevel] = tile.testValidity(level);
+    //         sameLevelCount += increment;
+    //         if (specialLevel) {
+    //             specialLevels.push(specialLevel);
+    //         }
+    //     });
+    //     // test validity of the requested movement
+    //     var spanTileCount = spanTiles.length;
+    //     if (sameLevelCount === spanTileCount) {
+    //         return [true, level];
+    //     }
+    //     if (specialLevels.length === spanTileCount) {
+    //         var minLevel = Math.min(...specialLevels);
+    //         var maxLevel = Math.max(...specialLevels);
+    //         if (maxLevel - minLevel < 1) {
+    //             var result = Number.isInteger(maxLevel) ? maxLevel : minLevel;
+    //             return [true, result];
+    //         }
+    //     }
+    //     return [false, level];
+    // }
 
-    isMoveValid(level, baseRect) {
-        return this.isSpanValid(level, this._getSpanTilesAndCacheStripes(baseRect));
-    }
+    // isMoveValid(level, baseRect) {
+    //     return this._isSpanValid(level, this._getSpanTilesAndCacheStripes(baseRect));
+    // }
 
-    _isShuffleValid(stripes, keys, level, shuffle) {
-        var stripe = stripes.get(keys[shuffle.index1]);
-        var [valid, newLevel] = this.isSpanValid(level, stripe);
-        if (valid) {
-            return [valid, newLevel, shuffle.shuffle1];
-        }
-        stripe = stripes.get(keys[shuffle.index2]);
-        [valid, newLevel] = this.isSpanValid(level, stripe);
-        return [valid, newLevel, shuffle.shuffle2];
-    }
+    // _isShuffleValid(stripes, keys, level, shuffle) {
+    //     var stripe = stripes.get(keys[shuffle.index1]);
+    //     var [valid, newLevel] = this._isSpanValid(level, stripe);
+    //     if (valid) {
+    //         return [valid, newLevel, shuffle.shuffle1];
+    //     }
+    //     stripe = stripes.get(keys[shuffle.index2]);
+    //     [valid, newLevel] = this._isSpanValid(level, stripe);
+    //     return [valid, newLevel, shuffle.shuffle2];
+    // }
 
-    _isStripeValid(level, stripes, min, max) {
-        if (stripes.size < 2) {
-            return [false, level, 0];
-        }
-        var keys = [...stripes.keys()];
-        var minDiff = Math.abs(keys[0] * tileSize - min);
-        var maxDiff = Math.abs((keys[1] + 1) * tileSize - max);
-        if (minDiff < maxDiff) {
-            return this._isShuffleValid(stripes, keys, level, minShuffle);
-        }
-        return this._isShuffleValid(stripes, keys, level, maxShuffle);
-    }
+    // _isStripeValid(level, stripes, min, max) {
+    //     if (stripes.size < 2) {
+    //         return [false, level, 0];
+    //     }
+    //     var keys = [...stripes.keys()];
+    //     var minDiff = Math.abs(keys[0] * tileSize - min);
+    //     var maxDiff = Math.abs((keys[1] + 1) * tileSize - max);
+    //     if (minDiff < maxDiff) {
+    //         return this._isShuffleValid(stripes, keys, level, minShuffle);
+    //     }
+    //     return this._isShuffleValid(stripes, keys, level, maxShuffle);
+    // }
 
-    isVerticalValid(level, baseRect) {
-        return this._isStripeValid(level, this.verticals, baseRect.left, baseRect.right);
-    }
+    // isVerticalValid(level, baseRect) {
+    //     return this._isStripeValid(level, this.verticals, baseRect.left, baseRect.right);
+    // }
 
-    isHorizontalValid(level, baseRect) {
-        return this._isStripeValid(level, this.horizontals, baseRect.top, baseRect.bottom);
-    }
+    // isHorizontalValid(level, baseRect) {
+    //     return this._isStripeValid(level, this.horizontals, baseRect.top, baseRect.bottom);
+    // }
 
     getMasksForUpright(spriteRect, spriteLevel, spriteZ) {
         return this.getMasks(spriteRect, spriteLevel, spriteZ, true);
     }
 
     getMasks(spriteRect, spriteLevel, spriteZ, spriteUpright) {
-        var spriteTiles = this._getSpanTiles(spriteRect);
-        var masks = [];
+        const spriteTiles = this._getSpanTiles(spriteRect);
+        const masks = [];
         spriteTiles.forEach(tile => {
             // TODO do we need to check the tile exists?
-            var tileMasks = tile.getMasks(spriteZ, spriteLevel, spriteUpright);
+            const tileMasks = tile.getMasks(spriteZ, spriteLevel, spriteUpright);
             if (tileMasks) {
                 masks.push({
                     x: tile.x,
@@ -328,22 +383,25 @@ class PlayMap {
         });
         return masks;
     }
-    
+
     getEvent(level, baseRect) {
-        //let downLevels = [];
-        let spanTiles = this._getSpanTiles(baseRect);
-        let falling = spanTiles.every(tile => {
-            let downLevel = tile.getDownLevel(level);
-            return !!downLevel;
-        });
-        if (!falling) {
-            return null;
-        }
-        return {
-            eventType: 'falling',
-            downLevel: spanTiles[0].getDownLevel(level)
-        };
+        return null;
     }
+    // getEvent(level, baseRect) {
+    //     //let downLevels = [];
+    //     let spanTiles = this._getSpanTiles(baseRect);
+    //     let falling = spanTiles.every(tile => {
+    //         let downLevel = tile.getDownLevel(level);
+    //         return !!downLevel;
+    //     });
+    //     if (!falling) {
+    //         return null;
+    //     }
+    //     return {
+    //         eventType: 'falling',
+    //         downLevel: spanTiles[0].getDownLevel(level)
+    //     };
+    // }
 
     _getSpanTiles(rect) {
         var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
@@ -356,26 +414,26 @@ class PlayMap {
         return rectTiles;
     }
 
-    _getSpanTilesAndCacheStripes(rect) {
-        var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
-        var rectTiles = [];
-        this.verticals = new Map();
-        this.horizontals = new Map();
-        for (var x = tx1; x < tx2; x++) {
-            var vertical = [];
-            for (var y = ty1; y < ty2; y++) {
-                if (this.verticals.size === 0) {
-                    this.horizontals.set(y, []);
-                }
-                var tile = this.tiles[x][y];
-                rectTiles.push(tile);
-                vertical.push(tile);
-                this.horizontals.get(y).push(tile);
-            }
-            this.verticals.set(x, vertical);
-        }
-        return rectTiles;
-    }
+    // _getSpanTilesAndCacheStripes(rect) {
+    //     var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
+    //     var rectTiles = [];
+    //     this.verticals = new Map();
+    //     this.horizontals = new Map();
+    //     for (var x = tx1; x < tx2; x++) {
+    //         var vertical = [];
+    //         for (var y = ty1; y < ty2; y++) {
+    //             if (this.verticals.size === 0) {
+    //                 this.horizontals.set(y, []);
+    //             }
+    //             var tile = this.tiles[x][y];
+    //             rectTiles.push(tile);
+    //             vertical.push(tile);
+    //             this.horizontals.get(y).push(tile);
+    //         }
+    //         this.verticals.set(x, vertical);
+    //     }
+    //     return rectTiles;
+    // }
 
     _convertRect(rect) {
         var tx1 = Math.max(0, Math.floor(rect.left / tileSize));

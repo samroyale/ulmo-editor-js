@@ -91,14 +91,12 @@ export function parseLevel(levelStr) {
     if (Number.isInteger(level)) {
       return {
         type: 'special',
-        level: level
+        level: level * 2
       }
     }
     return {
       type: 'special',
-      level: level,
-      high: Math.ceil(level),
-      low: Math.floor(level)
+      level: Math.floor(level) * 2 + 1
     }
   }
   if (levelStr.startsWith('D')) {
@@ -116,13 +114,13 @@ export function parseLevel(levelStr) {
     }
     return {
       type: 'down',
-      level: levelVal,
-      drop: dropVal
+      level: levelVal * 2,
+      drop: dropVal * 2
     }
   }
   return {
-    type: 'standard',
-    level: Number.parseInt(levelStr, 10)
+    type: 'default',
+    level: Number.parseInt(levelStr, 10) * 2
   };
 }
 

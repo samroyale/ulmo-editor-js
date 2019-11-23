@@ -156,38 +156,22 @@ export class Player extends Sprite {
             return;
         }
 
-        // check requested movement is valid
-        const newBaseRect = this._baseRect.move(mx, my);
-        const [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        const [valid, deferral, level, mx_delta, my_delta] = this._playMap.applyMove(mx, my, this._level, this._baseRect);
         if (valid) {
-            if (diagonal) {
+            if (deferral === 1) {
+                this._deferMovement(direction, level, mx_delta, my_delta);
+                return;
+            }
+            if (deferral === 2) {
                 if (this._deferDiagonal) {
                     this._deferDiagonal = false;
-                    this._deferMovement(direction, level, mx, my);
+                    this._deferMovement(direction, level, mx_delta, my_delta);
                     return;
                 }
             }
             this._deferDiagonal = true;
-            this._applyRectMovement(direction, level, newBaseRect, newRect);
+            this._applyMovement(direction, level, mx_delta, my_delta);
             return;
-        }
-
-        // movement invalid but we might be able to slide or shuffle
-        if (mx === 0) {
-            if (this._shuffleX(direction)) {
-                return;
-            }
-        }
-        else if (my === 0) {
-            if (this._shuffleY(direction)) {
-                return;
-            }
-        }
-        else {
-            // diagonal movement
-            if (this._slide(direction, mx, my)) {
-                return;
-            }
         }
 
         // movement invalid - apply a stationary change of direction if needed
@@ -196,40 +180,40 @@ export class Player extends Sprite {
         }
     }
 
-    _shuffleX(direction) {
-        // see if we can shuffle horizontally
-        const [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
-        if (valid) {
-            this._deferMovement(direction, level, shuffle, 0);
-        }
-        return valid;
-    }
-
-    _shuffleY(direction) {
-        // see if we can shuffle vertically
-        const [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
-        if (valid) {
-            this._deferMovement(direction, level, 0, shuffle);
-        }
-        return valid;
-    }
-
-    _slide(direction, mx, my) {
-        // see if we can slide horizontally
-        let newBaseRect = this._baseRect.move(mx, 0);
-        let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
-        if (valid) {
-            this._deferMovement(direction, level, mx, 0);
-            return valid;
-        }
-        // see if we can slide vertically
-        newBaseRect = this._baseRect.move(0, my);
-        [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
-        if (valid) {
-            this._deferMovement(direction, level, 0, my);
-        }
-        return valid;
-    }
+    // _shuffleX(direction) {
+    //     // see if we can shuffle horizontally
+    //     const [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
+    //     if (valid) {
+    //         this._deferMovement(direction, level, shuffle, 0);
+    //     }
+    //     return valid;
+    // }
+    //
+    // _shuffleY(direction) {
+    //     // see if we can shuffle vertically
+    //     const [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
+    //     if (valid) {
+    //         this._deferMovement(direction, level, 0, shuffle);
+    //     }
+    //     return valid;
+    // }
+    //
+    // _slide(direction, mx, my) {
+    //     // see if we can slide horizontally
+    //     let newBaseRect = this._baseRect.move(mx, 0);
+    //     let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+    //     if (valid) {
+    //         this._deferMovement(direction, level, mx, 0);
+    //         return valid;
+    //     }
+    //     // see if we can slide vertically
+    //     newBaseRect = this._baseRect.move(0, my);
+    //     [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+    //     if (valid) {
+    //         this._deferMovement(direction, level, 0, my);
+    //     }
+    //     return valid;
+    // }
 
     _applyDeferredMovement() {
         if (this._deferredMovement) {
@@ -246,10 +230,10 @@ export class Player extends Sprite {
         this._moveInternal(direction, level, this._rect.move(mx, my));
     }
 
-    _applyRectMovement(direction, level, baseRect, rect) {
-        this._baseRect = baseRect;
-        this._moveInternal(direction, level, rect);
-    }
+    // _applyRectMovement(direction, level, baseRect, rect) {
+    //     this._baseRect = baseRect;
+    //     this._moveInternal(direction, level, rect);
+    // }
 
     _deferMovement(direction, level, mx, my) {
         this._deferredMovement = [direction, level, mx, my];
