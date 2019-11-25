@@ -1,12 +1,5 @@
 import * as wasm from './wasm_ulmo_map_bg.wasm';
 
-function _assertClass(instance, klass) {
-    if (!(instance instanceof klass)) {
-        throw new Error(`expected instance of ${klass.name}`);
-    }
-    return instance.ptr;
-}
-
 const heap = new Array(32);
 
 heap.fill(undefined);
@@ -19,6 +12,13 @@ function addBorrowedObject(obj) {
     if (stack_pointer == 1) throw new Error('out of js stack');
     heap[--stack_pointer] = obj;
     return stack_pointer;
+}
+
+function _assertClass(instance, klass) {
+    if (!(instance instanceof klass)) {
+        throw new Error(`expected instance of ${klass.name}`);
+    }
+    return instance.ptr;
 }
 
 let cachedTextDecoder = new TextDecoder('utf-8');
@@ -158,14 +158,12 @@ export class MoveResult {
     * @param {boolean} valid
     * @param {number} deferral
     * @param {number} level
-    * @param {Rect} base_rect
+    * @param {number} mx
+    * @param {number} my
     * @returns {MoveResult}
     */
-    static new(valid, deferral, level, base_rect) {
-        _assertClass(base_rect, Rect);
-        const ptr0 = base_rect.ptr;
-        base_rect.ptr = 0;
-        const ret = wasm.moveresult_new(valid, deferral, level, ptr0);
+    static new(valid, deferral, level, mx, my) {
+        const ret = wasm.moveresult_new(valid, deferral, level, mx, my);
         return MoveResult.__wrap(ret);
     }
     /**
@@ -190,11 +188,18 @@ export class MoveResult {
         return ret;
     }
     /**
-    * @returns {Rect}
+    * @returns {number}
     */
-    get_rect() {
-        const ret = wasm.moveresult_get_rect(this.ptr);
-        return Rect.__wrap(ret);
+    get_mx() {
+        const ret = wasm.moveresult_get_mx(this.ptr);
+        return ret;
+    }
+    /**
+    * @returns {number}
+    */
+    get_my() {
+        const ret = wasm.moveresult_get_my(this.ptr);
+        return ret;
     }
 }
 /**

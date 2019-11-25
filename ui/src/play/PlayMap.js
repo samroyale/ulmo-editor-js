@@ -1,38 +1,38 @@
 import { tileSize, viewWidth, viewHeight } from '../config';
 import { drawTile, initTile, parseLevel, Rect } from '../utils';
 
-const minShuffle = {
-    index1: 0,
-    shuffle1: -2,
-    index2: 1,
-    shuffle2: 2
-};
+// const minShuffle = {
+//     index1: 0,
+//     shuffle1: -2,
+//     index2: 1,
+//     shuffle2: 2
+// };
 
-const maxShuffle = {
-    index1: 1,
-    shuffle1: 2,
-    index2: 0,
-    shuffle2: -2
-};
+// const maxShuffle = {
+//     index1: 1,
+//     shuffle1: 2,
+//     index2: 0,
+//     shuffle2: -2
+// };
 
 const blackTile = initTile('black');
 
 function asTileData(mapTile) {
-    var levels = [];
-    var downLevels = [];
-    var specialLevels = [];
+    const levels = [];
+    const downLevels = [];
+    const specialLevels = [];
     mapTile.getLevels()
         .map(level => parseLevel(level))
         .forEach(parsed => {
             if (parsed.type === 'special') {
                 specialLevels.push(parsed.level);
-                return;
             }
-            if (parsed.type === 'down') {
+            else if (parsed.type === 'down') {
                 downLevels.push([parsed.level, parsed.drop]);
-                return;
             }
-            levels.push(parsed.level);
+            else {
+                levels.push(parsed.level);
+            }
         });
     return {
         levels: levels,
@@ -236,7 +236,7 @@ class PlayMap {
             }
         }
         // debugger
-        const { PlayMap: WasmPlayMap } = wasm;
+        const { PlayMap: WasmPlayMap } = this.wasm;
         this.wasmPlayMap = WasmPlayMap.from_js_data({
             rows: this.rows,
             cols: this.cols,
@@ -253,12 +253,7 @@ class PlayMap {
             Math.round(level * 2),
             WasmRect.new(baseRect.left, baseRect.top, baseRect.width, baseRect.height)
         );
-        // TODO: move diffing of Rects into wasm - apply_move should return the delta
-        const wasmRect = result.get_rect();
-        const newBaseRect = new Rect(wasmRect.get_x(), wasmRect.get_y(), wasmRect.get_width(), wasmRect.get_height());
-        const mx_delta = newBaseRect.left - baseRect.left;
-        const my_delta = newBaseRect.top - baseRect.top;
-        return [result.is_valid(), result.get_deferral(), result.get_level() / 2, mx_delta, my_delta];
+        return [result.is_valid(), result.get_deferral(), result.get_level() / 2, result.get_mx(), result.get_my()];
     }
 
     drawMap(rpgMap) {
@@ -387,6 +382,7 @@ class PlayMap {
     getEvent(level, baseRect) {
         return null;
     }
+    // TODO: move into wasm
     // getEvent(level, baseRect) {
     //     //let downLevels = [];
     //     let spanTiles = this._getSpanTiles(baseRect);

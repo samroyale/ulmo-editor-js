@@ -3,7 +3,7 @@
   "collaborators": [
     "seldred <samuel.eldred@anaplan.com>"
   ],
-  "version": "0.1.1",
+  "version": "0.1.2",
   "files": [
     "wasm_ulmo_map_bg.wasm",
     "wasm_ulmo_map.js",

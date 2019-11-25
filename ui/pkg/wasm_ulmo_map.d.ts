@@ -12,10 +12,11 @@ export class MoveResult {
 * @param {boolean} valid 
 * @param {number} deferral 
 * @param {number} level 
-* @param {Rect} base_rect 
+* @param {number} mx 
+* @param {number} my 
 * @returns {MoveResult} 
 */
-  static new(valid: boolean, deferral: number, level: number, base_rect: Rect): MoveResult;
+  static new(valid: boolean, deferral: number, level: number, mx: number, my: number): MoveResult;
 /**
 * @returns {boolean} 
 */
@@ -29,9 +30,13 @@ export class MoveResult {
 */
   get_level(): number;
 /**
-* @returns {Rect} 
+* @returns {number} 
 */
-  get_rect(): Rect;
+  get_mx(): number;
+/**
+* @returns {number} 
+*/
+  get_my(): number;
 }
 /**
 */

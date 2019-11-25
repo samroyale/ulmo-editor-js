@@ -16,6 +16,10 @@ const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
 const playerFallingFramesUrl = spritesImgPath + '/ulmo-falling.png';
 const shadowFramesUrl = spritesImgPath + '/shadow.png';
 
+// const deferralNone = 0;
+const deferralDefault = 1;
+const deferralDiagonal = 2;
+
 /* =============================================================================
  * CLASS: KEYS
  * =============================================================================
@@ -145,11 +149,12 @@ export class Player extends Sprite {
         this._keyBits = keyBits;
         const moves = movement.get(keyBits);
         if (moves) {
-            this._move(moves[0], moves[1], moves[2], moves[3]);
+            let [direction, mx, my] = moves;
+            this._move(direction, mx, my);
         }
     }
 
-    _move(direction, mx, my, diagonal) {
+    _move(direction, mx, my) {
         // check requested movement falls within map boundary
         const newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
@@ -158,11 +163,11 @@ export class Player extends Sprite {
 
         const [valid, deferral, level, mx_delta, my_delta] = this._playMap.applyMove(mx, my, this._level, this._baseRect);
         if (valid) {
-            if (deferral === 1) {
+            if (deferral === deferralDefault) {
                 this._deferMovement(direction, level, mx_delta, my_delta);
                 return;
             }
-            if (deferral === 2) {
+            if (deferral === deferralDiagonal) {
                 if (this._deferDiagonal) {
                     this._deferDiagonal = false;
                     this._deferMovement(direction, level, mx_delta, my_delta);
