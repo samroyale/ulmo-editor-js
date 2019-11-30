@@ -183,6 +183,11 @@ export class Rect {
   toString() {
     return 'Rect [left: ' + this.left + ', top: ' + this.top + ', width: ' + this.width + ', height: ' + this.height + ']';
   }
+
+  toWasmRect(wasm) {
+    const { Rect: WasmRect } = wasm;
+    return WasmRect.new(this.left, this.top, this.width, this.height);
+  }
 }
 
 /* =============================================================================

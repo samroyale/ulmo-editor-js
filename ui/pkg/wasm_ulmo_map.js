@@ -21,32 +21,9 @@ function _assertClass(instance, klass) {
     return instance.ptr;
 }
 
-let cachedTextDecoder = new TextDecoder('utf-8');
-
-let cachegetUint8Memory = null;
-function getUint8Memory() {
-    if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) {
-        cachegetUint8Memory = new Uint8Array(wasm.memory.buffer);
-    }
-    return cachegetUint8Memory;
-}
-
-function getStringFromWasm(ptr, len) {
-    return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
-}
+function getObject(idx) { return heap[idx]; }
 
 let heap_next = heap.length;
-
-function addHeapObject(obj) {
-    if (heap_next === heap.length) heap.push(heap.length + 1);
-    const idx = heap_next;
-    heap_next = heap[idx];
-
-    heap[idx] = obj;
-    return idx;
-}
-
-function getObject(idx) { return heap[idx]; }
 
 function dropObject(idx) {
     if (idx < 36) return;
@@ -63,6 +40,14 @@ function takeObject(idx) {
 let WASM_VECTOR_LEN = 0;
 
 let cachedTextEncoder = new TextEncoder('utf-8');
+
+let cachegetUint8Memory = null;
+function getUint8Memory() {
+    if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) {
+        cachegetUint8Memory = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachegetUint8Memory;
+}
 
 let passStringToWasm;
 if (typeof cachedTextEncoder.encodeInto === 'function') {
@@ -125,6 +110,62 @@ function getInt32Memory() {
         cachegetInt32Memory = new Int32Array(wasm.memory.buffer);
     }
     return cachegetInt32Memory;
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8');
+
+function getStringFromWasm(ptr, len) {
+    return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
+}
+
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
+}
+/**
+*/
+export class MapEvent {
+
+    static __wrap(ptr) {
+        const obj = Object.create(MapEvent.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        wasm.__wbg_mapevent_free(ptr);
+    }
+    /**
+    * @param {number} event_type
+    * @param {number} value
+    * @returns {MapEvent}
+    */
+    static new(event_type, value) {
+        const ret = wasm.mapevent_new(event_type, value);
+        return MapEvent.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    get_event_type() {
+        const ret = wasm.mapevent_get_event_type(this.ptr);
+        return ret;
+    }
+    /**
+    * @returns {number}
+    */
+    get_value() {
+        const ret = wasm.mapevent_get_value(this.ptr);
+        return ret;
+    }
 }
 /**
 */
@@ -245,6 +286,33 @@ export class PlayMap {
         const ret = wasm.playmap_apply_move(this.ptr, mx, my, level, ptr0);
         return MoveResult.__wrap(ret);
     }
+    /**
+    * @param {number} level
+    * @param {Rect} base_rect
+    * @returns {MapEvent}
+    */
+    get_event(level, base_rect) {
+        _assertClass(base_rect, Rect);
+        const ptr0 = base_rect.ptr;
+        base_rect.ptr = 0;
+        const ret = wasm.playmap_get_event(this.ptr, level, ptr0);
+        return MapEvent.__wrap(ret);
+    }
+    /**
+    * @param {number} tx
+    * @param {number} ty
+    * @param {number} level
+    */
+    add_level_to_tile(tx, ty, level) {
+        wasm.playmap_add_level_to_tile(this.ptr, tx, ty, level);
+    }
+    /**
+    * @param {number} tx
+    * @param {number} ty
+    */
+    rollback_tile(tx, ty) {
+        wasm.playmap_rollback_tile(this.ptr, tx, ty);
+    }
 }
 /**
 */
@@ -304,11 +372,6 @@ export class Rect {
     }
 }
 
-export const __wbindgen_string_new = function(arg0, arg1) {
-    const ret = getStringFromWasm(arg0, arg1);
-    return addHeapObject(ret);
-};
-
 export const __wbindgen_object_drop_ref = function(arg0) {
     takeObject(arg0);
 };
@@ -319,6 +382,11 @@ export const __wbindgen_json_serialize = function(arg0, arg1) {
     const ret1 = WASM_VECTOR_LEN;
     getInt32Memory()[arg0 / 4 + 0] = ret0;
     getInt32Memory()[arg0 / 4 + 1] = ret1;
+};
+
+export const __wbindgen_string_new = function(arg0, arg1) {
+    const ret = getStringFromWasm(arg0, arg1);
+    return addHeapObject(ret);
 };
 
 export const __widl_f_log_1_ = function(arg0) {

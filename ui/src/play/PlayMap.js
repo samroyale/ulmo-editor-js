@@ -37,7 +37,8 @@ function asTileData(mapTile) {
     return {
         levels: levels,
         down_levels: downLevels,
-        special_levels: specialLevels
+        special_levels: specialLevels,
+        masks: []
     }
 }
 
@@ -196,16 +197,16 @@ class PlayTile {
         return activeMasks;
     }
 
-    addNewLevel(level) {
-        this.oldLevels = this.levels.slice();
-        this.levels.push(level);
-    }
-
-    rollback() {
-        if (this.oldLevels) {
-            this.levels = this.oldLevels;
-        }
-    }
+    // addNewLevel(level) {
+    //     this.oldLevels = this.levels.slice();
+    //     this.levels.push(level);
+    // }
+    //
+    // rollback() {
+    //     if (this.oldLevels) {
+    //         this.levels = this.oldLevels;
+    //     }
+    // }
 }
 
 /* =============================================================================
@@ -246,14 +247,14 @@ class PlayMap {
     }
 
     applyMove(mx, my, level, baseRect) {
-        const { Rect: WasmRect } = this.wasm;
-        const result = this.wasmPlayMap.apply_move(
-            mx,
-            my,
-            Math.round(level * 2),
-            WasmRect.new(baseRect.left, baseRect.top, baseRect.width, baseRect.height)
-        );
-        return [result.is_valid(), result.get_deferral(), result.get_level() / 2, result.get_mx(), result.get_my()];
+        const result = this.wasmPlayMap.apply_move(mx, my, Math.round(level * 2), baseRect.toWasmRect(this.wasm));
+        return [
+            result.is_valid(),
+            result.get_deferral(),
+            result.get_level() / 2,
+            result.get_mx(),
+            result.get_my()
+        ];
     }
 
     drawMap(rpgMap) {
@@ -295,69 +296,6 @@ class PlayMap {
         return (rect.top < 0) || (rect.bottom > this.mapCanvas.height);
     }
 
-    // _isSpanValid(level, spanTiles) {
-    //     var sameLevelCount = 0;
-    //     var specialLevels = [];
-    //     // iterate through base tiles and gather information
-    //     spanTiles.forEach(tile => {
-    //         var [increment, specialLevel] = tile.testValidity(level);
-    //         sameLevelCount += increment;
-    //         if (specialLevel) {
-    //             specialLevels.push(specialLevel);
-    //         }
-    //     });
-    //     // test validity of the requested movement
-    //     var spanTileCount = spanTiles.length;
-    //     if (sameLevelCount === spanTileCount) {
-    //         return [true, level];
-    //     }
-    //     if (specialLevels.length === spanTileCount) {
-    //         var minLevel = Math.min(...specialLevels);
-    //         var maxLevel = Math.max(...specialLevels);
-    //         if (maxLevel - minLevel < 1) {
-    //             var result = Number.isInteger(maxLevel) ? maxLevel : minLevel;
-    //             return [true, result];
-    //         }
-    //     }
-    //     return [false, level];
-    // }
-
-    // isMoveValid(level, baseRect) {
-    //     return this._isSpanValid(level, this._getSpanTilesAndCacheStripes(baseRect));
-    // }
-
-    // _isShuffleValid(stripes, keys, level, shuffle) {
-    //     var stripe = stripes.get(keys[shuffle.index1]);
-    //     var [valid, newLevel] = this._isSpanValid(level, stripe);
-    //     if (valid) {
-    //         return [valid, newLevel, shuffle.shuffle1];
-    //     }
-    //     stripe = stripes.get(keys[shuffle.index2]);
-    //     [valid, newLevel] = this._isSpanValid(level, stripe);
-    //     return [valid, newLevel, shuffle.shuffle2];
-    // }
-
-    // _isStripeValid(level, stripes, min, max) {
-    //     if (stripes.size < 2) {
-    //         return [false, level, 0];
-    //     }
-    //     var keys = [...stripes.keys()];
-    //     var minDiff = Math.abs(keys[0] * tileSize - min);
-    //     var maxDiff = Math.abs((keys[1] + 1) * tileSize - max);
-    //     if (minDiff < maxDiff) {
-    //         return this._isShuffleValid(stripes, keys, level, minShuffle);
-    //     }
-    //     return this._isShuffleValid(stripes, keys, level, maxShuffle);
-    // }
-
-    // isVerticalValid(level, baseRect) {
-    //     return this._isStripeValid(level, this.verticals, baseRect.left, baseRect.right);
-    // }
-
-    // isHorizontalValid(level, baseRect) {
-    //     return this._isStripeValid(level, this.horizontals, baseRect.top, baseRect.bottom);
-    // }
-
     getMasksForUpright(spriteRect, spriteLevel, spriteZ) {
         return this.getMasks(spriteRect, spriteLevel, spriteZ, true);
     }
@@ -380,24 +318,16 @@ class PlayMap {
     }
 
     getEvent(level, baseRect) {
+        const event = this.wasmPlayMap.get_event(Math.round(level * 2), baseRect.toWasmRect(this.wasm));
+        const eventType = event.get_event_type();
+        if (eventType === 1) {
+            return {
+                eventType: 'falling',
+                downLevel: event.get_value() / 2
+            };
+        }
         return null;
     }
-    // TODO: move into wasm
-    // getEvent(level, baseRect) {
-    //     //let downLevels = [];
-    //     let spanTiles = this._getSpanTiles(baseRect);
-    //     let falling = spanTiles.every(tile => {
-    //         let downLevel = tile.getDownLevel(level);
-    //         return !!downLevel;
-    //     });
-    //     if (!falling) {
-    //         return null;
-    //     }
-    //     return {
-    //         eventType: 'falling',
-    //         downLevel: spanTiles[0].getDownLevel(level)
-    //     };
-    // }
 
     _getSpanTiles(rect) {
         var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
@@ -439,8 +369,15 @@ class PlayMap {
         return [tx1, ty1, tx2, ty2];
     }
 
-    getTileAt(tx, ty) {
-        return this.tiles[tx][ty];
+    // getTileAt(tx, ty) {
+    //     return this.tiles[tx][ty];
+    // }
+    addLevelToTile(tx, ty, level) {
+        this.wasmPlayMap.add_level_to_tile(tx, ty, level * 2);
+    }
+
+    rollbackTile(tx, ty) {
+        this.wasmPlayMap.rollback_tile(tx, ty);
     }
 }
 

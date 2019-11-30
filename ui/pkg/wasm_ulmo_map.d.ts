@@ -1,6 +1,25 @@
 /* tslint:disable */
 /**
 */
+export class MapEvent {
+  free(): void;
+/**
+* @param {number} event_type 
+* @param {number} value 
+* @returns {MapEvent} 
+*/
+  static new(event_type: number, value: number): MapEvent;
+/**
+* @returns {number} 
+*/
+  get_event_type(): number;
+/**
+* @returns {number} 
+*/
+  get_value(): number;
+}
+/**
+*/
 export class MapTile {
   free(): void;
 }
@@ -55,6 +74,23 @@ export class PlayMap {
 * @returns {MoveResult} 
 */
   apply_move(mx: number, my: number, level: number, base_rect: Rect): MoveResult;
+/**
+* @param {number} level 
+* @param {Rect} base_rect 
+* @returns {MapEvent} 
+*/
+  get_event(level: number, base_rect: Rect): MapEvent;
+/**
+* @param {number} tx 
+* @param {number} ty 
+* @param {number} level 
+*/
+  add_level_to_tile(tx: number, ty: number, level: number): void;
+/**
+* @param {number} tx 
+* @param {number} ty 
+*/
+  rollback_tile(tx: number, ty: number): void;
 }
 /**
 */
