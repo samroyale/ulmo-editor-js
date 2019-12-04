@@ -24,5 +24,6 @@ export function playmap_apply_move(a: number, b: number, c: number, d: number, e
 export function playmap_get_event(a: number, b: number, c: number): number;
 export function playmap_add_level_to_tile(a: number, b: number, c: number, d: number): void;
 export function playmap_rollback_tile(a: number, b: number, c: number): void;
+export function playmap_get_js_sprite_masks(a: number, b: number, c: number, d: number, e: number): number;
 export function __wbindgen_malloc(a: number): number;
 export function __wbindgen_realloc(a: number, b: number, c: number): number;

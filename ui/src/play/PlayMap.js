@@ -17,7 +17,7 @@ import { drawTile, initTile, parseLevel, Rect } from '../utils';
 
 const blackTile = initTile('black');
 
-function asTileData(mapTile) {
+function asTileData(mapTile, x, y) {
     const levels = [];
     const downLevels = [];
     const specialLevels = [];
@@ -34,11 +34,26 @@ function asTileData(mapTile) {
                 levels.push(parsed.level);
             }
         });
+
+    const masks = [];
+    mapTile.getMaskTiles().forEach((maskTile, i) => {
+        var maskLevel = maskTile.getMaskLevel();
+        if (maskLevel) {
+            if (maskLevel.startsWith('V')) {
+                const level = Number.parseInt(maskLevel.substr(1), 10);
+                masks.push([i, level * 2, false, y]);
+                return;
+            }
+            const level = Number.parseInt(maskLevel, 10);
+            masks.push([i, level * 2, true, y]);
+        }
+    });
+
     return {
         levels: levels,
         down_levels: downLevels,
         special_levels: specialLevels,
-        masks: []
+        masks: masks
     }
 }
 
@@ -46,16 +61,16 @@ function asTileData(mapTile) {
  * CLASS: MASK INFO
  * =============================================================================
  */
-class MaskInfo {
-    constructor(tileIndex, level, flat, y) {
-        this.level = level;
-        this.flat = flat;
-        this.tileIndex = tileIndex;
-        // this.z1 = (y + 1) * tileSize + level * tileSize;
-        this.z1 = tileSize * (y + level + 1);
-        this.z2 = flat ? this.z1 + tileSize : this.z1 + 2 * tileSize;
-    }
-}
+// class MaskInfo {
+//     constructor(tileIndex, level, flat, y) {
+//         this.level = level;
+//         this.flat = flat;
+//         this.tileIndex = tileIndex;
+//         // this.z1 = (y + 1) * tileSize + level * tileSize;
+//         this.z1 = tileSize * (y + level + 1);
+//         this.z2 = flat ? this.z1 + tileSize : this.z1 + 2 * tileSize;
+//     }
+// }
 
 /* =============================================================================
  * CLASS: PLAY TILE
@@ -90,21 +105,25 @@ class PlayTile {
         //         this.levels.push(parsed.level);
         //     });
 
-        // masks
-        this.masks = null;
-        mapTile.getMaskTiles().forEach((maskTile, i) => {
-            var maskLevel = maskTile.getMaskLevel();
-            if (maskLevel) {
-                if (maskLevel.startsWith('V')) {
-                    this.addMask(i, Number.parseInt(maskLevel.substr(1), 10), false, y);
-                    return;
-                }
-                this.addMask(i, Number.parseInt(maskLevel, 10), true, y);
-            }
-        });
+        // // masks
+        // this.masks = null;
+        // mapTile.getMaskTiles().forEach((maskTile, i) => {
+        //     var maskLevel = maskTile.getMaskLevel();
+        //     if (maskLevel) {
+        //         if (maskLevel.startsWith('V')) {
+        //             this.addMask(i, Number.parseInt(maskLevel.substr(1), 10), false, y);
+        //             return;
+        //         }
+        //         this.addMask(i, Number.parseInt(maskLevel, 10), true, y);
+        //     }
+        // });
 
         // other stuff
-        this.oldLevels = null;
+        // this.oldLevels = null;
+    }
+
+    getTileImages(indices) {
+        return indices.map(index => this.tileImages[index]);
     }
 
     // addSpecialLevel(parsed) {
@@ -126,12 +145,12 @@ class PlayTile {
     //     this.downLevels.set(parsed.level, parsed.drop);
     // }
 
-    addMask(tileIndex, level, flat, y) {
-        if (!this.masks) {
-            this.masks = [];
-        }
-        this.masks.push(new MaskInfo(tileIndex, level, flat, y));
-    }
+    // addMask(tileIndex, level, flat, y) {
+    //     if (!this.masks) {
+    //         this.masks = [];
+    //     }
+    //     this.masks.push(new MaskInfo(tileIndex, level, flat, y));
+    // }
 
     // testValidity(level) {
     //     if (this.levels.includes(level)) {
@@ -180,22 +199,22 @@ class PlayTile {
     //     }
     // }
 
-    getMasks(spriteZ, spriteLevel, spriteUpright) {
-        if (!this.masks) {
-            return null;
-        }
-        var activeMasks = [];
-        this.masks.forEach(maskInfo => {
-            if (maskInfo.flat && maskInfo.level === spriteLevel) {
-                return;
-            }
-            var tileZ = spriteUpright ? maskInfo.z1 : maskInfo.z2;
-            if (tileZ > spriteZ) {
-                activeMasks.push(this.tileImages[maskInfo.tileIndex]);
-            }
-        });
-        return activeMasks;
-    }
+    // getMasks(spriteZ, spriteLevel, spriteUpright) {
+    //     if (!this.masks) {
+    //         return null;
+    //     }
+    //     var activeMasks = [];
+    //     this.masks.forEach(maskInfo => {
+    //         if (maskInfo.flat && maskInfo.level === spriteLevel) {
+    //             return;
+    //         }
+    //         var tileZ = spriteUpright ? maskInfo.z1 : maskInfo.z2;
+    //         if (tileZ > spriteZ) {
+    //             activeMasks.push(this.tileImages[maskInfo.tileIndex]);
+    //         }
+    //     });
+    //     return activeMasks;
+    // }
 
     // addNewLevel(level) {
     //     this.oldLevels = this.levels.slice();
@@ -233,7 +252,7 @@ class PlayMap {
         const tileData = [];
         for (let y = 0; y < this.rows; y++) {
             for (let x = 0; x < this.cols; x++) {
-                tileData.push(asTileData(rpgMap.getMapTile(x, y)));
+                tileData.push(asTileData(rpgMap.getMapTile(x, y), x, y));
             }
         }
         // debugger
@@ -296,26 +315,45 @@ class PlayMap {
         return (rect.top < 0) || (rect.bottom > this.mapCanvas.height);
     }
 
-    getMasksForUpright(spriteRect, spriteLevel, spriteZ) {
-        return this.getMasks(spriteRect, spriteLevel, spriteZ, true);
-    }
+    // getMasksForUpright(spriteRect, spriteLevel, spriteZ) {
+    //     return this.getMasks(spriteRect, spriteLevel, spriteZ, true);
+    // }
 
     getMasks(spriteRect, spriteLevel, spriteZ, spriteUpright) {
-        const spriteTiles = this._getSpanTiles(spriteRect);
-        const masks = [];
-        spriteTiles.forEach(tile => {
-            // TODO do we need to check the tile exists?
-            const tileMasks = tile.getMasks(spriteZ, spriteLevel, spriteUpright);
-            if (tileMasks) {
-                masks.push({
-                    x: tile.x,
-                    y: tile.y,
-                    tileMasks: tileMasks
-                });
+        const masks = this.wasmPlayMap.get_js_sprite_masks(
+            spriteRect.toWasmRect(this.wasm),
+            spriteZ,
+            spriteLevel * 2,
+            spriteUpright
+        );
+        debugger;
+        return masks.map(mask => {
+            const tx = mask.tx;
+            const ty = mask.ty;
+            return {
+                x: tx,
+                y: ty,
+                tileMasks: this.tiles[tx][ty].getTileImages(mask.tile_indices)
             }
         });
-        return masks;
     }
+
+    // getMasks(spriteRect, spriteLevel, spriteZ, spriteUpright) {
+    //     const spriteTiles = this._getSpanTiles(spriteRect);
+    //     const masks = [];
+    //     spriteTiles.forEach(tile => {
+    //         // TODO do we need to check the tile exists?
+    //         const tileMasks = tile.getMasks(spriteZ, spriteLevel, spriteUpright);
+    //         if (tileMasks) {
+    //             masks.push({
+    //                 x: tile.x,
+    //                 y: tile.y,
+    //                 tileMasks: tileMasks
+    //             });
+    //         }
+    //     });
+    //     return masks;
+    // }
 
     getEvent(level, baseRect) {
         const event = this.wasmPlayMap.get_event(Math.round(level * 2), baseRect.toWasmRect(this.wasm));
@@ -329,16 +367,16 @@ class PlayMap {
         return null;
     }
 
-    _getSpanTiles(rect) {
-        var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
-        var rectTiles = [];
-        for (var x = tx1; x < tx2; x++) {
-            for (var y = ty1; y < ty2; y++) {
-                rectTiles.push(this.tiles[x][y]);
-            }
-        }
-        return rectTiles;
-    }
+    // _getSpanTiles(rect) {
+    //     var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
+    //     var rectTiles = [];
+    //     for (var x = tx1; x < tx2; x++) {
+    //         for (var y = ty1; y < ty2; y++) {
+    //             rectTiles.push(this.tiles[x][y]);
+    //         }
+    //     }
+    //     return rectTiles;
+    // }
 
     // _getSpanTilesAndCacheStripes(rect) {
     //     var [tx1, ty1, tx2, ty2] = this._convertRect(rect);
@@ -361,13 +399,13 @@ class PlayMap {
     //     return rectTiles;
     // }
 
-    _convertRect(rect) {
-        var tx1 = Math.max(0, Math.floor(rect.left / tileSize));
-        var ty1 = Math.max(0, Math.floor(rect.top / tileSize));
-        var tx2 = Math.min(this.cols - 1, Math.floor((rect.right - 1) / tileSize)) + 1;
-        var ty2 = Math.min(this.rows - 1, Math.floor((rect.bottom - 1) / tileSize)) + 1;
-        return [tx1, ty1, tx2, ty2];
-    }
+    // _convertRect(rect) {
+    //     var tx1 = Math.max(0, Math.floor(rect.left / tileSize));
+    //     var ty1 = Math.max(0, Math.floor(rect.top / tileSize));
+    //     var tx2 = Math.min(this.cols - 1, Math.floor((rect.right - 1) / tileSize)) + 1;
+    //     var ty2 = Math.min(this.rows - 1, Math.floor((rect.bottom - 1) / tileSize)) + 1;
+    //     return [tx1, ty1, tx2, ty2];
+    // }
 
     // getTileAt(tx, ty) {
     //     return this.tiles[tx][ty];

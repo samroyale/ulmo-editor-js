@@ -91,6 +91,14 @@ export class PlayMap {
 * @param {number} ty 
 */
   rollback_tile(tx: number, ty: number): void;
+/**
+* @param {Rect} rect 
+* @param {number} z 
+* @param {number} level 
+* @param {boolean} upright 
+* @returns {any} 
+*/
+  get_js_sprite_masks(rect: Rect, z: number, level: number, upright: boolean): any;
 }
 /**
 */

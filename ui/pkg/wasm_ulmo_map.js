@@ -37,9 +37,7 @@ function takeObject(idx) {
     return ret;
 }
 
-let WASM_VECTOR_LEN = 0;
-
-let cachedTextEncoder = new TextEncoder('utf-8');
+let cachedTextDecoder = new TextDecoder('utf-8');
 
 let cachegetUint8Memory = null;
 function getUint8Memory() {
@@ -48,6 +46,23 @@ function getUint8Memory() {
     }
     return cachegetUint8Memory;
 }
+
+function getStringFromWasm(ptr, len) {
+    return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
+}
+
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
+}
+
+let WASM_VECTOR_LEN = 0;
+
+let cachedTextEncoder = new TextEncoder('utf-8');
 
 let passStringToWasm;
 if (typeof cachedTextEncoder.encodeInto === 'function') {
@@ -110,21 +125,6 @@ function getInt32Memory() {
         cachegetInt32Memory = new Int32Array(wasm.memory.buffer);
     }
     return cachegetInt32Memory;
-}
-
-let cachedTextDecoder = new TextDecoder('utf-8');
-
-function getStringFromWasm(ptr, len) {
-    return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
-}
-
-function addHeapObject(obj) {
-    if (heap_next === heap.length) heap.push(heap.length + 1);
-    const idx = heap_next;
-    heap_next = heap[idx];
-
-    heap[idx] = obj;
-    return idx;
 }
 /**
 */
@@ -313,6 +313,20 @@ export class PlayMap {
     rollback_tile(tx, ty) {
         wasm.playmap_rollback_tile(this.ptr, tx, ty);
     }
+    /**
+    * @param {Rect} rect
+    * @param {number} z
+    * @param {number} level
+    * @param {boolean} upright
+    * @returns {any}
+    */
+    get_js_sprite_masks(rect, z, level, upright) {
+        _assertClass(rect, Rect);
+        const ptr0 = rect.ptr;
+        rect.ptr = 0;
+        const ret = wasm.playmap_get_js_sprite_masks(this.ptr, ptr0, z, level, upright);
+        return takeObject(ret);
+    }
 }
 /**
 */
@@ -374,6 +388,11 @@ export class Rect {
 
 export const __wbindgen_object_drop_ref = function(arg0) {
     takeObject(arg0);
+};
+
+export const __wbindgen_json_parse = function(arg0, arg1) {
+    const ret = JSON.parse(getStringFromWasm(arg0, arg1));
+    return addHeapObject(ret);
 };
 
 export const __wbindgen_json_serialize = function(arg0, arg1) {
