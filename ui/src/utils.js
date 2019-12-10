@@ -185,8 +185,8 @@ export class Rect {
   }
 
   toWasmRect(wasm) {
-    const { Rect: WasmRect } = wasm;
-    return WasmRect.new(this.left, this.top, this.width, this.height);
+    const { WasmRect } = wasm;
+    return new WasmRect(this.left, this.top, this.width, this.height);
   }
 }
 

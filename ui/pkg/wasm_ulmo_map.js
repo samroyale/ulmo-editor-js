@@ -128,58 +128,6 @@ function getInt32Memory() {
 }
 /**
 */
-export class MapEvent {
-
-    static __wrap(ptr) {
-        const obj = Object.create(MapEvent.prototype);
-        obj.ptr = ptr;
-
-        return obj;
-    }
-
-    free() {
-        const ptr = this.ptr;
-        this.ptr = 0;
-
-        wasm.__wbg_mapevent_free(ptr);
-    }
-    /**
-    * @param {number} event_type
-    * @param {number} value
-    * @returns {MapEvent}
-    */
-    static new(event_type, value) {
-        const ret = wasm.mapevent_new(event_type, value);
-        return MapEvent.__wrap(ret);
-    }
-    /**
-    * @returns {number}
-    */
-    get_event_type() {
-        const ret = wasm.mapevent_get_event_type(this.ptr);
-        return ret;
-    }
-    /**
-    * @returns {number}
-    */
-    get_value() {
-        const ret = wasm.mapevent_get_value(this.ptr);
-        return ret;
-    }
-}
-/**
-*/
-export class MapTile {
-
-    free() {
-        const ptr = this.ptr;
-        this.ptr = 0;
-
-        wasm.__wbg_maptile_free(ptr);
-    }
-}
-/**
-*/
 export class MoveResult {
 
     static __wrap(ptr) {
@@ -196,59 +144,47 @@ export class MoveResult {
         wasm.__wbg_moveresult_free(ptr);
     }
     /**
-    * @param {boolean} valid
-    * @param {number} deferral
-    * @param {number} level
-    * @param {number} mx
-    * @param {number} my
-    * @returns {MoveResult}
-    */
-    static new(valid, deferral, level, mx, my) {
-        const ret = wasm.moveresult_new(valid, deferral, level, mx, my);
-        return MoveResult.__wrap(ret);
-    }
-    /**
     * @returns {boolean}
     */
-    is_valid() {
-        const ret = wasm.moveresult_is_valid(this.ptr);
+    get valid() {
+        const ret = wasm.__wbg_get_moveresult_valid(this.ptr);
         return ret !== 0;
     }
     /**
     * @returns {number}
     */
-    get_deferral() {
-        const ret = wasm.moveresult_get_deferral(this.ptr);
+    get deferral() {
+        const ret = wasm.__wbg_get_moveresult_deferral(this.ptr);
         return ret;
     }
     /**
     * @returns {number}
     */
-    get_level() {
-        const ret = wasm.moveresult_get_level(this.ptr);
+    get level() {
+        const ret = wasm.__wbg_get_moveresult_level(this.ptr);
         return ret;
     }
     /**
     * @returns {number}
     */
-    get_mx() {
-        const ret = wasm.moveresult_get_mx(this.ptr);
+    get mx() {
+        const ret = wasm.__wbg_get_moveresult_mx(this.ptr);
         return ret;
     }
     /**
     * @returns {number}
     */
-    get_my() {
-        const ret = wasm.moveresult_get_my(this.ptr);
+    get my() {
+        const ret = wasm.__wbg_get_moveresult_my(this.ptr);
         return ret;
     }
 }
 /**
 */
-export class PlayMap {
+export class WasmPlayMap {
 
     static __wrap(ptr) {
-        const obj = Object.create(PlayMap.prototype);
+        const obj = Object.create(WasmPlayMap.prototype);
         obj.ptr = ptr;
 
         return obj;
@@ -258,16 +194,16 @@ export class PlayMap {
         const ptr = this.ptr;
         this.ptr = 0;
 
-        wasm.__wbg_playmap_free(ptr);
+        wasm.__wbg_wasmplaymap_free(ptr);
     }
     /**
     * @param {any} val
-    * @returns {PlayMap}
+    * @returns {WasmPlayMap}
     */
-    static from_js_data(val) {
+    constructor(val) {
         try {
-            const ret = wasm.playmap_from_js_data(addBorrowedObject(val));
-            return PlayMap.__wrap(ret);
+            const ret = wasm.wasmplaymap_from_js_data(addBorrowedObject(val));
+            return WasmPlayMap.__wrap(ret);
         } finally {
             heap[stack_pointer++] = undefined;
         }
@@ -276,64 +212,64 @@ export class PlayMap {
     * @param {number} mx
     * @param {number} my
     * @param {number} level
-    * @param {Rect} base_rect
+    * @param {WasmRect} base_rect
     * @returns {MoveResult}
     */
-    apply_move(mx, my, level, base_rect) {
-        _assertClass(base_rect, Rect);
+    applyMove(mx, my, level, base_rect) {
+        _assertClass(base_rect, WasmRect);
         const ptr0 = base_rect.ptr;
         base_rect.ptr = 0;
-        const ret = wasm.playmap_apply_move(this.ptr, mx, my, level, ptr0);
+        const ret = wasm.wasmplaymap_applyMove(this.ptr, mx, my, level, ptr0);
         return MoveResult.__wrap(ret);
     }
     /**
+    * @param {number} tx
+    * @param {number} ty
     * @param {number} level
-    * @param {Rect} base_rect
-    * @returns {MapEvent}
     */
-    get_event(level, base_rect) {
-        _assertClass(base_rect, Rect);
+    addLevelToTile(tx, ty, level) {
+        wasm.wasmplaymap_addLevelToTile(this.ptr, tx, ty, level);
+    }
+    /**
+    * @param {number} tx
+    * @param {number} ty
+    */
+    rollbackTile(tx, ty) {
+        wasm.wasmplaymap_rollbackTile(this.ptr, tx, ty);
+    }
+    /**
+    * @param {number} level
+    * @param {WasmRect} base_rect
+    * @returns {any}
+    */
+    getEvent(level, base_rect) {
+        _assertClass(base_rect, WasmRect);
         const ptr0 = base_rect.ptr;
         base_rect.ptr = 0;
-        const ret = wasm.playmap_get_event(this.ptr, level, ptr0);
-        return MapEvent.__wrap(ret);
+        const ret = wasm.wasmplaymap_getEvent(this.ptr, level, ptr0);
+        return takeObject(ret);
     }
     /**
-    * @param {number} tx
-    * @param {number} ty
-    * @param {number} level
-    */
-    add_level_to_tile(tx, ty, level) {
-        wasm.playmap_add_level_to_tile(this.ptr, tx, ty, level);
-    }
-    /**
-    * @param {number} tx
-    * @param {number} ty
-    */
-    rollback_tile(tx, ty) {
-        wasm.playmap_rollback_tile(this.ptr, tx, ty);
-    }
-    /**
-    * @param {Rect} rect
+    * @param {WasmRect} rect
     * @param {number} z
     * @param {number} level
     * @param {boolean} upright
     * @returns {any}
     */
-    get_js_sprite_masks(rect, z, level, upright) {
-        _assertClass(rect, Rect);
+    getSpriteMasks(rect, z, level, upright) {
+        _assertClass(rect, WasmRect);
         const ptr0 = rect.ptr;
         rect.ptr = 0;
-        const ret = wasm.playmap_get_js_sprite_masks(this.ptr, ptr0, z, level, upright);
+        const ret = wasm.wasmplaymap_getSpriteMasks(this.ptr, ptr0, z, level, upright);
         return takeObject(ret);
     }
 }
 /**
 */
-export class Rect {
+export class WasmRect {
 
     static __wrap(ptr) {
-        const obj = Object.create(Rect.prototype);
+        const obj = Object.create(WasmRect.prototype);
         obj.ptr = ptr;
 
         return obj;
@@ -343,51 +279,28 @@ export class Rect {
         const ptr = this.ptr;
         this.ptr = 0;
 
-        wasm.__wbg_rect_free(ptr);
+        wasm.__wbg_wasmrect_free(ptr);
     }
     /**
     * @param {number} x
     * @param {number} y
     * @param {number} width
     * @param {number} height
-    * @returns {Rect}
+    * @returns {WasmRect}
     */
-    static new(x, y, width, height) {
-        const ret = wasm.rect_new(x, y, width, height);
-        return Rect.__wrap(ret);
-    }
-    /**
-    * @returns {number}
-    */
-    get_x() {
-        const ret = wasm.rect_get_x(this.ptr);
-        return ret;
-    }
-    /**
-    * @returns {number}
-    */
-    get_y() {
-        const ret = wasm.rect_get_y(this.ptr);
-        return ret;
-    }
-    /**
-    * @returns {number}
-    */
-    get_width() {
-        const ret = wasm.rect_get_width(this.ptr);
-        return ret >>> 0;
-    }
-    /**
-    * @returns {number}
-    */
-    get_height() {
-        const ret = wasm.rect_get_height(this.ptr);
-        return ret >>> 0;
+    constructor(x, y, width, height) {
+        const ret = wasm.wasmrect_new(x, y, width, height);
+        return WasmRect.__wrap(ret);
     }
 }
 
 export const __wbindgen_object_drop_ref = function(arg0) {
     takeObject(arg0);
+};
+
+export const __wbindgen_string_new = function(arg0, arg1) {
+    const ret = getStringFromWasm(arg0, arg1);
+    return addHeapObject(ret);
 };
 
 export const __wbindgen_json_parse = function(arg0, arg1) {
@@ -401,11 +314,6 @@ export const __wbindgen_json_serialize = function(arg0, arg1) {
     const ret1 = WASM_VECTOR_LEN;
     getInt32Memory()[arg0 / 4 + 0] = ret0;
     getInt32Memory()[arg0 / 4 + 1] = ret1;
-};
-
-export const __wbindgen_string_new = function(arg0, arg1) {
-    const ret = getStringFromWasm(arg0, arg1);
-    return addHeapObject(ret);
 };
 
 export const __widl_f_log_1_ = function(arg0) {

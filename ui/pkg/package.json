@@ -3,11 +3,18 @@
   "collaborators": [
     "seldred <samuel.eldred@gmail.com>"
   ],
-  "version": "0.1.5",
+  "description": "An implementation of the Ulmo game map in web assembly",
+  "version": "0.1.6",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/samroyale/wasm-ulmo-map"
+  },
   "files": [
     "wasm_ulmo_map_bg.wasm",
     "wasm_ulmo_map.js",
-    "wasm_ulmo_map.d.ts"
+    "wasm_ulmo_map.d.ts",
+    "LICENSE_APACHE"
   ],
   "module": "wasm_ulmo_map.js",
   "types": "wasm_ulmo_map.d.ts",

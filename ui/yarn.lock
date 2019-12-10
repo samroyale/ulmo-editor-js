@@ -10333,7 +10333,7 @@ wasm-loader@^1.3.0:
     wasm-dce "^1.0.0"
 
 "wasm-ulmo-map@file:./pkg":
-  version "0.1.5"
+  version "0.1.6"
 
 watchpack@^1.6.0:
   version "1.6.0"
