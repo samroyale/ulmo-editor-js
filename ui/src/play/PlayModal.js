@@ -57,6 +57,7 @@ export class PlayModal extends React.Component {
         if (showModal) {
             return { rpgMap: rpgMap };
         }
+        return null;
     };
 
     componentDidUpdate = (oldProps, oldState) => {

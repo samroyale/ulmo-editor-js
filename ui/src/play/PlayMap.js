@@ -3,12 +3,41 @@ import { drawTile, initTile, parseLevel, Rect } from '../utils';
 
 const blackTile = initTile('black');
 
+function parseLevelx2(levelStr) {
+    let { type, level, drop } = parseLevel(levelStr);
+    if (type === 'special') {
+        if (Number.isInteger(level)) {
+            return {
+                type: type,
+                level: level * 2
+            }
+        }
+        return {
+            type: type,
+            level: Math.floor(level) * 2 + 1
+        }
+    }
+    else if (type === 'down') {
+        return {
+            type: type,
+            level: level * 2,
+            drop: drop * 2
+        };
+    }
+    else {
+        return {
+            type: type,
+            level: level * 2
+        };
+    }
+}
+
 function asTileData(mapTile, x, y) {
     const levels = [];
     const downLevels = [];
     const specialLevels = [];
     mapTile.getLevels()
-        .map(level => parseLevel(level))
+        .map(level => parseLevelx2(level))
         .forEach(parsed => {
             if (parsed.type === 'special') {
                 specialLevels.push(parsed.level);

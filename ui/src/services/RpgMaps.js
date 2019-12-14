@@ -1,6 +1,7 @@
 import TileSetService from './TileSets';
 import { drawTile, initTile } from '../utils';
 import { rpgMapsApi, baseTileColours } from '../config';
+import uuidv4 from 'uuid/v4';
 
 const baseTiles = baseTileColours.map(
   colour => initTile(colour)
@@ -77,6 +78,7 @@ class MaskTile {
  */
 class MapTile {
   constructor(baseTileCanvas, maskTiles, levels) {
+    this._uuid = null;
     this._baseTileCanvas = baseTileCanvas;
     this._maskTiles = maskTiles ? maskTiles : [];
     this._levels = levels ? levels : [];
@@ -170,6 +172,13 @@ class MapTile {
       }
     }
     return null;
+  };
+
+  getId = () => {
+    if (!this._uuid) {
+      this._uuid = uuidv4();
+    }
+    return this._uuid;
   };
 }
 
@@ -498,7 +507,6 @@ class RpgMapService {
       const response = await fetch(mapUrl, {
         method: reqType,
         body: JSON.stringify(rpgMapDef), // data can be `string` or {object}!
-        // body: rpgMapDef, // data can be `string` or {object}!
         headers: new Headers({
           'Content-Type': 'application/json'
         })

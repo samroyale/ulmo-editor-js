@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from "react";
 import { Modal, Grid, Row, Col, Panel, ListGroup, ListGroupItem, ButtonToolbar,
     ButtonGroup, Button, Glyphicon, FormGroup, FormControl,
     Checkbox, Well } from 'react-bootstrap';
@@ -15,21 +15,24 @@ const numRegex = /\D/g;
  * COMPONENT: EDIT LEVELS MODAL
  * =============================================================================
  */
-export class EditLevelsModal extends React.Component {
+export class EditLevelsModal extends Component {
+  static getLevels = ({ editableTile }) => {
+    if (!editableTile) {
+      return [];
+    }
+    return editableTile.getLevels();
+  };
+
   constructor(props) {
     super(props);
-    this.state = EditLevelsModal.initialState();
-  }
-
-  static initialState = () => {
-    return {
+    this.state = {
       levelVal: '',
-      levels: [],
+      levels: EditLevelsModal.getLevels(props),
       selectedIndices: [],
       addDisabled: true,
       deleteDisabled: true
     };
-  };
+  }
 
   handleSubmit = () => this.props.onSubmit(this.state.levels);
 
@@ -89,24 +92,6 @@ export class EditLevelsModal extends React.Component {
       levelVal: '',
       levels: newLevels
     });
-  };
-
-  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
-    if (showModal) {
-      var initialState = EditLevelsModal.initialState();
-      return {
-        ...initialState,
-        levels: EditLevelsModal.getLevels(editableTile)
-      };
-    }
-  };
-
-  static getLevels = editableTile => {
-    if (!editableTile) {
-      return [];
-    }
-    // return a copy of the levels array
-    return [...editableTile.getLevels()];
   };
 
   levels = () => {
@@ -194,18 +179,22 @@ const LevelItem = ({ level, index, onDelete }) => (
 export class EditImagesModal extends React.Component {
   constructor(props) {
     super(props);
+    const { editableTile } = props;
+    const maskTiles = editableTile ? editableTile.getMaskTiles() : [];
     this._previewCanvas = React.createRef();
+    this._itemRefs = maskTiles.map(() => React.createRef());
     this.state = {
-      maskTiles: [],
+      maskTiles: maskTiles,
+      tilesDrawn: false
     };
   };
 
   handleSubmit = () => this.props.onSubmit(this.state.maskTiles);
 
   moveTile = (index, func) => {
-    var newMaskTiles = [...this.state.maskTiles];
-    var rIndex = newMaskTiles.length - index - 1;
-    var maskTile = newMaskTiles[rIndex];
+    const newMaskTiles = [...this.state.maskTiles];
+    const rIndex = newMaskTiles.length - index - 1;
+    const maskTile = newMaskTiles[rIndex];
     func(newMaskTiles, maskTile, rIndex);
     this.setState({ maskTiles: newMaskTiles });
   };
@@ -252,49 +241,51 @@ export class EditImagesModal extends React.Component {
     });
   };
 
-  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
-    if (showModal) {
-      return { maskTiles: EditImagesModal.getMaskTiles(editableTile) };
-    }
-  };
-
-  static getMaskTiles = editableTile => {
-    if (!editableTile) {
-      return [];
-    }
-    return editableTile.getMaskTiles();
-  };
-
-  componentDidUpdate = (oldProps, oldState) => {
+  drawTileImages = () => {
     const { showModal } = this.props;
     if (!showModal) {
       return;
     }
-    if (this.updateRequired()) {
-      this.forceUpdate(); // need this to populate refs
-    }
-    var maskTiles = [...this.state.maskTiles].reverse(); // copy + reverse the array
+    const maskTiles = [...this.state.maskTiles].reverse(); // copy + reverse the array
     maskTiles.forEach((maskTile, i) => {
-      var item = this.refs[`item${i}`];
+      //var item = this.refs[`item${i}`];
+      const item = this._itemRefs[i].current;
       if (item) {
         item.drawToCanvas(maskTile);
       }
     });
     const previewCanvas = this._previewCanvas.current;
     if (previewCanvas) {
-      var ctx = getDrawingContext(previewCanvas);
+      const ctx = getDrawingContext(previewCanvas);
       ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-      ctx.drawImage(drawTile(this.state.maskTiles), 0, 0,
-          previewCanvas.width, previewCanvas.height);
+      ctx.drawImage(drawTile(this.state.maskTiles), 0, 0, previewCanvas.width, previewCanvas.height);
     }
   };
 
-  updateRequired = () => {
-    return this.state.maskTiles.length > 0 && !this.refs['item0'];
+  componentDidMount = () => {
+    const { showModal } = this.props;
+    if (!showModal) {
+      return;
+    }
+    const { tilesDrawn } = this.state;
+    if (!tilesDrawn) {
+      // results in componentDidUpdate being called
+      this.setState({
+        tilesDrawn: true
+      });
+    }
+  };
+
+  componentDidUpdate = () => {
+    const { showModal } = this.props;
+    if (!showModal) {
+      return;
+    }
+    this.drawTileImages();
   };
 
   listPosition = (tileIndex, lastIndex) => {
-    var position = [];
+    const position = [];
     if (tileIndex === 0) {
       position.push('first');
     }
@@ -306,17 +297,18 @@ export class EditImagesModal extends React.Component {
 
   tileItems = ({ maskTiles }) => {
     return maskTiles.map((maskTile, i) => {
-      var listPosition = this.listPosition(i, maskTiles.length - 1);
+      const listPosition = this.listPosition(i, maskTiles.length - 1);
       return (
         <TileImageItem key={i}
           index={i}
-          ref={`item${i}`}
+          ref={this._itemRefs[i]}
           position={listPosition}
           onMoveTop={this.moveTop}
           onMoveUp={this.moveUp}
           onMoveDown={this.moveDown}
           onMoveBottom={this.moveBottom}
-          onDelete={this.delete} />
+          onDelete={this.delete}
+        />
       );
     });
   };
@@ -372,15 +364,15 @@ class TileImageItem extends React.Component {
 
   drawToCanvas = maskTile => {
     const canvas = this._canvas.current;
-    var ctx = getDrawingContext(canvas);
+    const ctx = getDrawingContext(canvas);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, canvas.width, canvas.height);
   };
 
   render = () => {
     const { position, index, onMoveTop, onMoveUp, onMoveDown, onMoveBottom, onDelete } = this.props;
-    var disabledFirst = position.includes('first');
-    var disabledLast = position.includes('last');
+    const disabledFirst = position.includes('first');
+    const disabledLast = position.includes('last');
     return (
       <ListGroupItem className="tile-list-item">
         <Grid>
@@ -432,14 +424,18 @@ class TileImageItem extends React.Component {
 export class EditMasksModal extends React.Component {
   constructor(props) {
     super(props);
+    const { editableTile } = props;
+    const maskTiles = editableTile ? editableTile.getMaskTiles().reverse() : [];
+    this._itemRefs = maskTiles.map(() => React.createRef());
     this.state = {
-      maskTiles: []
+      maskTiles: maskTiles,
+      tilesDrawn: false
     };
   }
 
   handleSubmit = () => {
     this.state.maskTiles.forEach((maskTile, i) => {
-      var item = this.refs[`item${i}`];
+      var item = this._itemRefs[i].current;
       maskTile.setMaskLevel(this.getMaskLevel(item));
     });
     this.props.onSubmit(this.state.maskTiles.reverse());
@@ -456,17 +452,27 @@ export class EditMasksModal extends React.Component {
     return maskLevel.toString();
   };
 
-  static getDerivedStateFromProps = ({ showModal, editableTile }) => {
-    if (showModal) {
-      return { maskTiles: EditMasksModal.getMaskTiles(editableTile) };
-    }
+  drawTileImages = () => {
+    this.state.maskTiles.forEach((maskTile, i) => {
+      const item = this._itemRefs[i].current;
+      if (item) {
+        item.drawToCanvas(maskTile);
+      }
+    });
   };
 
-  static getMaskTiles = editableTile => {
-    if (!editableTile) {
-      return [];
+  componentDidMount = () => {
+    const { showModal } = this.props;
+    if (!showModal) {
+      return;
     }
-    return editableTile.getMaskTiles().reverse();
+    const { tilesDrawn } = this.state;
+    if (!tilesDrawn) {
+      // results in componentDidUpdate being called
+      this.setState({
+        tilesDrawn: true
+      });
+    }
   };
 
   componentDidUpdate = (oldProps, oldState) => {
@@ -474,19 +480,7 @@ export class EditMasksModal extends React.Component {
     if (!showModal) {
       return;
     }
-    if (this.updateRequired()) {
-      this.forceUpdate(); // need this to populate refs
-    }
-    this.state.maskTiles.forEach((maskTile, i) => {
-      var item = this.refs[`item${i}`];
-      if (item) {
-        item.drawToCanvas(maskTile);
-      }
-    });
-  };
-
-  updateRequired = () => {
-    return this.state.maskTiles.length > 0 && !this.refs['item0'];
+    this.drawTileImages();
   };
 
   tileItems = () => {
@@ -503,7 +497,13 @@ export class EditMasksModal extends React.Component {
         maskLevel = '';
       }
       return (
-        <TileMaskItem key={i} index={i} ref={`item${i}`} level={maskLevel} vertical={maskVertical} />
+        <TileMaskItem
+          key={i}
+          index={i}
+          ref={this._itemRefs[i]}
+          level={maskLevel}
+          vertical={maskVertical}
+        />
       );
     });
   };
@@ -538,8 +538,8 @@ class TileMaskItem extends React.Component {
     super(props);
     this._canvas = React.createRef();
     this.state = {
-      levelVal: '',
-      verticalVal: false
+      levelVal: props.level,
+      verticalVal: props.vertical
     };
   }
 
@@ -551,13 +551,6 @@ class TileMaskItem extends React.Component {
     const canvas = this._canvas.current;
     var ctx = getDrawingContext(canvas);
     ctx.drawImage(maskTile.getTile().getCanvas(), 0, 0, canvas.width, canvas.height);
-  };
-
-  static getDerivedStateFromProps = ({ level, vertical }) => {
-    return {
-      levelVal: level,
-      verticalVal: vertical
-    };
   };
 
   render = () => {

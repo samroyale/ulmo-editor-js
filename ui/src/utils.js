@@ -88,16 +88,20 @@ export function parseLevel(levelStr) {
   if (levelStr.startsWith('S')) {
     let level = strictParseFloat(levelStr.substr(1),
         'Special level could not be parsed as a float: ' + levelStr);
-    if (Number.isInteger(level)) {
-      return {
-        type: 'special',
-        level: level * 2
-      }
-    }
     return {
       type: 'special',
-      level: Math.floor(level) * 2 + 1
-    }
+      level: level
+    };
+    // if (Number.isInteger(level)) {
+    //   return {
+    //     type: 'special',
+    //     level: level * 2
+    //   }
+    // }
+    // return {
+    //   type: 'special',
+    //   level: Math.floor(level) * 2 + 1
+    // }
   }
   if (levelStr.startsWith('D')) {
     let levels = levelStr.substr(1).split('-');
@@ -114,13 +118,13 @@ export function parseLevel(levelStr) {
     }
     return {
       type: 'down',
-      level: levelVal * 2,
-      drop: dropVal * 2
+      level: levelVal,
+      drop: dropVal
     }
   }
   return {
     type: 'default',
-    level: Number.parseInt(levelStr, 10) * 2
+    level: Number.parseInt(levelStr, 10)
   };
 }
 

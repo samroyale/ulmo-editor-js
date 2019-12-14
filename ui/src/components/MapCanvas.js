@@ -434,6 +434,13 @@ class MapCanvas extends React.Component {
     return {};
   };
 
+  keyFor = (prefix, editableTile) => {
+    if (!editableTile) {
+      return prefix;
+    }
+    return `${prefix}:${editableTile.getId()}`;
+  };
+
   render = () => {
     const { tilePosition } = this.props;
     const { showMap, showOverlay, overlayTarget, showModal, editableTile, playLevel } = this.state;
@@ -444,47 +451,61 @@ class MapCanvas extends React.Component {
           <canvas className={bsClass}
               onMouseMove={this.handleMouseMove}
               onMouseOut={this.handleMouseOut}
-              ref={this._canvas} />
+              ref={this._canvas}
+          />
 
           <div className="highlight" style={this.highlightStyle(this.props)}
               onMouseMove={this.handleSelectionMove}
               onMouseDown={this.handleMouseDown}
               onMouseUp={this.handleMouseUp}
               onMouseOut={this.handleSelectionOut}
-              onContextMenu={this.handleRightClick} />
+              onContextMenu={this.handleRightClick}
+          />
 
           <SelectionPopup
               showOverlay={showOverlay}
               target={overlayTarget}
               buttons={this.buttonsMetadata(this.props)}
-              onHide={this.hideOverlay} />
+              onHide={this.hideOverlay}
+          />
         </div>
 
 
-        <EditLevelsModal
-            showModal={showModal === "LEVELS"}
-            editableTile={editableTile}
-            onClose={this.closeModal}
-            onSubmit={this.applyLevelsEdit} />
+        {showModal === "LEVELS" &&
+          <EditLevelsModal
+              showModal={true}
+              editableTile={editableTile}
+              onClose={this.closeModal}
+              onSubmit={this.applyLevelsEdit}
+              key={this.keyFor("LEVELS", editableTile)}
+          />
+        }
 
-        <EditImagesModal
-            showModal={showModal === "IMAGES"}
-            editableTile={editableTile}
-            onClose={this.closeModal}
-            onSubmit={this.applyTilesEdit} />
+          <EditImagesModal
+              showModal={showModal === "IMAGES"}
+              editableTile={editableTile}
+              onClose={this.closeModal}
+              onSubmit={this.applyTilesEdit}
+              key={this.keyFor("IMAGES", editableTile)}
+          />
 
-        <EditMasksModal
-            showModal={showModal === "MASKS"}
-            editableTile={editableTile}
-            onClose={this.closeModal}
-            onSubmit={this.applyTilesEdit} />
+        {showModal === "MASKS" &&
+          <EditMasksModal
+              showModal={true}
+              editableTile={editableTile}
+              onClose={this.closeModal}
+              onSubmit={this.applyTilesEdit}
+              key={this.keyFor("MASKS", editableTile)}
+          />
+        }
 
         <PlayModal
             showModal={showModal === "PLAY"}
             tilePosition={tilePosition}
             level={playLevel}
             rpgMap={this._rpgMap}
-            onClose={this.closeModal} />
+            onClose={this.closeModal}
+        />
       </div>
     );
   };

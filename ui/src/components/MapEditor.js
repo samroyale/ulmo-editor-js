@@ -313,6 +313,7 @@ class MapEditor extends React.Component {
     if (!tileMode && selectedTile) {
       return { tileMode: "INSERT" };
     }
+    return null;
   };
 
   render = () => {
@@ -454,6 +455,7 @@ class TileControl extends React.Component {
     if (disabled && tileMode) {
       return { disabled: false };
     }
+    return null;
   };
 
   componentDidUpdate = (oldProps, oldState) => {
@@ -526,7 +528,7 @@ const OpenMapModal = ({ error, maps, onMapSelected, showModal, onClose }) => {
   var showError = error && error.length > 0;
 
   var items = maps.map(map =>
-    <ListGroupItem className="map-item" onClick={() => onMapSelected(map.id)}>
+    <ListGroupItem key={map.id} className="map-item" onClick={() => onMapSelected(map.id)}>
       {map.name}
     </ListGroupItem>
   );
