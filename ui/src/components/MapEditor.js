@@ -37,7 +37,6 @@ class MapEditor extends React.Component {
       serviceError: null,
       currentTilePosition: null,
       currentTile: null,
-      tileMode: null,
       changeHistory: []
     };
   }
@@ -290,8 +289,6 @@ class MapEditor extends React.Component {
     });
   };
 
-  setTileControlMode = mode => this.setState({ tileMode: mode });
-
   editSprites = () => {
     if (this.isMapPresent()) {
       this.setState({
@@ -308,22 +305,14 @@ class MapEditor extends React.Component {
     this.addToChangeHistory({ sprites: oldSprites })
   };
 
-  static getDerivedStateFromProps = ({ selectedTile }, { tileMode }) => {
-    // if selecting a tile for the first time, set the tile mode to INSERT
-    if (!tileMode && selectedTile) {
-      return { tileMode: "INSERT" };
-    }
-    return null;
-  };
-
   render = () => {
-    const { selectedTile, onAdmin } = this.props;
+    const { selectedTile, tileControlMode, onSetTileControlMode, onAdmin } = this.props;
     return (
       <div>
         <Panel className="component" bsClass="component-panel">
           <MapToolbar
               selectedTile={selectedTile}
-              tileMode={this.state.tileMode}
+              tileControlMode={tileControlMode}
               mapDirty={this.state.mapDirty}
               mapPresent={this.state.mapId !== null}
               onLoadMapsFromServer={this.loadMapsFromServer}
@@ -331,14 +320,14 @@ class MapEditor extends React.Component {
               onResizeMap={this.resizeMap}
               onSaveMap={this.saveMap}
               onShowSaveModal={this.showSaveModal}
-              onModeChange={this.setTileControlMode}
+              onSetTileControlMode={onSetTileControlMode}
               onEditSprites={this.editSprites}
               onUndo={this.undo}
               noHistory={this.state.changeHistory.length === 0}
               onAdmin={onAdmin} />
           <MapCanvas
               selectedTile={selectedTile}
-              tileMode={this.state.tileMode}
+              tileMode={tileControlMode}
               tilePosition={this.state.currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
               onMapUpdated={this.mapUpdated}
@@ -403,8 +392,8 @@ class MapEditor extends React.Component {
  */
 const MapToolbar = ({
   selectedTile,
-  tileMode,
-  onModeChange,
+  tileControlMode,
+  onSetTileControlMode,
   onLoadMapsFromServer,
   onNewMap,
   onResizeMap,
@@ -420,8 +409,10 @@ const MapToolbar = ({
   <ButtonToolbar className="component-buttons">
     <TileControl
       selectedTile={selectedTile}
-      tileMode={tileMode}
-      onModeChange={onModeChange} />
+      tileMode={tileControlMode}
+      onModeChange={onSetTileControlMode}
+      disabled={!tileControlMode}
+    />
     <Button onClick={onLoadMapsFromServer}>Open</Button>
     <Button onClick={onNewMap}>New</Button>
     <Button onClick={onResizeMap} disabled={!mapPresent}>Resize</Button>
@@ -446,17 +437,7 @@ class TileControl extends React.Component {
   constructor(props) {
     super(props);
     this._canvas = React.createRef();
-    this.state = {
-      disabled: true
-    };
   }
-
-  static getDerivedStateFromProps = ({ tileMode }, { disabled }) => {
-    if (disabled && tileMode) {
-      return { disabled: false };
-    }
-    return null;
-  };
 
   componentDidUpdate = () => {
     const { selectedTile, tileMode } = this.props;
@@ -499,10 +480,10 @@ class TileControl extends React.Component {
   };
 
   render = () => {
-    const { onModeChange } = this.props;
+    const { onModeChange, disabled } = this.props;
     return (
-      <Dropdown id="tile-control-dropdown" onSelect={onModeChange} disabled={this.state.disabled}>
-        <Button className="tile-button" disabled={this.state.disabled}>
+      <Dropdown id="tile-control-dropdown" onSelect={onModeChange} disabled={disabled}>
+        <Button className="tile-button" disabled={disabled}>
           <div className="tile-button-container">
             <canvas className="tile-button-cvs" width={tileSize} height={tileSize}
                 ref={this._canvas} />

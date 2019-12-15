@@ -44,7 +44,7 @@ const OpenTileSetModal = ({ error, tileSets, onTileSetSelected, showModal, onClo
   var showError = error && error.length > 0;
 
   var items = tileSets.map(tileSet =>
-    <ListGroupItem className="tileset-item" onClick={() => onTileSetSelected(tileSet.id)}>
+    <ListGroupItem key={tileSet.id} className="tileset-item" onClick={() => onTileSetSelected(tileSet.id)}>
       {tileSet.name}
     </ListGroupItem>
   );

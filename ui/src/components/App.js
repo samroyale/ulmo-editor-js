@@ -24,29 +24,43 @@ const App = () => (
  * =============================================================================
  */
 class Home extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedTile: null
+    constructor(props) {
+        super(props);
+        this.state = {
+            selectedTile: null,
+            tileControlMode: null
+        };
+    }
+
+    tileSelected = tile => {
+        const { tileControlMode } = this.state;
+        const newTileControlMode = tileControlMode ? tileControlMode : "INSERT";
+        this.setState({
+            selectedTile: tile,
+            tileControlMode: newTileControlMode
+        });
     };
-  }
 
-  tileSelected = tile => this.setState({ selectedTile: tile });
+    setTileControlMode = mode => this.setState({ tileControlMode: mode });
 
-  render = () => {
-    return (
-      <Row>
-        <Col className="tile-palette-col" lg={4}>
-          <TilePalette
-            onTileSelected={this.tileSelected} />
-        </Col>
-        <Col className="map-editor-col" lg={8}>
-          <MapEditor
-            selectedTile={this.state.selectedTile} />
-        </Col>
-      </Row>
-    );
-  };
+    render = () => {
+        const { selectedTile, tileControlMode } = this.state;
+        return (
+            <Row>
+                <Col className="tile-palette-col" lg={4}>
+                    <TilePalette
+                        onTileSelected={this.tileSelected} />
+                </Col>
+                <Col className="map-editor-col" lg={8}>
+                    <MapEditor
+                        selectedTile={selectedTile}
+                        tileControlMode={tileControlMode}
+                        onSetTileControlMode={this.setTileControlMode}
+                    />
+                </Col>
+            </Row>
+        );
+    };
 }
 
 export default App;
