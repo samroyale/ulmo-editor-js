@@ -441,6 +441,10 @@ class MapCanvas extends React.Component {
     return `${prefix}:${editableTile.getId()}`;
   };
 
+  playKey = () => {
+    return `${Date.now()}`;
+  };
+
   render = () => {
     const { tilePosition } = this.props;
     const { showMap, showOverlay, overlayTarget, showModal, editableTile, playLevel } = this.state;
@@ -470,10 +474,8 @@ class MapCanvas extends React.Component {
           />
         </div>
 
-
         {showModal === "LEVELS" &&
           <EditLevelsModal
-              showModal={true}
               editableTile={editableTile}
               onClose={this.closeModal}
               onSubmit={this.applyLevelsEdit}
@@ -481,17 +483,17 @@ class MapCanvas extends React.Component {
           />
         }
 
+        {showModal === "IMAGES" &&
           <EditImagesModal
-              showModal={showModal === "IMAGES"}
               editableTile={editableTile}
               onClose={this.closeModal}
               onSubmit={this.applyTilesEdit}
               key={this.keyFor("IMAGES", editableTile)}
           />
+        }
 
         {showModal === "MASKS" &&
           <EditMasksModal
-              showModal={true}
               editableTile={editableTile}
               onClose={this.closeModal}
               onSubmit={this.applyTilesEdit}
@@ -499,13 +501,15 @@ class MapCanvas extends React.Component {
           />
         }
 
-        <PlayModal
-            showModal={showModal === "PLAY"}
-            tilePosition={tilePosition}
-            level={playLevel}
-            rpgMap={this._rpgMap}
-            onClose={this.closeModal}
-        />
+        {showModal === "PLAY" &&
+          <PlayModal
+              tilePosition={tilePosition}
+              level={playLevel}
+              rpgMap={this._rpgMap}
+              onClose={this.closeModal}
+              key={this.playKey()}
+          />
+        }
       </div>
     );
   };

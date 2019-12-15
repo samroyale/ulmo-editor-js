@@ -20,8 +20,9 @@ export class PlayModal extends React.Component {
         this._intervalId = null; // only set if using setInterval
 
         this.state = {
-            rpgMap: null,
-            modeVal: 'live'
+            rpgMap: props.rpgMap,
+            modeVal: 'live',
+            playInit: false
         };
     }
 
@@ -53,18 +54,18 @@ export class PlayModal extends React.Component {
         return (value === 'live');
     };
 
-    static getDerivedStateFromProps = ({ showModal, rpgMap }) => {
-        if (showModal) {
-            return { rpgMap: rpgMap };
+    componentDidMount = () => {
+        const { playInit } = this.state;
+        if (!playInit) {
+            // results in componentDidUpdate being called
+            this.setState({
+                playInit: true
+            });
         }
-        return null;
     };
 
-    componentDidUpdate = (oldProps, oldState) => {
-        const { showModal, level, tilePosition } = this.props;
-        if (!showModal) {
-            return;
-        }
+    componentDidUpdate = () => {
+        const { level, tilePosition } = this.props;
         if (this.state.rpgMap && !this._stage) {
             let liveMode = this.isLive(this.state.modeVal);
             this._stage = new Stage(this.state.rpgMap, level,
@@ -111,43 +112,42 @@ export class PlayModal extends React.Component {
         this._stage.keyUp(evt.keyCode);
     };
 
-    modalBody = ({ showModal }) => {
+    modalBody = () => {
         const {rpgMap, playError, playReady, modeVal } = this.state;
-        if (showModal && rpgMap) {
-            let showError = playError && playError.length > 0;
-            return (
-                <Modal.Body>
-                    <Collapse in={showError}>
-                        <div>
-                            <Alert bsStyle="danger">Could not initiate play mode: {playError}</Alert>
-                        </div>
-                    </Collapse>
-                    <Collapse in={playReady}>
-                        <div>
-                            <canvas className="play-canvas" width={viewWidth} height={viewHeight}
-                                ref={this._canvas} />
-                        </div>
-                    </Collapse>
-                    <ButtonToolbar className="play-buttons">
-                        <ToggleButtonGroup type="radio"
-                                           name="options"
-                                           value={modeVal}
-                                           onChange={this.handleModeChange}
-                                           justified>
-                            <ToggleButton type="radio" value={'live'}>Live Mode</ToggleButton>
-                            <ToggleButton type="radio" value={'test'}>Test Mode</ToggleButton>
-                        </ToggleButtonGroup>
-                    </ButtonToolbar>
-                </Modal.Body>
-            );
+        if (!rpgMap) {
+            return <Modal.Body />;
         }
-        return <Modal.Body />
+        let showError = playError && playError.length > 0;
+        return (
+            <Modal.Body>
+                <Collapse in={showError}>
+                    <div>
+                        <Alert bsStyle="danger">Could not initiate play mode: {playError}</Alert>
+                    </div>
+                </Collapse>
+                <Collapse in={playReady}>
+                    <div>
+                        <canvas className="play-canvas" width={viewWidth} height={viewHeight}
+                            ref={this._canvas} />
+                    </div>
+                </Collapse>
+                <ButtonToolbar className="play-buttons">
+                    <ToggleButtonGroup type="radio"
+                                       name="options"
+                                       value={modeVal}
+                                       onChange={this.handleModeChange}
+                                       justified>
+                        <ToggleButton type="radio" value={'live'}>Live Mode</ToggleButton>
+                        <ToggleButton type="radio" value={'test'}>Test Mode</ToggleButton>
+                    </ToggleButtonGroup>
+                </ButtonToolbar>
+            </Modal.Body>
+        );
     };
 
     render = () => {
-        const { showModal } = this.props;
         return (
-            <Modal show={showModal} onHide={this.closeModal} dialogClassName="play-map-modal" onKeyDown={this.keyDown} onKeyUp={this.keyUp}>
+            <Modal show={true} onHide={this.closeModal} dialogClassName="play-map-modal" onKeyDown={this.keyDown} onKeyUp={this.keyUp}>
                 <Modal.Header closeButton>
                     <Modal.Title>Play Map</Modal.Title>
                 </Modal.Header>

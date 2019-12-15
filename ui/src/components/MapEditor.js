@@ -458,7 +458,7 @@ class TileControl extends React.Component {
     return null;
   };
 
-  componentDidUpdate = (oldProps, oldState) => {
+  componentDidUpdate = () => {
     const { selectedTile, tileMode } = this.props;
     if (selectedTile) {
       const canvas = this._canvas.current;

@@ -107,9 +107,9 @@ export class EditLevelsModal extends Component {
   };
 
   render = () => {
-    const { showModal, onClose } = this.props;
+    const { onClose } = this.props;
     return (
-      <Modal show={showModal} onHide={onClose} dialogClassName="tile-levels-modal">
+      <Modal show={true} onHide={onClose} dialogClassName="tile-levels-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
@@ -242,13 +242,8 @@ export class EditImagesModal extends React.Component {
   };
 
   drawTileImages = () => {
-    const { showModal } = this.props;
-    if (!showModal) {
-      return;
-    }
     const maskTiles = [...this.state.maskTiles].reverse(); // copy + reverse the array
     maskTiles.forEach((maskTile, i) => {
-      //var item = this.refs[`item${i}`];
       const item = this._itemRefs[i].current;
       if (item) {
         item.drawToCanvas(maskTile);
@@ -263,10 +258,6 @@ export class EditImagesModal extends React.Component {
   };
 
   componentDidMount = () => {
-    const { showModal } = this.props;
-    if (!showModal) {
-      return;
-    }
     const { tilesDrawn } = this.state;
     if (!tilesDrawn) {
       // results in componentDidUpdate being called
@@ -277,10 +268,6 @@ export class EditImagesModal extends React.Component {
   };
 
   componentDidUpdate = () => {
-    const { showModal } = this.props;
-    if (!showModal) {
-      return;
-    }
     this.drawTileImages();
   };
 
@@ -314,9 +301,9 @@ export class EditImagesModal extends React.Component {
   };
 
   render = () => {
-    const { showModal, onClose } = this.props;
+    const { onClose } = this.props;
     return (
-      <Modal show={showModal} onHide={onClose} dialogClassName="tile-images-modal">
+      <Modal show={true} onHide={onClose} dialogClassName="tile-images-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
@@ -462,10 +449,6 @@ export class EditMasksModal extends React.Component {
   };
 
   componentDidMount = () => {
-    const { showModal } = this.props;
-    if (!showModal) {
-      return;
-    }
     const { tilesDrawn } = this.state;
     if (!tilesDrawn) {
       // results in componentDidUpdate being called
@@ -475,11 +458,7 @@ export class EditMasksModal extends React.Component {
     }
   };
 
-  componentDidUpdate = (oldProps, oldState) => {
-    const { showModal } = this.props;
-    if (!showModal) {
-      return;
-    }
+  componentDidUpdate = () => {
     this.drawTileImages();
   };
 
@@ -509,9 +488,9 @@ export class EditMasksModal extends React.Component {
   };
 
   render = () => {
-    const { showModal, onClose } = this.props;
+    const { onClose } = this.props;
     return (
-      <Modal show={showModal} onHide={onClose} dialogClassName="tile-masks-modal">
+      <Modal show={true} onHide={onClose} dialogClassName="tile-masks-modal">
         <Modal.Header closeButton>
           <Modal.Title>Edit Tile</Modal.Title>
         </Modal.Header>
