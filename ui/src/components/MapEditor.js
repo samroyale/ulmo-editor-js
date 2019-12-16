@@ -5,7 +5,7 @@ import { Panel, Modal, Grid, Row, Col, ButtonToolbar, Button, DropdownButton,
 import SpritesModal from './SpritesModal';
 import MapCanvas from './MapCanvas';
 import RpgMapService from '../services/RpgMaps';
-import { tileSize } from '../config';
+import { tileSize, openMapModal, newMapModal, resizeMapModal, saveMapModal, mapSpritesModal } from '../config';
 import { initRect, getDrawingContext } from '../utils';
 import './MapEditor.css';
 
@@ -98,7 +98,7 @@ class MapEditor extends React.Component {
     }
   };
 
-  newMap = evt => this.setState({ showModal: "NEW" });
+  newMap = evt => this.setState({ showModal: newMapModal });
 
   newMapOfSize = (rows, cols) => {
     if (this.state.mapDirty) {
@@ -117,7 +117,7 @@ class MapEditor extends React.Component {
 
   resizeMap = evt => {
     if (this.isMapPresent()) {
-      this.setState({ showModal: "RESIZE" });
+      this.setState({ showModal: resizeMapModal });
     }
   };
 
@@ -161,7 +161,7 @@ class MapEditor extends React.Component {
       this.setState({
         maps: maps,
         serviceError: null,
-        showModal: "OPEN"
+        showModal: openMapModal
       });
     }
     catch(e) {
@@ -184,7 +184,7 @@ class MapEditor extends React.Component {
 
   showSaveModal = () => {
     if (this.isMapPresent()) {
-      this.setState({ showModal: "SAVE" });
+      this.setState({ showModal: saveMapModal });
     }
   };
 
@@ -234,7 +234,7 @@ class MapEditor extends React.Component {
       this.setState({
         serviceError: message
       });
-      if (this.state.showModal !== "SAVE") {
+      if (this.state.showModal !== saveMapModal) {
         this.setState({
           showErrorModal: true,
           errorModalTitle: "Save Map"
@@ -292,7 +292,7 @@ class MapEditor extends React.Component {
   editSprites = () => {
     if (this.isMapPresent()) {
       this.setState({
-        showModal: "SPRITES",
+        showModal: mapSpritesModal,
         sprites: this._mapCanvas.current.getSpritesFromMap()
       });
     }
@@ -305,16 +305,21 @@ class MapEditor extends React.Component {
     this.addToChangeHistory({ sprites: oldSprites })
   };
 
+  spritesKey = () => {
+    return `${Date.now()}`;
+  };
+
   render = () => {
     const { selectedTile, tileControlMode, onSetTileControlMode, onAdmin } = this.props;
+    const { showModal, mapDirty, mapId, changeHistory, currentTilePosition, currentTile } = this.state;
     return (
       <div>
         <Panel className="component" bsClass="component-panel">
           <MapToolbar
               selectedTile={selectedTile}
               tileControlMode={tileControlMode}
-              mapDirty={this.state.mapDirty}
-              mapPresent={this.state.mapId !== null}
+              mapDirty={mapDirty}
+              mapPresent={mapId !== null}
               onLoadMapsFromServer={this.loadMapsFromServer}
               onNewMap={this.newMap}
               onResizeMap={this.resizeMap}
@@ -323,48 +328,59 @@ class MapEditor extends React.Component {
               onSetTileControlMode={onSetTileControlMode}
               onEditSprites={this.editSprites}
               onUndo={this.undo}
-              noHistory={this.state.changeHistory.length === 0}
+              noHistory={changeHistory.length === 0}
               onAdmin={onAdmin} />
           <MapCanvas
               selectedTile={selectedTile}
               tileMode={tileControlMode}
-              tilePosition={this.state.currentTilePosition}
+              tilePosition={currentTilePosition}
               onTilePositionUpdated={this.updateCurrentTile}
               onMapUpdated={this.mapUpdated}
               ref={this._mapCanvas} />
           <MapTileInfo
-              tilePosition={this.state.currentTilePosition}
-              mapTile={this.state.currentTile} />
+              tilePosition={currentTilePosition}
+              mapTile={currentTile} />
         </Panel>
 
-        <OpenMapModal
-            showModal={this.state.showModal === "OPEN"}
-            maps={this.state.maps}
-            onMapSelected={this.mapSelected}
-            onClose={this.closeModal}
-            error={this.state.serviceError} />
+        {showModal === openMapModal &&
+          <OpenMapModal
+              maps={this.state.maps}
+              onMapSelected={this.mapSelected}
+              onClose={this.closeModal}
+              error={this.state.serviceError}
+          />
+        }
 
-        <NewMapModal
-            showModal={this.state.showModal === "NEW"}
-            onNewMap={this.newMapOfSize}
-            onClose={this.closeModal} />
+        {showModal === newMapModal &&
+          <NewMapModal
+              onNewMap={this.newMapOfSize}
+              onClose={this.closeModal}
+          />
+        }
 
-        <ResizeMapModal
-            showModal={this.state.showModal === "RESIZE"}
-            onResizeMap={this.resizeMapToSize}
-            onClose={this.closeModal} />
+        {showModal === resizeMapModal &&
+          <ResizeMapModal
+              onResizeMap={this.resizeMapToSize}
+              onClose={this.closeModal}
+          />
+        }
 
-        <SaveAsModal
-            showModal={this.state.showModal === "SAVE"}
-            onSaveAs={this.saveMapAs}
-            onClose={this.closeModal}
-            error={this.state.serviceError} />
+        {showModal === saveMapModal &&
+          <SaveAsModal
+              onSaveAs={this.saveMapAs}
+              onClose={this.closeModal}
+              error={this.state.serviceError}
+          />
+        }
 
-        <SpritesModal
-            showModal={this.state.showModal === "SPRITES"}
-            sprites={this.state.sprites}
-            onSubmit={this.applySpritesEdit}
-            onClose={this.closeModal} />
+        {showModal === mapSpritesModal &&
+          <SpritesModal
+              sprites={this.state.sprites}
+              onSubmit={this.applySpritesEdit}
+              onClose={this.closeModal}
+              key={this.spritesKey()}
+          />
+        }
 
         <ProgressModal
             showModal={this.state.showProgressModal}
@@ -505,7 +521,7 @@ class TileControl extends React.Component {
  * COMPONENT: OPEN MAP MODAL
  * =============================================================================
  */
-const OpenMapModal = ({ error, maps, onMapSelected, showModal, onClose }) => {
+const OpenMapModal = ({ error, maps, onMapSelected, onClose }) => {
   var showError = error && error.length > 0;
 
   var items = maps.map(map =>
@@ -515,7 +531,7 @@ const OpenMapModal = ({ error, maps, onMapSelected, showModal, onClose }) => {
   );
 
   return (
-    <Modal show={showModal} onHide={onClose}>
+    <Modal show={true} onHide={onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Open Map</Modal.Title>
       </Modal.Header>
@@ -567,9 +583,9 @@ class NewMapModal extends React.Component {
   };
 
   render = () => {
-    const { showModal, onClose } = this.props;
+    const { onClose } = this.props;
     return (
-      <Modal show={showModal} onHide={onClose} bsSize="small">
+      <Modal show={true} onHide={onClose} bsSize="small">
         <Modal.Header closeButton>
           <Modal.Title>New Map</Modal.Title>
         </Modal.Header>
@@ -638,9 +654,9 @@ class ResizeMapModal extends React.Component {
   };
 
   render = () => {
-    const { showModal, onClose } = this.props;
+    const { onClose } = this.props;
     return (
-      <Modal show={showModal} onHide={onClose} dialogClassName="resize-map-modal">
+      <Modal show={true} onHide={onClose} dialogClassName="resize-map-modal">
         <Modal.Header closeButton>
           <Modal.Title>Resize Map</Modal.Title>
         </Modal.Header>
@@ -721,10 +737,10 @@ class SaveAsModal extends React.Component {
   };
 
   render = () => {
-    const { error, showModal, onClose } = this.props;
+    const { error, onClose } = this.props;
     var showError = error && error.length > 0;
     return (
-      <Modal show={showModal} onHide={onClose}>
+      <Modal show={true} onHide={onClose}>
         <Modal.Header closeButton>
           <Modal.Title>Save As</Modal.Title>
         </Modal.Header>

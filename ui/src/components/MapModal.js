@@ -16,18 +16,13 @@ const numRegex = /\D/g;
  * =============================================================================
  */
 export class EditLevelsModal extends Component {
-  static getLevels = ({ editableTile }) => {
-    if (!editableTile) {
-      return [];
-    }
-    return editableTile.getLevels();
-  };
-
   constructor(props) {
     super(props);
+    const { editableTile } = props;
+    const tileLevels = editableTile ? editableTile.getLevels() : [];
     this.state = {
       levelVal: '',
-      levels: EditLevelsModal.getLevels(props),
+      levels: tileLevels,
       selectedIndices: [],
       addDisabled: true,
       deleteDisabled: true

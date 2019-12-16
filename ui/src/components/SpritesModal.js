@@ -17,9 +17,11 @@ const numRegex = /\D/g;
 class SpritesModal extends React.Component {
   constructor(props) {
     super(props);
+    const { sprites } = props;
     this.state = {
-      sprites: [],
+      sprites: sprites,
       editableSprite: null,
+      editableIndex: null,
       showEditModal: false
     };
   };
@@ -29,6 +31,7 @@ class SpritesModal extends React.Component {
   editSprite = index => {
     this.setState({
       editableSprite: this.state.sprites[index],
+      editableIndex: index,
       showEditModal: true
     });
   };
@@ -42,6 +45,7 @@ class SpritesModal extends React.Component {
   addSprite = () => {
     this.setState({
       editableSprite: null,
+      editableIndex: null,
       showEditModal: true
     });
   };
@@ -68,13 +72,6 @@ class SpritesModal extends React.Component {
 
   closeEditModal = () => this.setState({ showEditModal: false });
 
-  static getDerivedStateFromProps = ({ showModal, sprites }) => {
-    if (showModal) {
-      return { sprites: [...sprites] };
-    }
-    return null;
-  };
-
   sprites = () => {
     return this.state.sprites.map((sprite, i) => (
       <SpriteItem
@@ -86,37 +83,44 @@ class SpritesModal extends React.Component {
     ));
   };
 
+  spriteKey = () => {
+    const { editableIndex } = this.state;
+    return editableIndex ? editableIndex : "";
+  };
+
   render = () => {
-    const { showModal, onClose } = this.props;
+    const { onClose } = this.props;
     return (
       <div>
-      <Modal show={showModal} onHide={onClose} dialogClassName="sprites-modal">
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Sprites</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Panel className="sprites-panel">
-            <ListGroup>
-              {this.sprites()}
-              <ListGroupItem className="sprite-list-item">
-                <ButtonToolbar>
-                  <Button onClick={this.addSprite}>Add Sprite <Glyphicon glyph="plus" /></Button>
-                </ButtonToolbar>
-              </ListGroupItem>
-            </ListGroup>
-          </Panel>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
-          <Button onClick={onClose}>Cancel</Button>
-        </Modal.Footer>
-      </Modal>
+        <Modal show={true} onHide={onClose} dialogClassName="sprites-modal">
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Sprites</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Panel className="sprites-panel">
+              <ListGroup>
+                {this.sprites()}
+                <ListGroupItem className="sprite-list-item">
+                  <ButtonToolbar>
+                    <Button onClick={this.addSprite}>Add Sprite <Glyphicon glyph="plus" /></Button>
+                  </ButtonToolbar>
+                </ListGroupItem>
+              </ListGroup>
+            </Panel>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.handleSubmit} bsStyle="primary">OK</Button>
+            <Button onClick={onClose}>Cancel</Button>
+          </Modal.Footer>
+        </Modal>
 
-      <SpriteEditModal
-          showModal={this.state.showEditModal}
-          sprite={this.state.editableSprite}
-          onSubmit={this.applySpriteEdit}
-          onClose={this.closeEditModal} />
+        <SpriteEditModal
+            key={this.spriteKey()}
+            showModal={this.state.showEditModal}
+            sprite={this.state.editableSprite}
+            onSubmit={this.applySpriteEdit}
+            onClose={this.closeEditModal}
+        />
       </div>
     );
   };
@@ -179,16 +183,13 @@ class SpriteItem extends React.Component {
 class SpriteEditModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = SpriteEditModal._initialState();
-  };
-
-  static _initialState = () => {
-    return {
-      sprite: null,
-      typeVal: '',
-      levelVal: '',
-      locations: []
-    }
+    const { sprite } = props;
+    this.state = {
+      sprite: sprite ? sprite : null,
+      typeVal: sprite ? sprite.getType() : "",
+      levelVal: sprite ? `${sprite.getLevel()}` : "",
+      locations: sprite ? [...sprite.getLocation()] : []
+    };
   };
 
   handleSubmit = () => this.props.onSubmit(newSprite(
@@ -258,18 +259,6 @@ class SpriteEditModal extends React.Component {
   };
 
   addLocation = (x, y) => this.setState({ locations: [...this.state.locations, [x, y]] });
-
-  static getDerivedStateFromProps = ({ sprite }) => {
-    if (sprite) {
-      return {
-        sprite: sprite,
-        typeVal: sprite.getType(),
-        levelVal: '' + sprite.getLevel(),
-        locations: [...sprite.getLocation()]
-      };
-    }
-    return SpriteEditModal._initialState();
-  };
 
   typeText = spriteType => {
     return spriteType[0].toUpperCase() + spriteType.slice(1);

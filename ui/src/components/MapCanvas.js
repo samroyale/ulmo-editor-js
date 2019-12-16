@@ -4,7 +4,7 @@ import { EditLevelsModal, EditImagesModal, EditMasksModal } from './MapModal';
 import { PlayModal } from '../play/PlayModal';
 import RpgMapService, { emptyClipboard } from '../services/RpgMaps';
 import { TilePosition } from '../utils';
-import { tileSize } from '../config';
+import { tileSize, tileLevelsModal, tileImagesModal, tileMasksModal, playModal } from '../config';
 import './MapCanvas.css';
 
 const rpgMapService = new RpgMapService();
@@ -136,11 +136,11 @@ class MapCanvas extends React.Component {
     this.hideOverlay();
   };
 
-  editLevels = () => this.showModal("LEVELS");
+  editLevels = () => this.showModal(tileLevelsModal);
 
-  editImages = () => this.showModal("IMAGES");
+  editImages = () => this.showModal(tileImagesModal);
 
-  editMasks = () => this.showModal("MASKS");
+  editMasks = () => this.showModal(tileMasksModal);
 
   playMap = level => {
     if (level.startsWith('S')) {
@@ -153,7 +153,7 @@ class MapCanvas extends React.Component {
     else {
       this.setState({ playLevel: parseInt(level, 10) });
     }
-    this.showModal("PLAY");
+    this.showModal(playModal);
   };
 
   restoreSprites = sprites => this.applySpritesEdit(sprites);
@@ -434,11 +434,8 @@ class MapCanvas extends React.Component {
     return {};
   };
 
-  keyFor = (prefix, editableTile) => {
-    if (!editableTile) {
-      return prefix;
-    }
-    return `${prefix}:${editableTile.getId()}`;
+  keyFor = editableTile => {
+    return editableTile ? editableTile.getId() : "";
   };
 
   playKey = () => {
@@ -474,34 +471,34 @@ class MapCanvas extends React.Component {
           />
         </div>
 
-        {showModal === "LEVELS" &&
+        {showModal === tileLevelsModal &&
           <EditLevelsModal
               editableTile={editableTile}
               onClose={this.closeModal}
               onSubmit={this.applyLevelsEdit}
-              key={this.keyFor("LEVELS", editableTile)}
+              key={this.keyFor(editableTile)}
           />
         }
 
-        {showModal === "IMAGES" &&
+        {showModal === tileImagesModal &&
           <EditImagesModal
               editableTile={editableTile}
               onClose={this.closeModal}
               onSubmit={this.applyTilesEdit}
-              key={this.keyFor("IMAGES", editableTile)}
+              key={this.keyFor(editableTile)}
           />
         }
 
-        {showModal === "MASKS" &&
+        {showModal === tileMasksModal &&
           <EditMasksModal
               editableTile={editableTile}
               onClose={this.closeModal}
               onSubmit={this.applyTilesEdit}
-              key={this.keyFor("MASKS", editableTile)}
+              key={this.keyFor(editableTile)}
           />
         }
 
-        {showModal === "PLAY" &&
+        {showModal === playModal &&
           <PlayModal
               tilePosition={tilePosition}
               level={playLevel}
