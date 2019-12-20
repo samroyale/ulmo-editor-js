@@ -1,4 +1,4 @@
-FROM node:carbon
+FROM node:alpine
 
 EXPOSE 8081
 
@@ -11,4 +11,4 @@ COPY app ./app
 
 RUN yarn install
 
-CMD [ "npm", "start" ]
+CMD [ "yarn", "start" ]

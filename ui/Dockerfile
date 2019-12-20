@@ -1,4 +1,4 @@
-FROM node:carbon
+FROM node:alpine
 
 EXPOSE 3000
 
@@ -14,4 +14,4 @@ RUN ls -l /usr/src/client
 
 RUN yarn install
 
-CMD [ "npm", "start" ]
+CMD [ "yarn", "start" ]

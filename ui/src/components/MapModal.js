@@ -407,7 +407,7 @@ export class EditMasksModal extends React.Component {
   constructor(props) {
     super(props);
     const { editableTile } = props;
-    const maskTiles = editableTile ? editableTile.getMaskTiles().reverse() : [];
+    const maskTiles = editableTile ? [...editableTile.getMaskTiles()].reverse() : [];
     this._itemRefs = maskTiles.map(() => React.createRef());
     this.state = {
       maskTiles: maskTiles,

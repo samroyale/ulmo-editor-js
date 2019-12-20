@@ -3,21 +3,40 @@ import { Grid, Row, Col, PageHeader } from 'react-bootstrap';
 import TilePalette from './TilePalette';
 import MapEditor from './MapEditor';
 import './App.css';
+import WasmTest from "./WasmTest";
 
 /* =============================================================================
  * COMPONENT: MAIN
  * =============================================================================
  */
-const App = () => (
-  <Grid>
-    <Row>
-      <Col lg={12}>
-        <PageHeader className="app-header">Ulmo Editor <small>v0.5.0</small></PageHeader>
-      </Col>
-    </Row>
-    <Home />
-  </Grid>
-);
+class App extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            testWasm: false
+        };
+    }
+
+    toggleTestWasm = () => this.setState({ testWasm: !this.state.testWasm });
+
+    render = () => {
+        const { testWasm } = this.state;
+        return (
+            testWasm ? (
+                <WasmTest />
+            ) : (
+                <Grid>
+                    <Row>
+                        <Col lg={12}>
+                            <PageHeader className="app-header">Ulmo Editor <small>v0.5.0</small></PageHeader>
+                        </Col>
+                    </Row>
+                    <Home onTestWasm={this.toggleTestWasm} />
+                </Grid>
+            )
+        );
+    };
+}
 
 /* =============================================================================
  * COMPONENT: EDITOR VIEW
@@ -44,6 +63,7 @@ class Home extends React.Component {
     setTileControlMode = mode => this.setState({ tileControlMode: mode });
 
     render = () => {
+        const { onTestWasm } = this.props;
         const { selectedTile, tileControlMode } = this.state;
         return (
             <Row>
@@ -56,6 +76,7 @@ class Home extends React.Component {
                         selectedTile={selectedTile}
                         tileControlMode={tileControlMode}
                         onSetTileControlMode={this.setTileControlMode}
+                        onTestWasm={onTestWasm}
                     />
                 </Col>
             </Row>

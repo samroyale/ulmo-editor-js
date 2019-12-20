@@ -37,7 +37,7 @@ class MapEditor extends React.Component {
       serviceError: null,
       currentTilePosition: null,
       currentTile: null,
-      changeHistory: []
+      changeHistory: [],
     };
   }
 
@@ -310,7 +310,7 @@ class MapEditor extends React.Component {
   };
 
   render = () => {
-    const { selectedTile, tileControlMode, onSetTileControlMode, onAdmin } = this.props;
+    const { selectedTile, tileControlMode, onSetTileControlMode, onTestWasm } = this.props;
     const { showModal, mapDirty, mapId, changeHistory, currentTilePosition, currentTile } = this.state;
     return (
       <div>
@@ -328,8 +328,8 @@ class MapEditor extends React.Component {
               onSetTileControlMode={onSetTileControlMode}
               onEditSprites={this.editSprites}
               onUndo={this.undo}
-              noHistory={changeHistory.length === 0}
-              onAdmin={onAdmin} />
+              onTestWasm={onTestWasm}
+              noHistory={changeHistory.length === 0} />
           <MapCanvas
               selectedTile={selectedTile}
               tileMode={tileControlMode}
@@ -420,8 +420,9 @@ const MapToolbar = ({
   onExport,
   onEditSprites,
   onUndo,
-  noHistory
-  }) => (
+  noHistory,
+  onTestWasm
+}) => (
   <ButtonToolbar className="component-buttons">
     <TileControl
       selectedTile={selectedTile}
@@ -441,7 +442,7 @@ const MapToolbar = ({
     <Button onClick={onUndo} disabled={noHistory}>
       <div className="reverse"><Glyphicon glyph="repeat" /></div>
     </Button>
-    { /*<Button bsStyle="link" onClick={onAdmin}>Admin</Button>*/ }
+    <Button bsStyle="link" onClick={onTestWasm}>Test Wasm</Button>
   </ButtonToolbar>
 );
 

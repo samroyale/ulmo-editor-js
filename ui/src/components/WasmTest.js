@@ -1,87 +1,116 @@
 import React, { useState } from 'react';
 import './App.css';
 
-const formatResult = result => {
-    let rect = result.get_rect();
-    return `Result { valid: ${result.is_valid()}, deferral: ${result.get_deferral()}, level: ${result.get_level()}, rect: Rect { x: ${rect.get_x()}, y: ${rect.get_y()}, width: ${rect.get_width()}, height: ${rect.get_height()} } }\n`;
-};
-
-const testWasm = ({ PlayMap, Rect }) => {
-    const playMap = PlayMap.from_js_data({
+const aPlayMap = WasmPlayMap => {
+    return new WasmPlayMap({
         rows: 4,
         cols: 3,
-        tile_data: [{
-            levels:[4],
-            down_levels:[],
-            special_levels:[]
+        tileData: [{
+            levels: [4],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }, {
-            levels:[],
-            down_levels:[],
-            special_levels:[4]
+            levels: [],
+            downLevels: [],
+            specialLevels: [4],
+            masks: []
         }, {
-            levels:[4],
-            down_levels:[],
-            special_levels:[]
+            levels: [4],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }, {
-            levels:[],
-            down_levels:[],
-            special_levels:[]
+            levels: [],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }, {
-            levels:[],
-            down_levels:[[3, 2]],
-            special_levels:[3]
+            levels: [],
+            downLevels: [],
+            specialLevels: [3],
+            masks: []
         }, {
-            levels:[],
-            down_levels:[],
-            special_levels:[]
+            levels: [],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }, {
-            levels:[2],
-            down_levels:[],
-            special_levels:[]
+            levels: [2],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }, {
-            levels:[],
-            down_levels:[],
-            special_levels:[3]
+            levels: [],
+            downLevels: [],
+            specialLevels: [3],
+            masks: []
         }, {
-            levels:[2],
-            down_levels:[],
-            special_levels:[]
+            levels: [2],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }, {
-            levels:[2],
-            down_levels:[],
-            special_levels:[]
+            levels: [2],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }, {
-            levels:[],
-            down_levels:[],
-            special_levels:[2]
+            levels: [],
+            downLevels: [],
+            specialLevels: [2],
+            masks: []
         }, {
-            levels:[2],
-            down_levels:[],
-            special_levels:[]
+            levels: [2],
+            downLevels: [],
+            specialLevels: [],
+            masks: []
         }],
-        tile_size: 16
+        tileSize: 16
     });
-    console.log("HELLO " + playMap);
+};
+
+const formatMoveResult = result => {
+    let { valid, deferral, level, mx, my } = result;
+    return `MoveResult { valid: ${valid}, deferral: ${deferral}, level: ${level}, mx: ${mx}, my: ${my} }\n`;
+};
+
+const runApplyMove = ({ WasmPlayMap, WasmRect }) => {
+    const playMap = aPlayMap(WasmPlayMap);
 
     let results = "";
 
     // valid
-    let result = playMap.apply_move(0, 0, 4, Rect.new(4, 2, 16, 8));
-    results += formatResult(result);
+    let result = playMap.applyMove(2, 0, 4, new WasmRect(2, 2, 16, 8));
+    results += formatMoveResult(result);
+
+    // diagonal
+    result = playMap.applyMove(2, 2, 4, new WasmRect(2, 0, 16, 8));
+    results += formatMoveResult(result);
 
     // shuffle
-    result = playMap.apply_move(2, 0, 4, Rect.new(0, 12, 16, 8));
-    results += formatResult(result);
+    result = playMap.applyMove(2, 0, 4, new WasmRect(0, 12, 16, 8));
+    results += formatMoveResult(result);
 
     // slide
-    result = playMap.apply_move(2, 2, 2, Rect.new(0, 44, 16, 8));
-    results += formatResult(result);
+    result = playMap.applyMove(2, 2, 2, new WasmRect(0, 44, 16, 8));
+    results += formatMoveResult(result);
 
     // invalid
-    result = playMap.apply_move(2, 0, 2, Rect.new(0, 34, 16, 8));
-    results += formatResult(result);
+    result = playMap.applyMove(2, 0, 2, new WasmRect(0, 34, 16, 8));
+    results += formatMoveResult(result);
 
-    console.log(results);
+    return results;
+};
+
+const testWasm = wasm => {
+    let results = [
+        runApplyMove(wasm)
+        // runGetEvent(wasm),
+        // runGetSpriteMasks(wasm)
+    ];
+    //testResults.textContent = results.join("\n");
+    console.log(results.join("\n"));
 };
 
 const Loaded = ({ wasm }) => <button onClick={() => testWasm(wasm)}>Test</button>;
@@ -101,7 +130,6 @@ const WasmTest = () => {
     const loadWasm = async () => {
         try {
             setLoading(true);
-            // const wasm = await import('hello-wasm');
             const wasm = await import('wasm-ulmo-map');
             setWasm(wasm);
         } finally {
