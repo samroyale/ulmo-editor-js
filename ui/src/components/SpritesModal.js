@@ -90,6 +90,7 @@ class SpritesModal extends React.Component {
 
   render = () => {
     const { onClose } = this.props;
+    const { showEditModal, editableSprite } = this.state;
     return (
       <div>
         <Modal show={true} onHide={onClose} dialogClassName="sprites-modal">
@@ -114,13 +115,14 @@ class SpritesModal extends React.Component {
           </Modal.Footer>
         </Modal>
 
-        <SpriteEditModal
-            key={this.spriteKey()}
-            showModal={this.state.showEditModal}
-            sprite={this.state.editableSprite}
-            onSubmit={this.applySpriteEdit}
-            onClose={this.closeEditModal}
-        />
+        {showEditModal &&
+          <SpriteEditModal
+              sprite={editableSprite}
+              onSubmit={this.applySpriteEdit}
+              onClose={this.closeEditModal}
+              key={this.spriteKey()}
+          />
+        }
       </div>
     );
   };
@@ -344,14 +346,14 @@ class SpriteEditModal extends React.Component {
   };
 
   render = () => {
-    const { showModal, onClose } = this.props;
+    const { onClose } = this.props;
     var okDisabled = !this.isSpriteValid(
         this.state.typeVal,
         this.state.levelVal,
         this.state.locations
     );
     return (
-      <Modal show={showModal} onHide={onClose} dialogClassName="sprite-edit-modal">
+      <Modal show={true} onHide={onClose} dialogClassName="sprite-edit-modal">
         <Modal.Header closeButton>
           <Modal.Title>{this.modalTitle()}</Modal.Title>
         </Modal.Header>
@@ -456,10 +458,7 @@ class AddLocationItem extends React.Component {
     }
     var x = parseInt(this.state.xVal, 10);
     var y = parseInt(this.state.yVal, 10);
-    if (isNaN(x) || isNaN(y)) {
-      return false;
-    }
-    return true;
+    return !(isNaN(x) || isNaN(y));
   };
 
   addLocation = () => this.props.onAddLocation(

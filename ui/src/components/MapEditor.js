@@ -305,7 +305,7 @@ class MapEditor extends React.Component {
     this.addToChangeHistory({ sprites: oldSprites })
   };
 
-  spritesKey = () => {
+    spritesKey = () => {
     return `${Date.now()}`;
   };
 
