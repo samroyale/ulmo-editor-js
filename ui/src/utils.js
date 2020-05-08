@@ -88,20 +88,18 @@ export function parseLevel(levelStr) {
   if (levelStr.startsWith('S')) {
     let level = strictParseFloat(levelStr.substr(1),
         'Special level could not be parsed as a float: ' + levelStr);
+    if (Number.isInteger(level)) {
+      return {
+        type: 'special',
+        level: level
+      }
+    }
     return {
       type: 'special',
-      level: level
-    };
-    // if (Number.isInteger(level)) {
-    //   return {
-    //     type: 'special',
-    //     level: level * 2
-    //   }
-    // }
-    // return {
-    //   type: 'special',
-    //   level: Math.floor(level) * 2 + 1
-    // }
+      level: level,
+      high: Math.ceil(level),
+      low: Math.floor(level)
+    }
   }
   if (levelStr.startsWith('D')) {
     let levels = levelStr.substr(1).split('-');
@@ -123,7 +121,7 @@ export function parseLevel(levelStr) {
     }
   }
   return {
-    type: 'default',
+    type: 'standard',
     level: Number.parseInt(levelStr, 10)
   };
 }
@@ -186,11 +184,6 @@ export class Rect {
 
   toString() {
     return 'Rect [left: ' + this.left + ', top: ' + this.top + ', width: ' + this.width + ', height: ' + this.height + ']';
-  }
-
-  toWasmRect(wasm) {
-    const { WasmRect } = wasm;
-    return new WasmRect(this.left, this.top, this.width, this.height);
   }
 }
 

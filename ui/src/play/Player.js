@@ -16,10 +16,6 @@ const playerFramesUrl = spritesImgPath + '/ulmo-frames.png';
 const playerFallingFramesUrl = spritesImgPath + '/ulmo-falling.png';
 const shadowFramesUrl = spritesImgPath + '/shadow.png';
 
-// const deferralNone = 0;
-const deferralDefault = 1;
-const deferralDiagonal = 2;
-
 /* =============================================================================
  * CLASS: KEYS
  * =============================================================================
@@ -149,12 +145,11 @@ export class Player extends Sprite {
         this._keyBits = keyBits;
         const moves = movement.get(keyBits);
         if (moves) {
-            let [direction, mx, my] = moves;
-            this._move(direction, mx, my);
+            this._move(moves[0], moves[1], moves[2], moves[3]);
         }
     }
 
-    _move(direction, mx, my) {
+    _move(direction, mx, my, diagonal) {
         // check requested movement falls within map boundary
         const newRect = this._rect.move(mx, my);
         if (this._playMap.isMapBoundaryBreached(newRect)) {
@@ -162,28 +157,78 @@ export class Player extends Sprite {
         }
 
         // check requested movement is valid
-        const [valid, deferral, level, mx_delta, my_delta] = this._playMap.applyMove(mx, my, this._level, this._baseRect);
+        const newBaseRect = this._baseRect.move(mx, my);
+        const [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
         if (valid) {
-            if (deferral === deferralDefault) {
-                this._deferMovement(direction, level, mx_delta, my_delta);
-                return;
-            }
-            if (deferral === deferralDiagonal) {
+            if (diagonal) {
                 if (this._deferDiagonal) {
                     this._deferDiagonal = false;
-                    this._deferMovement(direction, level, mx_delta, my_delta);
+                    this._deferMovement(direction, level, mx, my);
                     return;
                 }
             }
             this._deferDiagonal = true;
-            this._applyMovement(direction, level, mx_delta, my_delta);
+            this._applyRectMovement(direction, level, newBaseRect, newRect);
             return;
+        }
+
+        // movement invalid but we might be able to slide or shuffle
+        if (mx === 0) {
+            if (this._shuffleX(direction)) {
+                return;
+            }
+        }
+        else if (my === 0) {
+            if (this._shuffleY(direction)) {
+                return;
+            }
+        }
+        else {
+            // diagonal movement
+            if (this._slide(direction, mx, my)) {
+                return;
+            }
         }
 
         // movement invalid - apply a stationary change of direction if needed
         if (this._frames.getDirection() !== direction) {
             this._moveInternal(direction, this._level, this._rect);
         }
+    }
+
+    _shuffleX(direction) {
+        // see if we can shuffle horizontally
+        const [valid, level, shuffle] = this._playMap.isVerticalValid(this._level, this._baseRect);
+        if (valid) {
+            this._deferMovement(direction, level, shuffle, 0);
+        }
+        return valid;
+    }
+
+    _shuffleY(direction) {
+        // see if we can shuffle vertically
+        const [valid, level, shuffle] = this._playMap.isHorizontalValid(this._level, this._baseRect);
+        if (valid) {
+            this._deferMovement(direction, level, 0, shuffle);
+        }
+        return valid;
+    }
+
+    _slide(direction, mx, my) {
+        // see if we can slide horizontally
+        let newBaseRect = this._baseRect.move(mx, 0);
+        let [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        if (valid) {
+            this._deferMovement(direction, level, mx, 0);
+            return valid;
+        }
+        // see if we can slide vertically
+        newBaseRect = this._baseRect.move(0, my);
+        [valid, level] =  this._playMap.isMoveValid(this._level, newBaseRect);
+        if (valid) {
+            this._deferMovement(direction, level, 0, my);
+        }
+        return valid;
     }
 
     _applyDeferredMovement() {
@@ -199,6 +244,11 @@ export class Player extends Sprite {
     _applyMovement(direction, level, mx, my) {
         this._baseRect.moveInPlace(mx, my);
         this._moveInternal(direction, level, this._rect.move(mx, my));
+    }
+
+    _applyRectMovement(direction, level, baseRect, rect) {
+        this._baseRect = baseRect;
+        this._moveInternal(direction, level, rect);
     }
 
     _deferMovement(direction, level, mx, my) {

@@ -719,20 +719,20 @@ export class Blades extends Sprite {
         this._countdown = 30;
         this._active = false;
         if (level) {
-            this._playMap.addLevelToTile(this._tx, this._ty, level);
+            this._getMapTile().addNewLevel(level);
             this._frames = this._frames.withFrameTicks(0);
         }
     }
 
     _activate() {
         this._active = true;
-        this._playMap.rollbackTile(this._tx, this._ty);
+        this._getMapTile().rollback();
         this._frames = this._frames.withFrameIndex(1).withFrameTicks(6);
     }
 
-    // _getMapTile() {
-    //     return this._playMap.getTileAt(this._tx, this._ty);
-    // }
+    _getMapTile() {
+        return this._playMap.getTileAt(this._tx, this._ty);
+    }
 
     processCollision() {
         return this._frames.getFrameIndex() > 0;
