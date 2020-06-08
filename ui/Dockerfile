@@ -6,7 +6,6 @@ WORKDIR /usr/src/client
 
 COPY package.json ./
 COPY yarn.lock ./
-COPY config-overrides.js ./
 
 RUN sed -i "s/localhost/api/" /usr/src/client/package.json
 
